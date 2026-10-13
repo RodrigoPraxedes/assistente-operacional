@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const ativo = usePathname().startsWith(href);
+// ativoEm: prefixo que marca o link como ativo (padrão: o próprio href)
+export function NavLink({ href, ativoEm, children }: { href: string; ativoEm?: string; children: React.ReactNode }) {
+  const ativo = usePathname().startsWith(ativoEm ?? href);
   return (
     <Link
       href={href}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
-import { TIPOS_STATUS, type Categoria, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
+import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Input, Select } from "@/components/ui";
 import {
   alternarSetor,
@@ -10,6 +10,7 @@ import {
   salvarCategoria,
   salvarEmpresa,
   salvarSetor,
+  salvarSla,
   salvarStatus,
   salvarUnidade,
 } from "../actions";
@@ -31,6 +32,18 @@ export default async function ConfigGeral({
     supabase.from("categorias").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("status").select("*").eq("empresa_id", empresaId).order("ordem"),
   ]);
+  const { data: sla } = await supabase.from("empresas").select("sla_chamados").eq("id", empresaId).single();
+  const prazos = (sla?.sla_chamados ?? {}) as Record<string, number>;
+  const seletorModulo = (valor: string | null, desabilitado: boolean) => (
+    <Select name="modulo" defaultValue={valor ?? ""} className="w-32" disabled={desabilitado} title="Em qual módulo aparece">
+      <option value="">Todos</option>
+      {Object.entries(ORIGENS).map(([k, v]) => (
+        <option key={k} value={k}>
+          {v}
+        </option>
+      ))}
+    </Select>
+  );
 
   const e = empresaId;
   return (
@@ -76,7 +89,7 @@ export default async function ConfigGeral({
         <h2 className="font-medium">Status do Kanban</h2>
         <p className="text-xs text-slate-500">
           O nome e a cor são livres. O tipo diz ao sistema o que o status significa (aberto, encerrado...) para calcular
-          atrasos e relatórios. Adiar sempre pede uma nova data e permite retornar ao status anterior.
+          atrasos e relatórios. O módulo limita onde o status aparece (ex.: &quot;Aguardando peça&quot; só em Chamados). Adiar sempre pede uma nova data e permite retornar ao status anterior.
         </p>
         <ul className="space-y-2">
           {(status as Status[] | null)?.map((s, i, lista) => (
@@ -92,6 +105,7 @@ export default async function ConfigGeral({
                     </option>
                   ))}
                 </Select>
+                {seletorModulo(s.modulo, !pode("config.status"))}
                 {pode("config.status") && <Botao variante="secundario" className="px-2 py-1">Salvar</Botao>}
               </form>
               {pode("config.status") && (
@@ -121,9 +135,26 @@ export default async function ConfigGeral({
                 </option>
               ))}
             </Select>
+            {seletorModulo(null, false)}
             <Botao variante="secundario">Adicionar</Botao>
           </form>
         )}
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <h2 className="font-medium">Prazos dos chamados</h2>
+        <p className="text-xs text-slate-500">Horas para atender um chamado, conforme a prioridade. Vale para os chamados abertos daqui em diante.</p>
+        <form action={salvarSla.bind(null, e)} className="flex flex-wrap items-end gap-3">
+          {Object.entries(PRIORIDADES).map(([k, v]) => (
+            <label key={k} className="space-y-1 text-sm">
+              <span className="block font-medium" style={{ color: v.cor }}>
+                {v.rotulo}
+              </span>
+              <Input type="number" min={1} name={k} defaultValue={prazos[k] ?? ""} className="w-24" disabled={!pode("config.empresa")} />
+            </label>
+          ))}
+          {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
+        </form>
       </Cartao>
 
       <Cartao className="space-y-3">

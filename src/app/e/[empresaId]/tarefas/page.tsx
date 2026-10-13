@@ -84,7 +84,10 @@ export default async function PaginaTarefas({
       <Kanban
         empresaId={empresaId}
         fuso={empresa.fuso_horario}
-        status={(status ?? []) as Status[]}
+        status={((status ?? []) as Status[]).filter(
+          // status de um módulo só (ex.: "Aguardando peça") aparecem aqui quando têm tarefas
+          (s) => !s.modulo || (tarefas ?? []).some((t) => t.status_id === s.id),
+        )}
         tarefas={(tarefas ?? []) as Tarefa[]}
         nomes={nomes}
         podeMover={pode("tarefas.mudar_status")}

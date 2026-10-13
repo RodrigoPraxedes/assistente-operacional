@@ -25,7 +25,8 @@ export default async function LayoutEmpresa({
             <NavLink href={`${base}/tarefas`}>Tarefas</NavLink>
             <NavLink href={`${base}/checklists`}>Check-lists</NavLink>
             <NavLink href={`${base}/acoes`}>Ações</NavLink>
-            {veConfig && <NavLink href={`${base}/config`}>Configurações</NavLink>}
+            <NavLink href={`${base}/chamados`}>Chamados</NavLink>
+            {veConfig && <NavLink href={`${base}/config/geral`} ativoEm={`${base}/config`}>Configurações</NavLink>}
           </nav>
           <div className="hidden text-right text-xs text-slate-500 sm:block">
             <p className="font-medium text-slate-700">{membro.nome}</p>

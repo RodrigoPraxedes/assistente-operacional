@@ -5,6 +5,7 @@ import { enviarChecklist } from "@/lib/checklist-envio";
 import { RESPOSTAS_SIM_NAO, type TipoResposta } from "@/lib/types";
 import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { trocarPorReduzidas } from "@/lib/foto";
 
 export interface ItemPreencher {
   id: string;
@@ -25,23 +26,6 @@ interface Props {
   executor?: string;
   itens: ItemPreencher[];
   voltar: { href: string; rotulo: string };
-}
-
-// Reduz a foto no navegador antes de enviar (celular tira fotos de vários MB)
-async function reduzirFoto(arquivo: File, lado = 1280, qualidade = 0.75): Promise<File> {
-  if (!arquivo.type.startsWith("image/")) return arquivo;
-  try {
-    const bitmap = await createImageBitmap(arquivo);
-    const escala = Math.min(1, lado / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * escala);
-    canvas.height = Math.round(bitmap.height * escala);
-    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", qualidade));
-    return blob ? new File([blob], "foto.jpg", { type: "image/jpeg" }) : arquivo;
-  } catch {
-    return arquivo;
-  }
 }
 
 export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, colaboradores, executor, itens, voltar }: Props) {
@@ -163,15 +147,7 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, co
                     capture="environment"
                     required={fotoObrigatoria}
                     className="mt-1 block w-full text-sm"
-                    onChange={async (e) => {
-                      const input = e.currentTarget;
-                      const arquivo = input.files?.[0];
-                      if (!arquivo) return;
-                      const reduzida = await reduzirFoto(arquivo);
-                      const dt = new DataTransfer();
-                      dt.items.add(reduzida);
-                      input.files = dt.files;
-                    }}
+                    onChange={(e) => trocarPorReduzidas(e.currentTarget)}
                   />
                 </label>
               )}

@@ -21,6 +21,7 @@ export async function moverTarefa(
   });
   if (error) return { erro: error.message };
   revalidatePath(`/e/${empresaId}/tarefas`);
+  revalidatePath(`/e/${empresaId}/chamados`);
   return { ok: true };
 }
 
@@ -29,6 +30,7 @@ export async function retornarTarefa(empresaId: string, tarefaId: string) {
   const { error } = await supabase.rpc("retornar_tarefa", { p_tarefa: tarefaId });
   if (error) return { erro: error.message };
   revalidatePath(`/e/${empresaId}/tarefas`);
+  revalidatePath(`/e/${empresaId}/chamados`);
   return { ok: true };
 }
 
@@ -65,4 +67,28 @@ export async function excluirTarefa(empresaId: string, tarefaId: string) {
   const { error } = await supabase.from("tarefas").delete().eq("id", tarefaId);
   if (error) return { erro: error.message };
   redirect(`/e/${empresaId}/tarefas`);
+}
+
+export async function comentarTarefa(empresaId: string, tarefaId: string, voltar: string, form: FormData) {
+  const { supabase, membro } = await getContexto(empresaId);
+  const texto = String(form.get("texto") ?? "").trim();
+  if (!texto) return;
+  const { error } = await supabase
+    .from("tarefa_comentarios")
+    .insert({ tarefa_id: tarefaId, empresa_id: empresaId, membro_id: membro.id, texto });
+  if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
+  revalidatePath(voltar);
+}
+
+// Mudar status por formulário (páginas de detalhe)
+export async function moverPorFormulario(empresaId: string, tarefaId: string, voltar: string, form: FormData) {
+  const r = await moverTarefa(
+    empresaId,
+    tarefaId,
+    String(form.get("status_id")),
+    String(form.get("prazo") ?? "") || undefined,
+    String(form.get("comentario") ?? "") || undefined,
+  );
+  if (r.erro) redirect(`${voltar}?erro=${encodeURIComponent(r.erro)}`);
+  revalidatePath(voltar);
 }

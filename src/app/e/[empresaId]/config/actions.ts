@@ -25,6 +25,16 @@ export async function salvarEmpresa(empresaId: string, form: FormData) {
   revalidatePath(`/e/${empresaId}`, "layout");
 }
 
+export async function salvarSla(empresaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const sla = Object.fromEntries(
+    ["urgente", "alta", "media", "baixa"].map((p) => [p, Math.max(1, Number(form.get(p)) || 1)]),
+  );
+  const { error } = await supabase.from("empresas").update({ sla_chamados: sla }).eq("id", empresaId);
+  if (error) falhar(`/e/${empresaId}/config`, error.message);
+  revalidatePath(`/e/${empresaId}/config`);
+}
+
 export async function salvarUnidade(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const id = opcional(form, "id");
@@ -78,7 +88,12 @@ export async function excluirCategoria(empresaId: string, categoriaId: string) {
 export async function salvarStatus(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const id = opcional(form, "id");
-  const dados = { nome: txt(form, "nome"), tipo: txt(form, "tipo"), cor: txt(form, "cor") || "#64748b" };
+  const dados = {
+    nome: txt(form, "nome"),
+    tipo: txt(form, "tipo"),
+    cor: txt(form, "cor") || "#64748b",
+    modulo: opcional(form, "modulo"),
+  };
   let error;
   if (id) {
     ({ error } = await supabase.from("status").update(dados).eq("id", id));

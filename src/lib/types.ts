@@ -123,6 +123,8 @@ export interface ChecklistItem {
   obrigatorio: boolean;
   permite_foto: boolean;
   foto_obrigatoria_se_nao: boolean;
+  abre_chamado_se_nao: boolean;
+  prioridade_chamado: Prioridade;
   ativo: boolean;
 }
 
@@ -172,4 +174,50 @@ export interface Acao {
   recorrencia: string | null;
   ativo: boolean;
   created_at: string;
+}
+
+export type Prioridade = "baixa" | "media" | "alta" | "urgente";
+
+export const PRIORIDADES: Record<Prioridade, { rotulo: string; cor: string }> = {
+  urgente: { rotulo: "Urgente", cor: "#dc2626" },
+  alta: { rotulo: "Alta", cor: "#ea580c" },
+  media: { rotulo: "Média", cor: "#2563eb" },
+  baixa: { rotulo: "Baixa", cor: "#64748b" },
+};
+
+export interface Chamado {
+  tarefa_id: string;
+  empresa_id: string;
+  numero: number;
+  prioridade: Prioridade;
+  equipamento_id: string | null;
+  local: string | null;
+  fornecedor_id: string | null;
+  custo: number | null;
+  aberto_por_nome: string | null;
+  execucao_id: string | null;
+  created_at: string;
+}
+
+export interface Equipamento {
+  id: string;
+  empresa_id: string;
+  unidade_id: string | null;
+  setor_id: string | null;
+  nome: string;
+  codigo: string | null;
+  marca: string | null;
+  modelo: string | null;
+  observacao: string | null;
+  ativo: boolean;
+}
+
+export interface Fornecedor {
+  id: string;
+  empresa_id: string;
+  nome: string;
+  especialidade: string | null;
+  telefone: string | null;
+  email: string | null;
+  ativo: boolean;
 }
