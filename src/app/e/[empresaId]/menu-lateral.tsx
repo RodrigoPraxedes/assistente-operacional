@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   ArrowLeftRight,
   CalendarClock,
+  CalendarDays,
   ClipboardCheck,
   ListChecks,
   LogOut,
@@ -50,6 +51,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, tema: temaInicial
     { href: `${base}/acoes`, rotulo: "Ações", icone: Repeat },
     { href: `${base}/chamados`, rotulo: "Chamados", icone: Wrench },
     { href: `${base}/alertas`, rotulo: "Alertas", icone: CalendarClock },
+    { href: `${base}/escalas`, rotulo: "Escalas", icone: CalendarDays },
     ...(veConfig ? [{ href: `${base}/config/geral`, rotulo: "Configurações", icone: Settings, ativoEm: `${base}/config` }] : []),
   ];
   const atual = itens.find((i) => pathname.startsWith(i.ativoEm ?? i.href));
