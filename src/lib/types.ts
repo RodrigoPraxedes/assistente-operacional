@@ -155,3 +155,21 @@ export const RESPOSTAS_SIM_NAO = [
   { valor: "em_processo", rotulo: "Em processo" },
   { valor: "na", rotulo: "N/A" },
 ] as const;
+
+export interface Acao {
+  id: string;
+  empresa_id: string;
+  unidade_id: string | null;
+  setor_id: string | null;
+  categoria_id: string | null;
+  responsavel_id: string | null;
+  nome: string;
+  descricao: string | null;
+  data_inicial: string;
+  data_final: string | null;
+  horario: string;
+  prazo_horas: number;
+  recorrencia: string | null;
+  ativo: boolean;
+  created_at: string;
+}

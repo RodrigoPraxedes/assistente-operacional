@@ -1,14 +1,20 @@
-// Opções prontas para a tela (o usuário não precisa saber RRULE)
+// Opções prontas para a tela (o usuário não precisa saber RRULE).
+// Repetições semanais/mensais/anuais usam o dia da data de início.
 export const RECORRENCIAS_PRONTAS = [
   { regra: "FREQ=DAILY", rotulo: "Todos os dias" },
   { regra: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", rotulo: "Dias úteis (seg a sex)" },
   { regra: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA", rotulo: "Segunda a sábado" },
   { regra: "FREQ=WEEKLY;BYDAY=SA,SU", rotulo: "Fins de semana" },
-  { regra: "FREQ=WEEKLY", rotulo: "Uma vez por semana (mesmo dia da criação)" },
-  { regra: "FREQ=MONTHLY", rotulo: "Uma vez por mês (mesmo dia da criação)" },
+  { regra: "FREQ=WEEKLY", rotulo: "Toda semana (mesmo dia da semana do início)" },
+  { regra: "FREQ=WEEKLY;INTERVAL=2", rotulo: "A cada 2 semanas" },
+  { regra: "FREQ=MONTHLY", rotulo: "Todo mês (mesmo dia do início)" },
+  { regra: "FREQ=MONTHLY;INTERVAL=3", rotulo: "A cada 3 meses" },
+  { regra: "FREQ=MONTHLY;INTERVAL=6", rotulo: "A cada 6 meses" },
+  { regra: "FREQ=YEARLY", rotulo: "Todo ano" },
 ] as const;
 
-export function descreverRecorrencia(regra: string) {
+export function descreverRecorrencia(regra: string | null) {
+  if (!regra) return "Uma vez";
   const pronta = RECORRENCIAS_PRONTAS.find((r) => r.regra === regra);
   return pronta?.rotulo ?? regra;
 }

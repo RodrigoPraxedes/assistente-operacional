@@ -9,36 +9,60 @@ export { RECORRENCIAS_PRONTAS, descreverRecorrencia } from "@/lib/recorrencias-p
 // UTC ("horário flutuante") e só no fim convertemos para o instante real no fuso.
 
 export interface RegraRecorrencia {
-  regra: string; // ex.: "FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR"
+  regra: string | null; // ex.: "FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR". null = acontece uma vez só
   horario: string; // "HH:MM" ou "HH:MM:SS"
-  inicio: Date; // âncora da regra (ex.: data de criação), importa para INTERVAL
+  // âncora da regra: instante (ex.: data de criação) ou data local "AAAA-MM-DD".
+  // Importa para INTERVAL e é a data da ocorrência única.
+  inicio: Date | string;
+  fim?: string | null; // última data local "AAAA-MM-DD" (inclusive)
   fuso: string;
 }
 
-export function ocorrencias({ regra, horario, inicio, fuso }: RegraRecorrencia, dias: number, base = new Date()) {
+type DataLocal = { y: number; m: number; d: number };
+
+function dataLocal(valor: Date | string, fuso: string): DataLocal {
+  if (typeof valor === "string") {
+    const [y, m, d] = valor.slice(0, 10).split("-").map(Number);
+    return { y, m, d };
+  }
+  return hojeNoFuso(fuso, valor);
+}
+
+// Ocorrências de hoje até "dias" à frente, como instantes reais (UTC)
+export function ocorrencias({ regra, horario, inicio, fim, fuso }: RegraRecorrencia, dias: number, base = new Date()) {
   const [h, mi] = horario.split(":").map(Number);
-  const ancora = hojeNoFuso(fuso, inicio);
+  const ancora = dataLocal(inicio, fuso);
   const hoje = hojeNoFuso(fuso, base);
 
-  const opcoes = RRule.parseString(regra.replace(/^RRULE:/i, ""));
-  const rule = new RRule({
-    ...opcoes,
-    dtstart: new Date(Date.UTC(ancora.y, ancora.m - 1, ancora.d, h, mi)),
-  });
-
+  const dtstart = new Date(Date.UTC(ancora.y, ancora.m - 1, ancora.d, h, mi));
   const de = new Date(Date.UTC(hoje.y, hoje.m - 1, hoje.d, 0, 0));
-  const ate = new Date(Date.UTC(hoje.y, hoje.m - 1, hoje.d + dias, 23, 59));
+  let ate = new Date(Date.UTC(hoje.y, hoje.m - 1, hoje.d + dias, 23, 59));
+  if (fim) {
+    const f = dataLocal(fim, fuso);
+    const limite = new Date(Date.UTC(f.y, f.m - 1, f.d, 23, 59));
+    if (limite < ate) ate = limite;
+  }
 
-  return rule.between(de, ate, true).map((flutuante) =>
-    horaLocalParaUtc(
-      flutuante.getUTCFullYear(),
-      flutuante.getUTCMonth() + 1,
-      flutuante.getUTCDate(),
-      flutuante.getUTCHours(),
-      flutuante.getUTCMinutes(),
-      fuso,
-    ),
+  let flutuantes: Date[];
+  if (!regra) {
+    flutuantes = dtstart >= de && dtstart <= ate ? [dtstart] : [];
+  } else {
+    const rule = new RRule({ ...RRule.parseString(regra.replace(/^RRULE:/i, "")), dtstart });
+    flutuantes = ate < de ? [] : rule.between(de, ate, true);
+  }
+
+  return flutuantes.map((f) =>
+    horaLocalParaUtc(f.getUTCFullYear(), f.getUTCMonth() + 1, f.getUTCDate(), f.getUTCHours(), f.getUTCMinutes(), fuso),
   );
+}
+
+// Próxima ocorrência a partir de hoje (para mostrar na tela), procurando até ~2 anos
+export function proximaOcorrencia(r: RegraRecorrencia, base = new Date()) {
+  try {
+    return ocorrencias(r, 730, base)[0] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function regraValida(regra: string) {

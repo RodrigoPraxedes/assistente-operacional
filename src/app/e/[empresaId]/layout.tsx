@@ -24,6 +24,7 @@ export default async function LayoutEmpresa({
           <nav className="flex flex-1 gap-1 overflow-x-auto text-sm">
             <NavLink href={`${base}/tarefas`}>Tarefas</NavLink>
             <NavLink href={`${base}/checklists`}>Check-lists</NavLink>
+            <NavLink href={`${base}/acoes`}>Ações</NavLink>
             {veConfig && <NavLink href={`${base}/config`}>Configurações</NavLink>}
           </nav>
           <div className="hidden text-right text-xs text-slate-500 sm:block">

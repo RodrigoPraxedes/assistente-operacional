@@ -27,10 +27,14 @@ escalas e alertas de datas, com avisos por WhatsApp e Google Agenda.
 - **Recorrência (RRULE, o mesmo formato do Google Agenda):** um job diário cria no Kanban as
   tarefas dos check-lists de hoje e dos próximos 2 dias. Ao preencher, a tarefa do dia é
   concluída sozinha.
+- **Ações recorrentes:** nome, categoria, responsável, unidade, data inicial, data final e
+  recorrência (uma vez, diária, dia útil, semanal, mensal, a cada 3 ou 6 meses, anual ou uma
+  regra RRULE própria). Cada ocorrência vira uma tarefa no Kanban no dia marcado. Ex.: limpeza
+  da caixa d'água a cada 6 meses, pagar o aluguel todo dia 10.
 - **Convites:** cadastre o colaborador com e-mail; quando ele criar a conta com o mesmo e-mail,
   já entra vinculado à empresa.
 
-Próximos módulos (já previstos no banco): ações recorrentes, chamados, alertas e escalas.
+Próximos módulos (já previstos no banco): chamados, alertas e escalas.
 
 ## Como colocar no ar
 
@@ -95,7 +99,7 @@ supabase/migrations/   schema, RLS e funções (fonte da verdade das regras de a
 src/lib/               clientes Supabase, contexto de permissões, recorrência, WhatsApp
 src/app/(auth)/        entrar e cadastrar
 src/app/app/           escolher/criar empresa
-src/app/e/[empresaId]/ área logada: tarefas (Kanban), check-lists, configurações
+src/app/e/[empresaId]/ área logada: tarefas (Kanban), check-lists, ações, configurações
 src/app/qr/[token]/    central pública de check-lists da unidade (QR Code)
 src/app/api/cron/      job da recorrência (Vercel Cron)
 ```
