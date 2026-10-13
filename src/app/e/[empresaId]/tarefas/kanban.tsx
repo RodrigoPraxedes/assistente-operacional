@@ -14,9 +14,15 @@ interface Props {
   tarefas: Tarefa[];
   nomes: { membros: Record<string, string>; unidades: Record<string, string> };
   podeMover: boolean;
+  // etiquetas extras por tarefa (ex.: prioridade e número do chamado)
+  etiquetas?: Record<string, { texto: string; cor?: string }[]>;
 }
 
-export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, podeMover }: Props) {
+// chamados abrem na própria página; o resto no detalhe da tarefa
+const linkDe = (empresaId: string, t: Tarefa) =>
+  t.origem === "chamado" ? `/e/${empresaId}/chamados/${t.id}` : `/e/${empresaId}/tarefas/${t.id}`;
+
+export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, podeMover, etiquetas }: Props) {
   const [tarefas, setTarefas] = useState(iniciais);
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [adiando, setAdiando] = useState<{ tarefa: Tarefa; statusId: string } | null>(null);
@@ -117,11 +123,16 @@ export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, pode
                       onDragStart={() => setArrastando(t.id)}
                       className={`rounded-lg border bg-white p-3 text-sm shadow-sm ${atrasada ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""}`}
                     >
-                      <Link href={`/e/${empresaId}/tarefas/${t.id}`} className="font-medium text-slate-900 hover:text-blue-700">
+                      <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
                         {t.titulo}
                       </Link>
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {t.origem !== "avulsa" && <Etiqueta cor="#7c3aed">{ORIGENS[t.origem]}</Etiqueta>}
+                        {etiquetas?.[t.id]?.map((e) => (
+                          <Etiqueta key={e.texto} cor={e.cor}>
+                            {e.texto}
+                          </Etiqueta>
+                        ))}
+                        {t.origem !== "avulsa" && !etiquetas?.[t.id] && <Etiqueta cor="#7c3aed">{ORIGENS[t.origem]}</Etiqueta>}
                         {t.unidade_id && <Etiqueta>{nomes.unidades[t.unidade_id]}</Etiqueta>}
                         {atrasada && <Etiqueta cor="#dc2626">Atrasada</Etiqueta>}
                       </div>

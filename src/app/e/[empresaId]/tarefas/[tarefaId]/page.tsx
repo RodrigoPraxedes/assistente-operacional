@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { formatarDataHora } from "@/lib/formato";
 import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
-import { Aviso, Cartao, Etiqueta, Titulo } from "@/components/ui";
+import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
+import { comentarTarefa } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
 
 const ACOES: Record<string, string> = {
@@ -27,8 +28,9 @@ export default async function DetalheTarefa({
 
   const { data: tarefa } = await supabase.from("tarefas").select("*").eq("id", tarefaId).maybeSingle<Tarefa>();
   if (!tarefa) notFound();
+  if (tarefa.origem === "chamado") redirect(`/e/${empresaId}/chamados/${tarefa.id}`);
 
-  const [{ data: status }, { data: membros }, { data: historico }, { data: unidade }, { data: execucao }] =
+  const [{ data: status }, { data: membros }, { data: historico }, { data: unidade }, { data: execucao }, { data: comentarios }] =
     await Promise.all([
       supabase.from("status").select("id, nome, cor").eq("empresa_id", empresaId),
       supabase.from("membros").select("id, nome, telefone").eq("empresa_id", empresaId),
@@ -37,6 +39,7 @@ export default async function DetalheTarefa({
         ? supabase.from("unidades").select("nome").eq("id", tarefa.unidade_id).maybeSingle()
         : Promise.resolve({ data: null }),
       supabase.from("checklist_execucoes").select("id").eq("tarefa_id", tarefaId).maybeSingle(),
+      supabase.from("tarefa_comentarios").select("*").eq("tarefa_id", tarefaId).order("created_at"),
     ]);
 
   const st = new Map((status ?? []).map((s) => [s.id, s]));
@@ -101,6 +104,24 @@ export default async function DetalheTarefa({
           )}
           {pode("tarefas.excluir") && <BotaoExcluir empresaId={empresaId} tarefaId={tarefa.id} />}
         </div>
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <h2 className="font-medium">Comentários</h2>
+        <ul className="space-y-2 text-sm">
+          {(comentarios ?? []).map((c) => (
+            <li key={c.id} className="rounded-lg bg-slate-50 p-2">
+              <p className="whitespace-pre-wrap">{c.texto}</p>
+              <p className="text-xs text-slate-500">
+                {c.membro_id ? mb.get(c.membro_id)?.nome : ""} · {formatarDataHora(c.created_at, empresa.fuso_horario)}
+              </p>
+            </li>
+          ))}
+        </ul>
+        <form action={comentarTarefa.bind(null, empresaId, tarefa.id, `/e/${empresaId}/tarefas/${tarefa.id}`)} className="flex gap-2">
+          <Textarea name="texto" rows={1} placeholder="Escreva um comentário" required />
+          <Botao variante="secundario">Comentar</Botao>
+        </form>
       </Cartao>
 
       <Cartao>

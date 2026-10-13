@@ -3,12 +3,15 @@
 import { useActionState, useState } from "react";
 import { salvarModelo } from "../actions";
 import { RECORRENCIAS_PRONTAS } from "@/lib/recorrencias-prontas";
-import type { ChecklistItem, ChecklistModelo, TipoResposta } from "@/lib/types";
+import { PRIORIDADES, type ChecklistItem, type ChecklistModelo, type Prioridade, type TipoResposta } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 
 type Opcao = { id: string; nome: string };
-type ItemEditavel = Pick<ChecklistItem, "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria_se_nao"> & {
+type ItemEditavel = Pick<
+  ChecklistItem,
+  "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria_se_nao" | "abre_chamado_se_nao" | "prioridade_chamado"
+> & {
   id?: string;
   chave: string;
 };
@@ -21,6 +24,8 @@ const novoItem = (): ItemEditavel => ({
   obrigatorio: true,
   permite_foto: true,
   foto_obrigatoria_se_nao: false,
+  abre_chamado_se_nao: false,
+  prioridade_chamado: "media",
 });
 
 export function FormModelo({
@@ -191,6 +196,29 @@ export function FormModelo({
                     onChange={(e) => alterar(item.chave, { foto_obrigatoria_se_nao: e.target.checked })}
                   />
                   Foto obrigatória se &quot;Não&quot;
+                </label>
+              )}
+              {item.tipo_resposta === "sim_nao" && (
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={item.abre_chamado_se_nao}
+                    onChange={(e) => alterar(item.chave, { abre_chamado_se_nao: e.target.checked })}
+                  />
+                  Abrir chamado se &quot;Não&quot;
+                  {item.abre_chamado_se_nao && (
+                    <select
+                      value={item.prioridade_chamado}
+                      onChange={(e) => alterar(item.chave, { prioridade_chamado: e.target.value as Prioridade })}
+                      className="ml-1 rounded border border-slate-200 bg-white px-1 py-0.5"
+                    >
+                      {Object.entries(PRIORIDADES).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {v.rotulo}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </label>
               )}
               <span className="ml-auto flex gap-2">

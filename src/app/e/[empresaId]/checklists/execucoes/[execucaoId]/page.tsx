@@ -64,6 +64,11 @@ export default async function Execucao({ params }: { params: Promise<{ empresaId
             </div>
             {r.valor_texto && <p className="mt-1 whitespace-pre-wrap text-slate-700">{r.valor_texto}</p>}
             {r.observacao && <p className="mt-1 text-slate-600">Obs.: {r.observacao}</p>}
+            {r.chamado_id && (
+              <Link href={`/e/${empresaId}/chamados/${r.chamado_id}`} className="mt-1 inline-block text-xs font-medium text-red-700">
+                Chamado aberto para este item →
+              </Link>
+            )}
             {r.foto_path && url.get(r.foto_path) && (
               <a href={url.get(r.foto_path)} target="_blank" rel="noopener">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
