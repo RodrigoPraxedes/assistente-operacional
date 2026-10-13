@@ -99,7 +99,7 @@ export default async function PaginaChamados({
             ))}
           </Select>
         )}
-        <button className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">Filtrar</button>
+        <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
         {(filtros.unidade || filtros.equipamento || filtros.prioridade) && (
           <Link href={`/e/${empresaId}/chamados`} className="px-2 py-2 text-sm text-slate-500">
             Limpar

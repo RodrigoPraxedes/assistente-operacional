@@ -89,7 +89,7 @@ export default async function PaginaChecklists({
           {(execucoes ?? []).length === 0 ? (
             <Vazio>Nenhum check-list preenchido ainda.</Vazio>
           ) : (
-            <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+            <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-superficie">
               {execucoes!.map((e) => (
                 <li key={e.id}>
                   <Link href={`${base}/execucoes/${e.id}`} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm hover:bg-slate-50">

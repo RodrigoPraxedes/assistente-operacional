@@ -67,7 +67,7 @@ export default async function PaginaAlertas({
       {linhas.length === 0 ? (
         <Vazio>Nenhum alerta cadastrado. Ex.: vencimento do alvará, AVCB, contrato de aluguel, dedetização.</Vazio>
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-superficie">
           {linhas.map(({ a, proxima, faltam, avisos: vs }) => (
             <li
               key={a.id}

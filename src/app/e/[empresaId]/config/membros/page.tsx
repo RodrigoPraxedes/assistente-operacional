@@ -22,7 +22,7 @@ export default async function PaginaMembros({ params }: { params: Promise<{ empr
       <Titulo acoes={<LinkBotao href={`/e/${empresaId}/config/membros/novo`}>Novo colaborador</LinkBotao>}>
         Colaboradores
       </Titulo>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-superficie">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>

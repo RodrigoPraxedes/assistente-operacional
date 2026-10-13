@@ -73,7 +73,7 @@ export default async function PaginaTarefas({
         <label className="flex items-center gap-2 px-2 text-sm">
           <input type="checkbox" name="minhas" value="1" defaultChecked={!!filtros.minhas} /> Só as minhas
         </label>
-        <button className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">Filtrar</button>
+        <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
         {(filtros.origem || filtros.unidade || filtros.minhas) && (
           <Link href={`/e/${empresaId}/tarefas`} className="px-2 py-2 text-sm text-slate-500">
             Limpar

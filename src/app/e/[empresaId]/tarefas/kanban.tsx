@@ -121,7 +121,7 @@ export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, pode
                       key={t.id}
                       draggable={podeMover}
                       onDragStart={() => setArrastando(t.id)}
-                      className={`rounded-lg border bg-white p-3 text-sm shadow-sm ${atrasada ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""}`}
+                      className={`rounded-lg border bg-superficie p-3 text-sm shadow-sm ${atrasada ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""}`}
                     >
                       <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
                         {t.titulo}
@@ -146,7 +146,7 @@ export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, pode
                             aria-label="Mover para"
                             value={t.status_id}
                             onChange={(e) => mover(t, e.target.value)}
-                            className="min-w-0 flex-1 rounded border border-slate-200 bg-white px-1 py-1 text-xs"
+                            className="min-w-0 flex-1 rounded border border-slate-200 bg-superficie px-1 py-1 text-xs"
                           >
                             {status.map((o) => (
                               <option key={o.id} value={o.id}>
@@ -212,7 +212,7 @@ function DialogoAdiar({
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
       <form
-        className="w-full max-w-sm space-y-3 rounded-xl bg-white p-5 shadow-lg"
+        className="w-full max-w-sm space-y-3 rounded-xl bg-superficie p-5 shadow-lg"
         onSubmit={(e) => {
           e.preventDefault();
           if (prazo && prazo !== atual) onConfirmar(prazo, comentario);

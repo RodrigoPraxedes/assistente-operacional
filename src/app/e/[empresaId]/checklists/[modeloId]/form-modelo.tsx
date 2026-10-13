@@ -210,7 +210,7 @@ export function FormModelo({
                     <select
                       value={item.prioridade_chamado}
                       onChange={(e) => alterar(item.chave, { prioridade_chamado: e.target.value as Prioridade })}
-                      className="ml-1 rounded border border-slate-200 bg-white px-1 py-0.5"
+                      className="ml-1 rounded border border-slate-200 bg-superficie px-1 py-0.5"
                     >
                       {Object.entries(PRIORIDADES).map(([k, v]) => (
                         <option key={k} value={k}>
