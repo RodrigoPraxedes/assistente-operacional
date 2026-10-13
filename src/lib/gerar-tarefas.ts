@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ocorrencias, type RegraRecorrencia } from "@/lib/recorrencia";
+import { avisosDeAlerta, ocorrencias, type RegraRecorrencia } from "@/lib/recorrencia";
+import { formatarData } from "@/lib/formato";
 import type { Origem } from "@/lib/types";
 
 const DIAS_A_FRENTE = 2;
@@ -13,21 +14,32 @@ interface Fonte {
   origem: Origem;
   id: string;
   empresa_id: string;
-  unidade_id: string | null; // null = uma tarefa por unidade ativa
+  unidade_id: string | null;
+  // unidade_id null: true = uma tarefa por unidade ativa; false = uma só, sem unidade
+  porUnidade?: boolean;
   setor_id: string | null;
   categoria_id: string | null;
   responsavel_id: string | null;
   titulo: string;
-  descricao?: string | null;
-  regra: Omit<RegraRecorrencia, "fuso">;
-  prazoMinutos: number;
+  descricao?: string | null | ((m: { quando: Date; prazo: Date }) => string);
+  // quando cada tarefa aparece e qual o prazo dela
+  momentos: () => { quando: Date; prazo: Date }[];
 }
+
+const MINUTO = 60_000;
+
+// ocorrências da regra com prazo fixo depois de cada uma
+const porRegra = (regra: RegraRecorrencia, prazoMinutos: number) => () =>
+  ocorrencias(regra, DIAS_A_FRENTE).map((quando) => ({
+    quando,
+    prazo: new Date(quando.getTime() + prazoMinutos * MINUTO),
+  }));
 
 interface ComFuso {
   empresas: { fuso_horario: string } | null;
 }
 
-async function fontesChecklist(admin: Admin, modeloId?: string): Promise<(Fonte & { fuso: string })[]> {
+async function fontesChecklist(admin: Admin, modeloId?: string): Promise<Fonte[]> {
   let q = admin
     .from("checklist_modelos")
     .select(
@@ -60,13 +72,19 @@ async function fontesChecklist(admin: Admin, modeloId?: string): Promise<(Fonte 
     categoria_id: m.categoria_id,
     responsavel_id: m.responsavel_id,
     titulo: `Check-list: ${m.nome}`,
-    regra: { regra: m.recorrencia, horario: m.horario_preferencial, inicio: new Date(m.created_at) },
-    prazoMinutos: m.tolerancia_minutos,
-    fuso: m.empresas?.fuso_horario ?? "America/Sao_Paulo",
+    momentos: porRegra(
+      {
+        regra: m.recorrencia,
+        horario: m.horario_preferencial,
+        inicio: new Date(m.created_at),
+        fuso: m.empresas?.fuso_horario ?? "America/Sao_Paulo",
+      },
+      m.tolerancia_minutos,
+    ),
   }));
 }
 
-async function fontesAcoes(admin: Admin, acaoId?: string): Promise<(Fonte & { fuso: string })[]> {
+async function fontesAcoes(admin: Admin, acaoId?: string): Promise<Fonte[]> {
   let q = admin
     .from("acoes")
     .select(
@@ -102,20 +120,91 @@ async function fontesAcoes(admin: Admin, acaoId?: string): Promise<(Fonte & { fu
     responsavel_id: a.responsavel_id,
     titulo: a.nome,
     descricao: a.descricao,
-    regra: { regra: a.recorrencia, horario: a.horario, inicio: a.data_inicial, fim: a.data_final },
-    prazoMinutos: a.prazo_horas * 60,
-    fuso: a.empresas?.fuso_horario ?? "America/Sao_Paulo",
+    momentos: porRegra(
+      {
+        regra: a.recorrencia,
+        horario: a.horario,
+        inicio: a.data_inicial,
+        fim: a.data_final,
+        fuso: a.empresas?.fuso_horario ?? "America/Sao_Paulo",
+      },
+      a.prazo_horas * 60,
+    ),
   }));
+}
+
+// Cada aviso de alerta é uma fonte: a tarefa aparece X dias antes da data e
+// o prazo é a própria data do evento.
+async function fontesAlertas(admin: Admin, alertaId?: string): Promise<Fonte[]> {
+  let q = admin
+    .from("alerta_avisos")
+    .select(
+      "id, dias_antes, titulo, responsavel_id, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, empresas(fuso_horario))",
+    )
+    .eq("alertas.ativo", true);
+  if (alertaId) q = q.eq("alerta_id", alertaId);
+  const { data, error } = await q.returns<
+    {
+      id: string;
+      dias_antes: number;
+      titulo: string;
+      responsavel_id: string | null;
+      alertas: {
+        id: string;
+        empresa_id: string;
+        unidade_id: string | null;
+        setor_id: string | null;
+        categoria_id: string | null;
+        responsavel_id: string | null;
+        nome: string;
+        descricao: string | null;
+        data_evento: string;
+        recorrencia: string | null;
+        horario: string;
+      } & ComFuso;
+    }[]
+  >();
+  if (error) throw error;
+  return (data ?? []).map((v) => {
+    const a = v.alertas;
+    const fuso = a.empresas?.fuso_horario ?? "America/Sao_Paulo";
+    const evento = {
+      regra: a.recorrencia,
+      horario: a.horario,
+      inicio: a.data_evento,
+      fuso,
+    };
+    return {
+      origem: "alerta",
+      id: v.id,
+      empresa_id: a.empresa_id,
+      // alerta da empresa toda = uma tarefa só, sem unidade
+      unidade_id: a.unidade_id,
+      porUnidade: false,
+      setor_id: a.setor_id,
+      categoria_id: a.categoria_id,
+      responsavel_id: v.responsavel_id ?? a.responsavel_id,
+      titulo: v.titulo,
+      descricao: (quando) =>
+        [`${a.nome}: ${formatarData(quando.prazo.toISOString(), fuso)}`, a.descricao].filter(Boolean).join("\n\n"),
+      momentos: () =>
+        avisosDeAlerta(evento, v.dias_antes, DIAS_A_FRENTE).map((m) => ({
+          quando: m.quando,
+          prazo: m.evento,
+        })),
+    };
+  });
 }
 
 // Gera no Kanban as tarefas de hoje e dos próximos dias de todos os módulos
 // recorrentes. Idempotente: pode rodar várias vezes sem duplicar (índice único).
-export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acaoId?: string }) {
+export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acaoId?: string; alertaId?: string }) {
   const admin = createAdminClient();
-  const soUm = filtro?.modeloId || filtro?.acaoId;
+  const soUm = filtro?.modeloId || filtro?.acaoId || filtro?.alertaId;
   const fontes = [
     ...(!soUm || filtro?.modeloId ? await fontesChecklist(admin, filtro?.modeloId) : []),
     ...(!soUm || filtro?.acaoId ? await fontesAcoes(admin, filtro?.acaoId) : []),
+    ...(!soUm || filtro?.alertaId ? await fontesAlertas(admin, filtro?.alertaId) : []),
   ];
 
   const empresas = [...new Set(fontes.map((f) => f.empresa_id))];
@@ -139,20 +228,21 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
   for (const f of fontes) {
     const statusId = statusInicial.get(f.empresa_id);
     if (!statusId) continue;
-    const alvo = f.unidade_id
-      ? [f.unidade_id]
-      : (unidades ?? []).filter((u) => u.empresa_id === f.empresa_id).map((u) => u.id);
+    const alvo: (string | null)[] =
+      f.unidade_id || f.porUnidade === false
+        ? [f.unidade_id]
+        : (unidades ?? []).filter((u) => u.empresa_id === f.empresa_id).map((u) => u.id);
 
-    let datas: Date[];
+    let momentos: { quando: Date; prazo: Date }[];
     try {
-      datas = ocorrencias({ ...f.regra, fuso: f.fuso }, DIAS_A_FRENTE);
+      momentos = f.momentos();
     } catch {
-      console.error(`Recorrência inválida (${f.origem} ${f.id}): ${f.regra.regra}`);
+      console.error(`Recorrência inválida (${f.origem} ${f.id})`);
       continue;
     }
 
     for (const unidadeId of alvo) {
-      for (const quando of datas) {
+      for (const m of momentos) {
         novas.push({
           empresa_id: f.empresa_id,
           unidade_id: unidadeId,
@@ -160,11 +250,11 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           categoria_id: f.categoria_id,
           responsavel_id: f.responsavel_id,
           titulo: f.titulo,
-          descricao: f.descricao ?? null,
+          descricao: typeof f.descricao === "function" ? f.descricao(m) : (f.descricao ?? null),
           origem: f.origem,
           origem_id: f.id,
-          ocorrencia_em: quando.toISOString(),
-          prazo: new Date(quando.getTime() + f.prazoMinutos * 60_000).toISOString(),
+          ocorrencia_em: m.quando.toISOString(),
+          prazo: m.prazo.toISOString(),
           status_id: statusId,
         });
       }

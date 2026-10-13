@@ -47,7 +47,10 @@ export function ocorrencias({ regra, horario, inicio, fim, fuso }: RegraRecorren
   if (!regra) {
     flutuantes = dtstart >= de && dtstart <= ate ? [dtstart] : [];
   } else {
-    const rule = new RRule({ ...RRule.parseString(regra.replace(/^RRULE:/i, "")), dtstart });
+    const rule = new RRule({
+      ...RRule.parseString(regra.replace(/^RRULE:/i, "")),
+      dtstart,
+    });
     flutuantes = ate < de ? [] : rule.between(de, ate, true);
   }
 
@@ -72,4 +75,25 @@ export function regraValida(regra: string) {
   } catch {
     return false;
   }
+}
+
+// Alertas: para cada data do evento nos próximos dias, o momento em que a tarefa
+// deve aparecer ("diasAntes" antes, no mesmo horário). Se o aviso já devia ter
+// aparecido (alerta criado em cima da hora), o momento fica no passado e a
+// tarefa nasce atrasada em vez de ser esquecida.
+export function avisosDeAlerta(
+  evento: Omit<RegraRecorrencia, "fim">,
+  diasAntes: number,
+  diasAFrente: number,
+  base = new Date(),
+) {
+  const [h, mi] = evento.horario.split(":").map(Number);
+  return ocorrencias(evento, diasAntes + diasAFrente, base).map((data) => {
+    const l = hojeNoFuso(evento.fuso, data);
+    const d = new Date(Date.UTC(l.y, l.m - 1, l.d - diasAntes));
+    return {
+      evento: data,
+      quando: horaLocalParaUtc(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), h, mi, evento.fuso),
+    };
+  });
 }

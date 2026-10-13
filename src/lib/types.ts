@@ -176,6 +176,31 @@ export interface Acao {
   created_at: string;
 }
 
+export interface Alerta {
+  id: string;
+  empresa_id: string;
+  unidade_id: string | null;
+  setor_id: string | null;
+  categoria_id: string | null;
+  responsavel_id: string | null;
+  nome: string;
+  descricao: string | null;
+  data_evento: string;
+  recorrencia: string | null;
+  horario: string;
+  ativo: boolean;
+  created_at: string;
+}
+
+export interface AlertaAviso {
+  id: string;
+  empresa_id: string;
+  alerta_id: string;
+  dias_antes: number;
+  titulo: string;
+  responsavel_id: string | null;
+}
+
 export type Prioridade = "baixa" | "media" | "alta" | "urgente";
 
 export const PRIORIDADES: Record<Prioridade, { rotulo: string; cor: string }> = {
