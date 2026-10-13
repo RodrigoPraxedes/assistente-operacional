@@ -36,10 +36,14 @@ escalas e alertas de datas, com avisos por WhatsApp e Google Agenda.
   comentários e histórico. Usa o mesmo Kanban, com status próprios opcionais (ex.: "Aguardando
   peça"). Cadastro de equipamentos com o histórico de chamados de cada um. Um item de check-list
   respondido "Não" pode abrir chamado sozinho (ex.: "Freezer funcionando? Não").
+- **Alertas de datas importantes:** vencimento do alvará, AVCB, contrato, dedetização... Data
+  única ou repetida (todo ano, a cada 6 meses...), com um ou mais avisos do tipo "30 dias antes,
+  criar a tarefa Pedir renovação para Fulano". A tarefa aparece no Kanban na antecedência marcada
+  e o prazo é a própria data. Se o alerta for criado em cima da hora, a tarefa já nasce atrasada.
 - **Convites:** cadastre o colaborador com e-mail; quando ele criar a conta com o mesmo e-mail,
   já entra vinculado à empresa.
 
-Próximos módulos: alertas de datas importantes e escalas.
+Próximo módulo: escalas.
 
 ## Como colocar no ar
 
@@ -104,7 +108,7 @@ supabase/migrations/   schema, RLS e funções (fonte da verdade das regras de a
 src/lib/               clientes Supabase, contexto de permissões, recorrência, WhatsApp
 src/app/(auth)/        entrar e cadastrar
 src/app/app/           escolher/criar empresa
-src/app/e/[empresaId]/ área logada: tarefas (Kanban), check-lists, ações, chamados, configurações
+src/app/e/[empresaId]/ área logada: tarefas (Kanban), check-lists, ações, chamados, alertas, configurações
 src/app/qr/[token]/    central pública de check-lists da unidade (QR Code)
 src/app/api/cron/      job da recorrência (Vercel Cron)
 ```

@@ -12,7 +12,7 @@ export default function PaginaCadastrar() {
     return <Aviso tipo="sucesso">{estado.mensagem}</Aviso>;
   }
   return (
-    <form action={acao} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form action={acao} className="space-y-4 rounded-xl border border-slate-200 bg-superficie p-6 shadow-sm">
       <Campo rotulo="Seu nome">
         <Input name="nome" autoComplete="name" required />
       </Campo>

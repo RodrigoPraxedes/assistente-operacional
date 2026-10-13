@@ -66,7 +66,7 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, co
       />
 
       {canal === "qr" ? (
-        <div className="grid grid-cols-3 gap-3 rounded-xl border border-slate-200 bg-white p-4">
+        <div className="grid grid-cols-3 gap-3 rounded-xl border border-slate-200 bg-superficie p-4">
           <div className="col-span-2">
             <Campo rotulo="Seu nome">
               <Select name="membro_id" required defaultValue="">
@@ -96,7 +96,7 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, co
           const resposta = respostas[item.id];
           const fotoObrigatoria = item.foto_obrigatoria_se_nao && resposta === "nao";
           return (
-            <li key={item.id} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+            <li key={item.id} className="space-y-3 rounded-xl border border-slate-200 bg-superficie p-4">
               <p className="font-medium">
                 {n + 1}. {item.texto}
                 {item.obrigatorio && <span className="text-red-500"> *</span>}

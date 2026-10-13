@@ -9,7 +9,8 @@ export function NavLink({ href, ativoEm, children }: { href: string; ativoEm?: s
   return (
     <Link
       href={href}
-      className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${ativo ? "bg-blue-50 font-medium text-blue-700" : "text-slate-600 hover:bg-slate-100"}`}
+      aria-current={ativo ? "page" : undefined}
+      className={`whitespace-nowrap rounded-lg px-3 py-2 transition-colors duration-150 ${ativo ? "bg-blue-50 font-medium text-blue-700" : "text-slate-600 hover:bg-slate-100"}`}
     >
       {children}
     </Link>

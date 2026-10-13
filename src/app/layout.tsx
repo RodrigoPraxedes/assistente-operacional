@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
-
-const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Assistente Operacional",
@@ -12,13 +10,18 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#2563eb",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f5f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#15171b" },
+  ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // tema escolhido no menu (claro/escuro); sem cookie segue o sistema
+  const tema = (await cookies()).get("tema")?.value;
   return (
-    <html lang="pt-BR">
-      <body className={`${geist.variable} min-h-screen bg-slate-50 font-sans text-slate-900 antialiased`}>{children}</body>
+    <html lang="pt-BR" data-tema={tema === "claro" || tema === "escuro" ? tema : undefined}>
+      <body className="min-h-screen font-sans">{children}</body>
     </html>
   );
 }

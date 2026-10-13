@@ -66,7 +66,7 @@ export default async function EditarPerfil({
                     <select
                       name={`escopo_${p.chave}`}
                       defaultValue={atual.get(p.chave) ?? "proprias"}
-                      className="rounded border border-slate-200 bg-white px-2 py-1 text-xs"
+                      className="rounded border border-slate-200 bg-superficie px-2 py-1 text-xs"
                     >
                       {(Object.keys(ESCOPOS) as Escopo[]).map((e) => (
                         <option key={e} value={e}>

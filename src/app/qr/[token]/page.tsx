@@ -25,7 +25,7 @@ export default async function CentralQr({ params }: { params: Promise<{ token: s
             <li key={m.id}>
               <Link
                 href={`/qr/${token}/${m.id}`}
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-blue-400"
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-superficie p-4 shadow-sm hover:border-blue-400"
               >
                 <span>
                   <span className="block font-medium">{m.nome}</span>

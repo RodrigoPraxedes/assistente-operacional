@@ -47,7 +47,7 @@ export default async function PaginaAcoes({
       {linhas.length === 0 ? (
         <Vazio>Nenhuma ação cadastrada. Ex.: limpeza da caixa d&apos;água a cada 6 meses, pagar aluguel todo dia 10.</Vazio>
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-superficie">
           {linhas.map(({ a, proxima }) => (
             <li key={a.id} className={`flex flex-wrap items-center justify-between gap-2 p-3 text-sm ${a.ativo ? "" : "opacity-60"}`}>
               <div>

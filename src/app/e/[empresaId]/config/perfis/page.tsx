@@ -20,7 +20,7 @@ export default async function PaginaPerfis({ params }: { params: Promise<{ empre
           <li key={p.id}>
             <Link
               href={`/e/${empresaId}/config/perfis/${p.id}`}
-              className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-blue-400"
+              className="block rounded-xl border border-slate-200 bg-superficie p-4 shadow-sm hover:border-blue-400"
             >
               <p className="font-medium">{p.nome}</p>
               {p.descricao && <p className="text-sm text-slate-500">{p.descricao}</p>}

@@ -1,5 +1,228 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+/*
+ * Visual inspirado nas Human Interface Guidelines da Apple (kit Kairu Apple HIG):
+ * conteúdo em primeiro plano, superfícies discretas, fonte do sistema, acento azul.
+ *
+ * As telas usam as classes padrão do Tailwind (slate, blue, red...). Aqui essas
+ * cores viram tokens que mudam no modo escuro, então nenhuma tela precisa saber
+ * qual tema está ativo. "superficie" é o fundo de cards e campos (branco no claro).
+ */
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-lg: 10px; /* botões, campos */
+  --radius-xl: 19px; /* cards */
+
+  --color-superficie: var(--tema-superficie);
+  --color-sidebar: var(--tema-sidebar);
+
+  --color-slate-50: var(--tema-slate-50);
+  --color-slate-100: var(--tema-slate-100);
+  --color-slate-200: var(--tema-slate-200);
+  --color-slate-300: var(--tema-slate-300);
+  --color-slate-400: var(--tema-slate-400);
+  --color-slate-500: var(--tema-slate-500);
+  --color-slate-600: var(--tema-slate-600);
+  --color-slate-700: var(--tema-slate-700);
+  --color-slate-800: var(--tema-slate-800);
+  --color-slate-900: var(--tema-slate-900);
+
+  --color-blue-50: var(--tema-blue-50);
+  --color-blue-100: var(--tema-blue-100);
+  --color-blue-200: var(--tema-blue-200);
+  --color-blue-400: var(--tema-blue-400);
+  --color-blue-500: var(--tema-blue-500);
+  --color-blue-600: var(--tema-blue-600);
+  --color-blue-700: var(--tema-blue-700);
+  --color-blue-800: var(--tema-blue-800);
+
+  --color-red-50: var(--tema-red-50);
+  --color-red-200: var(--tema-red-200);
+  --color-red-300: var(--tema-red-300);
+  --color-red-500: var(--tema-red-500);
+  --color-red-600: var(--tema-red-600);
+  --color-red-700: var(--tema-red-700);
+  --color-red-800: var(--tema-red-800);
+
+  --color-green-50: var(--tema-green-50);
+  --color-green-200: var(--tema-green-200);
+  --color-green-600: var(--tema-green-600);
+  --color-green-700: var(--tema-green-700);
+  --color-green-800: var(--tema-green-800);
+}
+
+/* modo claro (padrão) */
+:root {
+  color-scheme: light;
+  --tema-superficie: #ffffff;
+  --tema-sidebar: #ffffffb5;
+
+  --tema-slate-50: #f5f5f7; /* fundo */
+  --tema-slate-100: #ececf0;
+  --tema-slate-200: #e4e4e9; /* bordas quase imperceptíveis */
+  --tema-slate-300: #d2d2d8;
+  --tema-slate-400: #a1a3a9;
+  --tema-slate-500: #6e7178; /* texto secundário */
+  --tema-slate-600: #55585e;
+  --tema-slate-700: #3a3c40;
+  --tema-slate-800: #2a2b2e;
+  --tema-slate-900: #202124; /* texto */
+
+  --tema-blue-50: #007aff12; /* seleção azul suave */
+  --tema-blue-100: #007aff22;
+  --tema-blue-200: #007aff40;
+  --tema-blue-400: #007aff80;
+  --tema-blue-500: #007aff;
+  --tema-blue-600: #086ace; /* botão */
+  --tema-blue-700: #0c5fb4;
+  --tema-blue-800: #0a4d92;
+
+  --tema-red-50: #ff3b3010;
+  --tema-red-200: #ff3b3038;
+  --tema-red-300: #ff3b3066;
+  --tema-red-500: #e5372d;
+  --tema-red-600: #d12f26;
+  --tema-red-700: #b3261e;
+  --tema-red-800: #8f1f19;
+
+  --tema-green-50: #34c75912;
+  --tema-green-200: #34c75940;
+  --tema-green-600: #2b8052;
+  --tema-green-700: #236b44;
+  --tema-green-800: #1d5838;
+
+  --sombra: 0 1px 2px #11131808, 0 3px 14px #11131808;
+}
+
+/* modo escuro equivalente: automático pelo sistema ou escolhido no menu */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --tema-superficie: #1e2125;
+    --tema-sidebar: #1a1d21;
+    --tema-slate-50: #15171b;
+    --tema-slate-100: #23262b;
+    --tema-slate-200: #2d3136;
+    --tema-slate-300: #3b4046;
+    --tema-slate-400: #6b7078;
+    --tema-slate-500: #9a9ea6;
+    --tema-slate-600: #b3b7be;
+    --tema-slate-700: #cfd2d7;
+    --tema-slate-800: #e2e4e8;
+    --tema-slate-900: #f2f3f5;
+    --tema-blue-50: #4795e61c;
+    --tema-blue-100: #4795e630;
+    --tema-blue-200: #4795e650;
+    --tema-blue-400: #4795e690;
+    --tema-blue-500: #4795e6;
+    --tema-blue-600: #2f7fd6;
+    --tema-blue-700: #6aaef0;
+    --tema-blue-800: #9ac8f5;
+    --tema-red-50: #ff453a1a;
+    --tema-red-200: #ff453a45;
+    --tema-red-300: #ff453a70;
+    --tema-red-500: #ff6259;
+    --tema-red-600: #ff6b63;
+    --tema-red-700: #ff8a83;
+    --tema-red-800: #ffb1ac;
+    --tema-green-50: #30d1581a;
+    --tema-green-200: #30d15845;
+    --tema-green-600: #2a9d5c;
+    --tema-green-700: #4cc27f;
+    --tema-green-800: #8de0b0;
+    --sombra: 0 3px 14px #00000030;
+    color-scheme: dark;
+  }
+}
+:root[data-tema="escuro"] {
+  --tema-superficie: #1e2125;
+  --tema-sidebar: #1a1d21;
+  --tema-slate-50: #15171b;
+  --tema-slate-100: #23262b;
+  --tema-slate-200: #2d3136;
+  --tema-slate-300: #3b4046;
+  --tema-slate-400: #6b7078;
+  --tema-slate-500: #9a9ea6;
+  --tema-slate-600: #b3b7be;
+  --tema-slate-700: #cfd2d7;
+  --tema-slate-800: #e2e4e8;
+  --tema-slate-900: #f2f3f5;
+  --tema-blue-50: #4795e61c;
+  --tema-blue-100: #4795e630;
+  --tema-blue-200: #4795e650;
+  --tema-blue-400: #4795e690;
+  --tema-blue-500: #4795e6;
+  --tema-blue-600: #2f7fd6;
+  --tema-blue-700: #6aaef0;
+  --tema-blue-800: #9ac8f5;
+  --tema-red-50: #ff453a1a;
+  --tema-red-200: #ff453a45;
+  --tema-red-300: #ff453a70;
+  --tema-red-500: #ff6259;
+  --tema-red-600: #ff6b63;
+  --tema-red-700: #ff8a83;
+  --tema-red-800: #ffb1ac;
+  --tema-green-50: #30d1581a;
+  --tema-green-200: #30d15845;
+  --tema-green-600: #2a9d5c;
+  --tema-green-700: #4cc27f;
+  --tema-green-800: #8de0b0;
+  --sombra: 0 3px 14px #00000030;
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    background: var(--color-slate-50);
+    color: var(--color-slate-900);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* foco sempre visível: anel de 3 px com afastamento */
+  :focus-visible {
+    outline: 3px solid var(--color-blue-500);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-offset: 1px;
+  }
+  h1 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility shadow-sm {
+  box-shadow: var(--sombra);
+}
+
+/* entrada de conteúdo: 220 ms, opacidade e 8 px */
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.entrar {
+  animation: entrar 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@keyframes entrar-gaveta {
+  from {
+    transform: translateX(-12px);
+    opacity: 0;
+  }
+}
+.entrar-gaveta {
+  animation: entrar-gaveta 220ms ease-out;
 }

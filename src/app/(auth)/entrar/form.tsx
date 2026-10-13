@@ -9,7 +9,7 @@ import { BotaoEnviar } from "@/components/botao-enviar";
 export function FormEntrar({ voltar }: { voltar?: string }) {
   const [estado, acao] = useActionState(entrar, undefined);
   return (
-    <form action={acao} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form action={acao} className="space-y-4 rounded-xl border border-slate-200 bg-superficie p-6 shadow-sm">
       <input type="hidden" name="voltar" value={voltar ?? ""} />
       <Campo rotulo="E-mail">
         <Input name="email" type="email" autoComplete="email" required />

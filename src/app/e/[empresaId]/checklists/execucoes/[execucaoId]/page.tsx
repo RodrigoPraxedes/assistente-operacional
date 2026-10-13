@@ -53,7 +53,7 @@ export default async function Execucao({ params }: { params: Promise<{ empresaId
 
       <ol className="space-y-2">
         {(respostas ?? []).map((r) => (
-          <li key={r.id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+          <li key={r.id} className="rounded-xl border border-slate-200 bg-superficie p-3 text-sm">
             <div className="flex items-start justify-between gap-2">
               <p className="font-medium">{r.item_texto}</p>
               {r.tipo_resposta === "sim_nao" ? (
