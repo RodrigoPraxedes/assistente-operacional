@@ -246,3 +246,58 @@ export interface Fornecedor {
   email: string | null;
   ativo: boolean;
 }
+
+export type TipoEscala = "turno" | "folga" | "ferias" | "falta";
+
+// o que não é turno aparece na grade com estes nomes e cores
+export const AUSENCIAS: Record<Exclude<TipoEscala, "turno">, { rotulo: string; sigla: string; cor: string }> = {
+  folga: { rotulo: "Folga", sigla: "F", cor: "#64748b" },
+  ferias: { rotulo: "Férias", sigla: "FÉ", cor: "#16a34a" },
+  falta: { rotulo: "Falta", sigla: "X", cor: "#dc2626" },
+};
+
+export interface Turno {
+  id: string;
+  empresa_id: string;
+  unidade_id: string | null;
+  nome: string;
+  inicio: string;
+  fim: string;
+  cor: string;
+  ativo: boolean;
+}
+
+export interface Escala {
+  id: string;
+  empresa_id: string;
+  unidade_id: string;
+  setor_id: string | null;
+  membro_id: string;
+  data: string;
+  tipo: TipoEscala;
+  turno_id: string | null;
+  observacao: string | null;
+}
+
+export type StatusTroca = "pendente" | "aprovada" | "recusada" | "cancelada";
+
+export const STATUS_TROCA: Record<StatusTroca, { rotulo: string; cor: string }> = {
+  pendente: { rotulo: "Aguardando", cor: "#d97706" },
+  aprovada: { rotulo: "Aprovada", cor: "#16a34a" },
+  recusada: { rotulo: "Recusada", cor: "#dc2626" },
+  cancelada: { rotulo: "Cancelada", cor: "#64748b" },
+};
+
+export interface EscalaTroca {
+  id: string;
+  empresa_id: string;
+  escala_id: string;
+  solicitante_id: string;
+  substituto_id: string;
+  motivo: string | null;
+  status: StatusTroca;
+  pedido_por: string | null;
+  decidido_por: string | null;
+  decidido_em: string | null;
+  created_at: string;
+}

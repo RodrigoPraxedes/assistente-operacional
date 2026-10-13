@@ -40,10 +40,15 @@ escalas e alertas de datas, com avisos por WhatsApp e Google Agenda.
   única ou repetida (todo ano, a cada 6 meses...), com um ou mais avisos do tipo "30 dias antes,
   criar a tarefa Pedir renovação para Fulano". A tarefa aparece no Kanban na antecedência marcada
   e o prazo é a própria data. Se o alerta for criado em cima da hora, a tarefa já nasce atrasada.
+- **Escalas:** turnos cadastrados por empresa ou unidade (Abertura 06:00–14:00, plantão que
+  vira a noite...) e uma grade semanal por unidade: em cada dia, turno, folga, férias ou falta.
+  Copia a semana anterior, mostra quantos trabalham por dia e manda a escala de cada um pelo
+  WhatsApp. O colaborador pede troca indicando o colega; quem monta a escala aprova e o sistema
+  troca os dois (ou o colega assume, se estava sem nada no dia). Líder de setor monta só o seu setor.
 - **Convites:** cadastre o colaborador com e-mail; quando ele criar a conta com o mesmo e-mail,
   já entra vinculado à empresa.
 
-Próximo módulo: escalas.
+Próximos passos: integrações com Google Agenda e WhatsApp oficial.
 
 ## Como colocar no ar
 
@@ -108,7 +113,7 @@ supabase/migrations/   schema, RLS e funções (fonte da verdade das regras de a
 src/lib/               clientes Supabase, contexto de permissões, recorrência, WhatsApp
 src/app/(auth)/        entrar e cadastrar
 src/app/app/           escolher/criar empresa
-src/app/e/[empresaId]/ área logada: tarefas (Kanban), check-lists, ações, chamados, alertas, configurações
+src/app/e/[empresaId]/ área logada: tarefas (Kanban), check-lists, ações, chamados, alertas, escalas, configurações
 src/app/qr/[token]/    central pública de check-lists da unidade (QR Code)
 src/app/api/cron/      job da recorrência (Vercel Cron)
 ```
