@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
+import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { Aviso, Botao, Cartao, Etiqueta, Input, Select } from "@/components/ui";
 import {
   alternarSetor,
   alternarStatus,
   excluirCategoria,
+  excluirSetor,
   moverStatus,
   salvarCategoria,
   salvarEmpresa,
@@ -159,18 +161,31 @@ export default async function ConfigGeral({
 
       <Cartao className="space-y-3">
         <h2 className="font-medium">Setores</h2>
-        <p className="text-xs text-slate-500">Setores valem para todas as unidades (ex.: Cozinha, Salão, Estoque).</p>
+        <p className="text-xs text-slate-500">Setores valem para todas as unidades (ex.: Cozinha, Salão, Estoque). Clique no nome para ativar ou desativar.</p>
         <div className="flex flex-wrap gap-2">
           {(setores as Setor[] | null)?.map((s) => (
-            <form key={s.id} action={alternarSetor.bind(null, e, s.id, !s.ativo)}>
-              <button
-                disabled={!pode("config.setores")}
-                title={s.ativo ? "Clique para desativar" : "Clique para ativar"}
-                className={`rounded-full border px-3 py-1 text-sm ${s.ativo ? "border-slate-300" : "border-dashed text-slate-400"}`}
-              >
-                {s.nome}
-              </button>
-            </form>
+            <span key={s.id} className="flex items-center gap-1">
+              <form action={alternarSetor.bind(null, e, s.id, !s.ativo)}>
+                <button
+                  disabled={!pode("config.setores")}
+                  title={s.ativo ? "Clique para desativar" : "Clique para ativar"}
+                  className={`rounded-full border px-3 py-1 text-sm ${s.ativo ? "border-slate-300" : "border-dashed text-slate-400"}`}
+                >
+                  {s.nome}
+                </button>
+              </form>
+              {pode("config.setores") && (
+                <form action={excluirSetor.bind(null, e, s.id)}>
+                  <BotaoConfirmar
+                    mensagem={`Excluir o setor "${s.nome}"? Tarefas, colaboradores e check-lists dele ficam sem setor.`}
+                    className="text-xs text-slate-400 hover:text-red-600"
+                    title="Excluir"
+                  >
+                    ×
+                  </BotaoConfirmar>
+                </form>
+              )}
+            </span>
           ))}
         </div>
         {pode("config.setores") && (

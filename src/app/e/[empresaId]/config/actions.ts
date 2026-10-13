@@ -68,6 +68,14 @@ export async function alternarSetor(empresaId: string, setorId: string, ativo: b
   revalidatePath(`/e/${empresaId}/config`);
 }
 
+// o que estava no setor (tarefas, colaboradores, check-lists...) fica sem setor
+export async function excluirSetor(empresaId: string, setorId: string) {
+  const { supabase } = await getContexto(empresaId);
+  const { error } = await supabase.from("setores").delete().eq("id", setorId);
+  if (error) falhar(`/e/${empresaId}/config`, error.message);
+  revalidatePath(`/e/${empresaId}/config`);
+}
+
 export async function salvarCategoria(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const { error } = await supabase
