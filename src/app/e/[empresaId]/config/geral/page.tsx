@@ -34,7 +34,9 @@ export default async function ConfigGeral({
     supabase.from("categorias").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("status").select("*").eq("empresa_id", empresaId).order("ordem"),
   ]);
-  const { data: sla } = await supabase.from("empresas").select("sla_chamados").eq("id", empresaId).single();
+  const { data: sla } = await supabase.from("empresas").select("sla_chamados, limite_unidades").eq("id", empresaId).single();
+  const unidadesAtivas = (unidades as Unidade[] | null)?.filter((u) => u.ativo).length ?? 0;
+  const limiteUnidades: number = sla?.limite_unidades ?? 1;
   const prazos = (sla?.sla_chamados ?? {}) as Record<string, number>;
   const seletorModulo = (valor: string | null, desabilitado: boolean) => (
     <Select name="modulo" defaultValue={valor ?? ""} className="w-32" disabled={desabilitado} title="Em qual módulo aparece">
@@ -68,7 +70,12 @@ export default async function ConfigGeral({
           {pode("config.empresa") && <Botao>Salvar</Botao>}
         </form>
 
-        <h3 className="pt-2 text-sm font-medium text-slate-700">Unidades</h3>
+        <div className="flex items-baseline justify-between pt-2">
+          <h3 className="text-sm font-medium text-slate-700">Unidades</h3>
+          <span className="text-xs text-slate-500">
+            {unidadesAtivas} de {limiteUnidades} do seu plano
+          </span>
+        </div>
         <ul className="divide-y divide-slate-100 text-sm">
           {(unidades as Unidade[] | null)?.map((u) => (
             <li key={u.id} className="flex items-center justify-between py-2">
@@ -79,7 +86,10 @@ export default async function ConfigGeral({
             </li>
           ))}
         </ul>
-        {pode("config.empresa") && (
+        {pode("config.empresa") && unidadesAtivas >= limiteUnidades && (
+          <p className="text-xs text-slate-500">Para cadastrar mais unidades, fale com o administrador do sistema.</p>
+        )}
+        {pode("config.empresa") && unidadesAtivas < limiteUnidades && (
           <form action={salvarUnidade.bind(null, e)} className="flex gap-2">
             <Input name="nome" placeholder="Nova unidade (ex.: Bangu)" required />
             <Botao variante="secundario">Adicionar</Botao>

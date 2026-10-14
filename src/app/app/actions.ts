@@ -10,5 +10,6 @@ export async function criarEmpresa(_: { erro?: string } | undefined, form: FormD
     p_unidade: String(form.get("unidade") ?? ""),
   });
   if (error) return { erro: error.message };
+  // empresa aguardando aprovação volta para a lista (getContexto redireciona)
   redirect(`/e/${data}/config`);
 }

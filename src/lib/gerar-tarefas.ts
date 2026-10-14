@@ -223,11 +223,22 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
 export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acaoId?: string; alertaId?: string }) {
   const admin = createAdminClient();
   const soUm = filtro?.modeloId || filtro?.acaoId || filtro?.alertaId;
-  const fontes = [
+  const todas = [
     ...(!soUm || filtro?.modeloId ? await fontesChecklist(admin, { id: filtro?.modeloId }) : []),
     ...(!soUm || filtro?.acaoId ? await fontesAcoes(admin, { id: filtro?.acaoId }) : []),
     ...(!soUm || filtro?.alertaId ? await fontesAlertas(admin, { id: filtro?.alertaId }) : []),
   ];
+
+  if (todas.length === 0) return { criadas: 0, avaliadas: 0 };
+
+  // empresas suspensas ou aguardando aprovação não geram tarefas
+  const { data: ativas } = await admin
+    .from("empresas")
+    .select("id")
+    .in("id", [...new Set(todas.map((f) => f.empresa_id))])
+    .eq("situacao", "ativa");
+  const liberadas = new Set((ativas ?? []).map((e) => e.id));
+  const fontes = todas.filter((f) => liberadas.has(f.empresa_id));
 
   const empresas = [...new Set(fontes.map((f) => f.empresa_id))];
   if (empresas.length === 0) return { criadas: 0, avaliadas: 0 };
