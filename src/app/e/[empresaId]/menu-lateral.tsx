@@ -17,6 +17,7 @@ import {
   Moon,
   Repeat,
   Settings,
+  ShieldCheck,
   SquareKanban,
   Sun,
   Wrench,
@@ -30,6 +31,7 @@ interface Props {
   empresa: string;
   membro: { nome: string; cargo: string | null };
   veConfig: boolean;
+  veAdmin: boolean;
   tema: Tema;
 }
 
@@ -41,7 +43,7 @@ interface Item {
 }
 
 // Menu à esquerda em todas as telas. Abaixo de 900 px vira gaveta aberta pelo botão Menu.
-export function MenuLateral({ base, empresa, membro, veConfig, tema: temaInicial }: Props) {
+export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, tema: temaInicial }: Props) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
   const botaoMenu = useRef<HTMLButtonElement>(null);
@@ -57,6 +59,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, tema: temaInicial
     { href: `${base}/escalas`, rotulo: "Escalas", icone: CalendarDays },
     { href: `${base}/agenda`, rotulo: "Agenda", icone: CalendarSync },
     ...(veConfig ? [{ href: `${base}/config/geral`, rotulo: "Configurações", icone: Settings, ativoEm: `${base}/config` }] : []),
+    ...(veAdmin ? [{ href: "/admin", rotulo: "Admin Master", icone: ShieldCheck }] : []),
   ];
   const atual = itens.find((i) => pathname.startsWith(i.ativoEm ?? i.href));
 
