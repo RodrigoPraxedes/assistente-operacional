@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import type { ChecklistItem, ChecklistModelo } from "@/lib/types";
@@ -36,10 +35,8 @@ export default async function EditarModelo({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/checklists`} className="text-sm text-slate-500">
-        ← Check-lists
-      </Link>
       <Titulo
+        voltar={{ href: `/e/${empresaId}/checklists`, rotulo: "Check-lists" }}
         acoes={
           modelo && (
             <form action={excluirChecklist.bind(null, empresaId, modelo.id)}>

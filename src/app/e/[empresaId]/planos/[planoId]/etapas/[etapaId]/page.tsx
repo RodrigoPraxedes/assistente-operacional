@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import { utcParaLocalInput } from "@/lib/formato";
@@ -52,10 +51,7 @@ export default async function FormEtapa({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/planos/${planoId}`} className="text-sm text-slate-500">
-        ← {plano.nome}
-      </Link>
-      <Titulo>{nova ? "Nova etapa" : "Editar etapa"}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/planos/${planoId}`, rotulo: plano.nome }}>{nova ? "Nova etapa" : "Editar etapa"}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
 
       <form action={salvarEtapa.bind(null, empresaId, planoId, nova ? null : etapaId)} className="space-y-4">

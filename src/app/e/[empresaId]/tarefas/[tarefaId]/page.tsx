@@ -65,12 +65,9 @@ export default async function DetalheTarefa({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/tarefas`} className="text-sm text-slate-500">
-        ← Voltar ao Kanban
-      </Link>
       {nova && <Aviso tipo="sucesso">Tarefa criada.</Aviso>}
       {erro && <Aviso>{erro}</Aviso>}
-      <Titulo>{tarefa.titulo}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/tarefas`, rotulo: "Tarefas" }}>{tarefa.titulo}</Titulo>
 
       <Cartao className="space-y-3">
         <div className="flex flex-wrap gap-2">

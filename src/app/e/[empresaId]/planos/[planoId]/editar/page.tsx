@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import type { Plano } from "@/lib/types";
@@ -27,10 +26,7 @@ export default async function EditarPlano({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/planos/${planoId}`} className="text-sm text-slate-500">
-        ← {plano.nome}
-      </Link>
-      <Titulo>Editar plano</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/planos/${planoId}`, rotulo: plano.nome }}>Editar plano</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       <FormPlano empresaId={empresaId} plano={plano} {...opcoes} />
 

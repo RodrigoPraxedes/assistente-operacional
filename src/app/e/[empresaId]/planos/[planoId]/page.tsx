@@ -79,12 +79,10 @@ export default async function DetalhePlano({
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <Link href={`/e/${empresaId}/planos`} className="text-sm text-slate-500">
-        ← Planos
-      </Link>
       {avisos.salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
       {avisos.erro && <Aviso>{avisos.erro}</Aviso>}
       <Titulo
+        voltar={{ href: `/e/${empresaId}/planos`, rotulo: "Planos" }}
         acoes={
           edita && (
             <>

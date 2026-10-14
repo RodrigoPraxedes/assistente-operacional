@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { Titulo } from "@/components/ui";
 import { rotuloPrestador } from "@/lib/formato";
@@ -38,10 +37,7 @@ export default async function NovoChamado({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/chamados`} className="text-sm text-slate-500">
-        ← Manutenções
-      </Link>
-      <Titulo>Abrir chamado</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/chamados`, rotulo: "Manutenções" }}>Abrir chamado</Titulo>
       <FormChamado
         empresaId={empresaId}
         gerencia={pode("chamados.gerenciar")}

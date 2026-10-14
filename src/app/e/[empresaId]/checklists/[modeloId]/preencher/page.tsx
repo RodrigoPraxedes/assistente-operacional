@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import { FormPreencher, type ItemPreencher } from "@/components/checklist/form-preencher";
@@ -29,10 +28,7 @@ export default async function Preencher({
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <Link href={`/e/${empresaId}/checklists`} className="text-sm text-slate-500">
-        ← Check-lists
-      </Link>
-      <Titulo>{modelo.nome}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/checklists`, rotulo: "Check-lists" }}>{modelo.nome}</Titulo>
       <p className="-mt-3 text-sm text-slate-500">
         {unidade.nome}
         {modelo.descricao ? ` · ${modelo.descricao}` : ""}

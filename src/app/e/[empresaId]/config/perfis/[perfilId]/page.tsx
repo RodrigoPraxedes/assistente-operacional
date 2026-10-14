@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import { ESCOPOS, type Escopo, type Permissao } from "@/lib/types";
@@ -34,10 +33,7 @@ export default async function EditarPerfil({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/config/perfis`} className="text-sm text-slate-500">
-        ← Perfis
-      </Link>
-      <Titulo>{novo ? "Novo perfil" : perfil!.nome}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/config/perfis`, rotulo: "Perfis" }}>{novo ? "Novo perfil" : perfil!.nome}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       {salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
 

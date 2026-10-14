@@ -49,6 +49,7 @@ export default async function PaginaPatrimonio({
   return (
     <div className="space-y-4">
       <Titulo
+        voltar={{ href: `/e/${empresaId}/chamados`, rotulo: "Manutenções" }}
         acoes={
           pode("patrimonio.gerenciar") && (
             <>

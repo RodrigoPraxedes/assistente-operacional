@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
@@ -50,10 +51,31 @@ export function Cartao({ className, children }: { className?: string; children: 
   return <div className={cx("rounded-xl border border-slate-200 bg-superficie p-5 shadow-sm", className)}>{children}</div>;
 }
 
-export function Titulo({ children, acoes }: { children: ReactNode; acoes?: ReactNode }) {
+// voltar: seta ao lado do título que leva à tela anterior
+export function Titulo({
+  children,
+  acoes,
+  voltar,
+}: {
+  children: ReactNode;
+  acoes?: ReactNode;
+  voltar?: { href: string; rotulo: string };
+}) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-2xl font-semibold text-slate-900">{children}</h1>
+      <div className="flex min-w-0 items-center gap-2">
+        {voltar && (
+          <Link
+            href={voltar.href}
+            aria-label={`Voltar para ${voltar.rotulo}`}
+            title={`Voltar para ${voltar.rotulo}`}
+            className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-blue-600 transition-colors duration-150 hover:bg-slate-100 print:hidden sm:h-10 sm:w-10"
+          >
+            <ChevronLeft className="h-6 w-6" aria-hidden />
+          </Link>
+        )}
+        <h1 className="text-2xl font-semibold text-slate-900">{children}</h1>
+      </div>
       {acoes && <div className="flex flex-wrap gap-2">{acoes}</div>}
     </div>
   );

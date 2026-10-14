@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import type { Membro } from "@/lib/types";
@@ -36,10 +35,7 @@ export default async function EditarMembro({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/config/membros`} className="text-sm text-slate-500">
-        ← Colaboradores
-      </Link>
-      <Titulo>{novo ? "Novo colaborador" : m!.nome}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/config/membros`, rotulo: "Colaboradores" }}>{novo ? "Novo colaborador" : m!.nome}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       {salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
 

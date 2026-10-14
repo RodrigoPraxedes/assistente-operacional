@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { Titulo } from "@/components/ui";
 import { ImportarPlanilha } from "@/components/importacao/importar-planilha";
@@ -11,10 +10,7 @@ export default async function ImportarPatrimonio({ params }: { params: Promise<{
 
   return (
     <div className="space-y-4">
-      <Link href={base} className="text-sm text-slate-500">
-        ← Patrimônio
-      </Link>
-      <Titulo>Importar planilha</Titulo>
+      <Titulo voltar={{ href: base, rotulo: "Patrimônio" }}>Importar planilha</Titulo>
       <ImportarPlanilha
         ler={lerPatrimonio.bind(null, empresaId)}
         importar={importarPatrimonio.bind(null, empresaId)}

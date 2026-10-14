@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { ordenarTurnos } from "@/lib/escala";
 import type { Turno } from "@/lib/types";
@@ -40,10 +39,7 @@ export default async function Turnos({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/escalas`} className="text-sm text-slate-500">
-        ← Escalas
-      </Link>
-      <Titulo>Turnos</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/escalas`, rotulo: "Escalas" }}>Turnos</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
 
       <Cartao className="space-y-3">

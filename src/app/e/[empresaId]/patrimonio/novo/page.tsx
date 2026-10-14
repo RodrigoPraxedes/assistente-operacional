@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { Titulo } from "@/components/ui";
 import { FormItem } from "../form-item";
@@ -13,10 +12,7 @@ export default async function NovoItem({ params }: { params: Promise<{ empresaId
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/patrimonio`} className="text-sm text-slate-500">
-        ← Patrimônio
-      </Link>
-      <Titulo>Novo item</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/patrimonio`, rotulo: "Patrimônio" }}>Novo item</Titulo>
       <FormItem empresaId={empresaId} unidades={unidades ?? []} setores={setores ?? []} />
     </div>
   );
