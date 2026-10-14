@@ -83,7 +83,7 @@ export function FormChamado({
               <Campo rotulo="Responsável interno">
                 <Select name="responsavel_id">{opcoes(membros)}</Select>
               </Campo>
-              <Campo rotulo="Fornecedor externo">
+              <Campo rotulo="Prestador de serviço">
                 <Select name="fornecedor_id">{opcoes(fornecedores)}</Select>
               </Campo>
             </>

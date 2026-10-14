@@ -76,3 +76,17 @@ export function hojeNoFuso(fuso: string, base = new Date()) {
 export function soDigitos(valor: string | null | undefined) {
   return (valor ?? "").replace(/\D/g, "");
 }
+
+// "21999998888" → "(21) 99999-8888"; outros formatos ficam como vieram
+export function formatarTelefone(valor: string | null | undefined) {
+  const n = soDigitos(valor);
+  if (n.length === 11) return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`;
+  if (n.length === 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
+  return valor ?? "";
+}
+
+// "João · Eletricista, Encanador" para escolher o prestador num chamado
+export function rotuloPrestador(p: { nome: string; tipos_servico?: { nome: string }[] | null }) {
+  const tipos = (p.tipos_servico ?? []).map((t) => t.nome).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return tipos.length ? `${p.nome} · ${tipos.join(", ")}` : p.nome;
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { Titulo } from "@/components/ui";
+import { rotuloPrestador } from "@/lib/formato";
 import { FormChamado } from "./form";
 
 export default async function NovoChamado({ params }: { params: Promise<{ empresaId: string }> }) {
@@ -17,7 +18,12 @@ export default async function NovoChamado({ params }: { params: Promise<{ empres
       supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
       ativos("equipamentos"),
       ativos("membros"),
-      ativos("fornecedores"),
+      supabase
+        .from("fornecedores")
+        .select("id, nome, tipos_servico(nome)")
+        .eq("empresa_id", empresaId)
+        .eq("ativo", true)
+        .order("nome"),
     ]);
 
   return (
@@ -35,7 +41,7 @@ export default async function NovoChamado({ params }: { params: Promise<{ empres
         categorias={categorias ?? []}
         equipamentos={(equipamentos ?? []) as { id: string; nome: string }[]}
         membros={(membros ?? []) as { id: string; nome: string }[]}
-        fornecedores={(fornecedores ?? []) as { id: string; nome: string }[]}
+        fornecedores={(fornecedores ?? []).map((f) => ({ id: f.id, nome: rotuloPrestador(f) }))}
       />
     </div>
   );
