@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
-import { localParaUtc, soDigitos } from "@/lib/formato";
+import { localParaUtc } from "@/lib/formato";
 
 const txt = (f: FormData, k: string) => String(f.get(k) ?? "").trim() || null;
 
@@ -117,23 +117,6 @@ export async function salvarEquipamento(empresaId: string, form: FormData) {
   const { error } = id
     ? await supabase.from("equipamentos").update(dados).eq("id", id)
     : await supabase.from("equipamentos").insert({ ...dados, empresa_id: empresaId });
-  if (error) redirect(`/e/${empresaId}/chamados/cadastros?erro=${encodeURIComponent(error.message)}`);
-  revalidatePath(`/e/${empresaId}/chamados/cadastros`);
-}
-
-export async function salvarFornecedor(empresaId: string, form: FormData) {
-  const { supabase } = await getContexto(empresaId);
-  const id = txt(form, "id");
-  const dados = {
-    nome: txt(form, "nome")!,
-    especialidade: txt(form, "especialidade"),
-    telefone: soDigitos(txt(form, "telefone")) || null,
-    email: txt(form, "email"),
-    ativo: form.get("ativo") !== "false",
-  };
-  const { error } = id
-    ? await supabase.from("fornecedores").update(dados).eq("id", id)
-    : await supabase.from("fornecedores").insert({ ...dados, empresa_id: empresaId });
   if (error) redirect(`/e/${empresaId}/chamados/cadastros?erro=${encodeURIComponent(error.message)}`);
   revalidatePath(`/e/${empresaId}/chamados/cadastros`);
 }

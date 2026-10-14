@@ -243,7 +243,16 @@ export interface Fornecedor {
   nome: string;
   especialidade: string | null;
   telefone: string | null;
+  telefone2: string | null;
   email: string | null;
+  ativo: boolean;
+}
+
+// tipo de serviço de um prestador (pedreiro, eletricista...)
+export interface TipoServico {
+  id: string;
+  empresa_id: string;
+  nome: string;
   ativo: boolean;
 }
 
