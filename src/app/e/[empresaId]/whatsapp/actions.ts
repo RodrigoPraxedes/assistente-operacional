@@ -87,7 +87,9 @@ export async function gerarQr(_: EstadoQr, form: FormData): Promise<EstadoQr> {
   const { supabase, conexao } = await conexaoGerenciada(empresaId, conexaoId);
   const provedor = provedorDe(conexao.provedor);
   try {
-    // eventos primeiro: assim o "conectado" chega pelo webhook assim que o QR for lido
+    // conectar cria a instância na primeira vez; os eventos só podem ser configurados depois
+    // dela existir, e antes do QR ser lido, para o "conectado" chegar pelo webhook
+    const r = await provedor.conectar(conexao.instancia);
     let aviso: string | undefined;
     const url = urlDoSite(`/api/whatsapp/webhook/${conexao.id}`);
     if (url.startsWith("https://")) {
@@ -96,7 +98,6 @@ export async function gerarQr(_: EstadoQr, form: FormData): Promise<EstadoQr> {
     } else {
       aviso = "O app não está num endereço https: o status não será atualizado sozinho. Use “Atualizar status”.";
     }
-    const r = await provedor.conectar(conexao.instancia);
     if (conexao.provedor !== "evolution" || r.jaConectado) {
       const estado = await provedor.consultarConexao(conexao.instancia);
       await supabase.rpc("whatsapp_atualizar_estado", {
