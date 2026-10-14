@@ -9,6 +9,7 @@ const CORES: Record<TipoEvento, string> = {
   ferias: "border-green-500 bg-green-50",
   tarefa: "border-slate-400 bg-slate-50",
   previsto: "border-slate-300 border-dashed bg-superficie",
+  google: "border-slate-300 bg-slate-100",
 };
 
 const hora = (d: Date, fuso: string) =>
@@ -30,7 +31,12 @@ export function CalendarioSemana({
 }) {
   const doDia = (dia: string) =>
     eventos
-      .filter((e) => (typeof e.inicio === "string" ? e.inicio === dia : diaLocal(e.inicio, fuso) === dia))
+      // dia inteiro: aparece em todos os dias do evento (o fim é exclusivo)
+      .filter((e) =>
+        typeof e.inicio === "string"
+          ? e.inicio === dia || (e.inicio < dia && dia < (e.fim as string))
+          : diaLocal(e.inicio, fuso) === dia,
+      )
       // dia inteiro primeiro, depois por horário
       .sort((a, b) => (typeof a.inicio === "string" ? -1 : typeof b.inicio === "string" ? 1 : +a.inicio - +b.inicio));
 
@@ -59,11 +65,12 @@ export function CalendarioSemana({
                       <span className="block text-xs text-slate-500">
                         {typeof e.inicio === "string"
                           ? "Dia todo"
-                          : e.tipo === "turno"
+                          : e.tipo === "turno" || e.tipo === "google"
                             ? `${hora(e.inicio, fuso)}–${hora(e.fim as Date, fuso)}`
                             : hora(e.inicio, fuso)}
                         {e.atrasada && <span className="ml-1 font-medium text-red-600">atrasada</span>}
                         {e.tipo === "previsto" && <span className="ml-1">programada</span>}
+                        {e.tipo === "google" && <span className="ml-1">Google</span>}
                       </span>
                       <span
                         className={`block text-sm leading-snug text-slate-800 ${e.concluida ? "text-slate-500 line-through" : ""}`}

@@ -9,7 +9,7 @@ import { somarDias } from "@/lib/escala";
 // ocorrências que o Kanban ainda não criou e a escala. Usada pelo feed do
 // Google Agenda e pela tela Agenda do app.
 
-export type TipoEvento = "tarefa" | "previsto" | "turno" | "folga" | "ferias";
+export type TipoEvento = "tarefa" | "previsto" | "turno" | "folga" | "ferias" | "google";
 
 export interface EventoAgenda extends EventoIcal {
   tipo: TipoEvento;

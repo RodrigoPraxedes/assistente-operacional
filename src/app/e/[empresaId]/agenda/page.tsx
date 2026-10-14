@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
-import { eventosDoMembro } from "@/lib/agenda";
+import { eventosDoMembro, type EventoAgenda } from "@/lib/agenda";
+import { PREFIXO_GOOGLE, eventosDoGoogle } from "@/lib/google-agenda";
 import { dataValida, diasDaSemana, hojeIso, rotuloSemana, segundaDaSemana, somarDias } from "@/lib/escala";
 import { formatarDataHora, horaLocalParaUtc } from "@/lib/formato";
 import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
@@ -9,7 +10,7 @@ import { Aviso, Botao, Cartao, Input, Select, Titulo, estilos } from "@/componen
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { BotaoCopiar } from "./botao-copiar";
 import { CalendarioSemana } from "./calendario-semana";
-import { gerarLinkAgenda, revogarLinkAgenda } from "./actions";
+import { gerarLinkAgenda, removerAgendaGoogle, revogarLinkAgenda, salvarAgendaGoogle } from "./actions";
 
 interface LinkAgenda {
   membro_id: string;
@@ -42,7 +43,7 @@ export default async function PaginaAgenda({
   const segunda = segundaDaSemana(dataValida(filtros.semana) ? filtros.semana : hoje);
   const dias = diasDaSemana(segunda);
 
-  const [{ data: links }, { data: equipe }] = await Promise.all([
+  const [{ data: links }, { data: equipe }, { data: google }] = await Promise.all([
     supabase
       .from("agenda_links")
       .select("membro_id, token, acessado_em")
@@ -56,6 +57,7 @@ export default async function PaginaAgenda({
           .eq("ativo", true)
           .order("nome")
       : Promise.resolve({ data: [] }),
+    supabase.from("agenda_google").select("url").eq("membro_id", membro.id).maybeSingle<{ url: string }>(),
   ]);
   const linkDe = new Map((links ?? []).map((l) => [l.membro_id, l]));
   const meu = linkDe.get(membro.id);
@@ -65,13 +67,13 @@ export default async function PaginaAgenda({
   const vendo = (veEquipe && (equipe ?? []).find((m) => m.id === filtros.membro)) || null;
   const [y0, m0, d0] = segunda.split("-").map(Number);
   const [y1, m1, d1] = somarDias(segunda, 7).split("-").map(Number);
-  const eventos = await eventosDoMembro(supabase, {
-    empresaId,
-    membroId: vendo?.id ?? membro.id,
-    fuso,
-    de: horaLocalParaUtc(y0, m0, d0, 0, 0, fuso),
-    ate: new Date(horaLocalParaUtc(y1, m1, d1, 0, 0, fuso).getTime() - 1),
-  });
+  const de = horaLocalParaUtc(y0, m0, d0, 0, 0, fuso);
+  const ate = new Date(horaLocalParaUtc(y1, m1, d1, 0, 0, fuso).getTime() - 1);
+  // eventos pessoais do Google só na agenda da própria pessoa
+  const [eventos, doGoogle] = await Promise.all([
+    eventosDoMembro(supabase, { empresaId, membroId: vendo?.id ?? membro.id, fuso, de, ate }),
+    google && !vendo ? eventosDoGoogle(google.url, de, ate).catch(() => null) : Promise.resolve([] as EventoAgenda[]),
+  ]);
   const url = (semana: string) => `/e/${empresaId}/agenda?semana=${semana}${vendo ? `&membro=${vendo.id}` : ""}`;
   const botaoSeta =
     "flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-superficie text-slate-600 hover:bg-slate-100";
@@ -114,7 +116,12 @@ export default async function PaginaAgenda({
         )}
       </div>
 
-      <CalendarioSemana dias={dias} hoje={hoje} eventos={eventos} fuso={fuso} />
+      {doGoogle === null && (
+        <Aviso>
+          Não consegui ler sua agenda do Google agora. Se o endereço secreto foi trocado, cole o novo abaixo.
+        </Aviso>
+      )}
+      <CalendarioSemana dias={dias} hoje={hoje} eventos={[...eventos, ...(doGoogle ?? [])]} fuso={fuso} />
       <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
         <span>
           <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-blue-500" />
@@ -136,12 +143,63 @@ export default async function PaginaAgenda({
           <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-green-500" />
           Folga ou férias
         </span>
+        <span>
+          <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-slate-300" />
+          Meu Google
+        </span>
       </p>
 
       <div className="mx-auto max-w-3xl space-y-4 pt-4">
         {semSite && (
           <Aviso tipo="info">Configure NEXT_PUBLIC_SITE_URL para o link apontar para o endereço completo do app.</Aviso>
         )}
+
+        <Cartao className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Trazer meus eventos do Google</h2>
+            <p className="text-sm text-slate-600">
+              Seus compromissos pessoais do Google (reuniões, aniversários...) aparecem na agenda acima. Só você vê.
+            </p>
+          </div>
+          {google ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="flex-1 text-sm text-green-700">Agenda do Google conectada.</p>
+              <form action={removerAgendaGoogle.bind(null, empresaId)}>
+                <BotaoConfirmar
+                  mensagem="Parar de mostrar seus eventos do Google aqui?"
+                  className={estilos.botaoPerigo}
+                >
+                  Desconectar
+                </BotaoConfirmar>
+              </form>
+            </div>
+          ) : (
+            <>
+              <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-700">
+                <li>
+                  No computador, abra o Google Agenda, clique na engrenagem e em <strong>Configurações</strong>.
+                </li>
+                <li>
+                  À esquerda, em &quot;Configurações das minhas agendas&quot;, clique na sua agenda e desça até{" "}
+                  <strong>Integrar agenda</strong>.
+                </li>
+                <li>
+                  Copie o <strong>Endereço secreto no formato iCal</strong> e cole aqui.
+                </li>
+              </ol>
+              <form action={salvarAgendaGoogle.bind(null, empresaId)} className="flex flex-wrap gap-2">
+                <Input
+                  name="url"
+                  required
+                  placeholder={`${PREFIXO_GOOGLE}...`}
+                  aria-label="Endereço secreto no formato iCal"
+                  className="min-w-0 flex-1"
+                />
+                <Botao>Conectar</Botao>
+              </form>
+            </>
+          )}
+        </Cartao>
 
         <Cartao className="space-y-4">
           <div>
