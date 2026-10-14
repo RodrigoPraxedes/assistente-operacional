@@ -183,8 +183,14 @@ export function FormModelo({
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="publico_qr" defaultChecked={modelo?.publico_qr ?? true} />
-          Disponível no QR Code da unidade (preenchimento sem login, com nome + PIN)
+          Disponível no QR Code da unidade (preenchimento sem login)
         </label>
+        <Campo rotulo="Quem preenche pelo QR Code">
+          <Select name="modo_executor" defaultValue={modelo?.modo_executor ?? "aberto"}>
+            <option value="aberto">Aberto: a pessoa digita o próprio nome, sem PIN</option>
+            <option value="usuarios">Só usuários: escolhe o nome na lista e digita o PIN</option>
+          </Select>
+        </Campo>
       </Cartao>
 
       <Cartao className="space-y-3">

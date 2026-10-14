@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import type { ModoExecutor } from "@/lib/types";
 
 // Cliente anônimo (sem sessão) para a central pública
 function anon() {
@@ -11,7 +12,7 @@ function anon() {
 export interface CentralQr {
   unidade: { id: string; nome: string };
   empresa: { id: string; nome: string };
-  modelos: { id: string; nome: string; descricao: string | null; horario_preferencial: string }[];
+  modelos: { id: string; nome: string; descricao: string | null; horario_preferencial: string; modo_executor: ModoExecutor }[];
   colaboradores: { id: string; nome: string }[];
 }
 
@@ -27,6 +28,7 @@ export async function carregarModeloQr(token: string, modeloId: string) {
         id: string;
         nome: string;
         descricao: string | null;
+        modo_executor: ModoExecutor;
         itens: import("@/components/checklist/form-preencher").ItemPreencher[];
       }
     | null;

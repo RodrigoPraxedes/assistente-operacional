@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { enviarChecklist } from "@/lib/checklist-envio";
-import { RESPOSTAS_SIM_NAO, type TipoResposta } from "@/lib/types";
+import { RESPOSTAS_SIM_NAO, type ModoExecutor, type TipoResposta } from "@/lib/types";
 import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { trocarPorReduzidas } from "@/lib/foto";
@@ -30,13 +30,14 @@ interface Props {
   modeloId: string;
   unidadeId?: string;
   token?: string;
+  modoExecutor?: ModoExecutor;
   colaboradores?: { id: string; nome: string }[];
   executor?: string;
   itens: ItemPreencher[];
   voltar: { href: string; rotulo: string };
 }
 
-export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, colaboradores, executor, itens, voltar }: Props) {
+export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, modoExecutor, colaboradores, executor, itens, voltar }: Props) {
   const [estado, acao] = useActionState(enviarChecklist, undefined);
   const [respostas, setRespostas] = useState<Record<string, string>>({});
 
@@ -67,13 +68,20 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, co
       <input type="hidden" name="modelo_id" value={modeloId} />
       <input type="hidden" name="unidade_id" value={unidadeId ?? ""} />
       <input type="hidden" name="token" value={token ?? ""} />
+      <input type="hidden" name="modo_executor" value={modoExecutor ?? "usuarios"} />
       <input
         type="hidden"
         name="itens"
         value={JSON.stringify(itens.map((i) => ({ id: i.id, texto: i.texto, tipo_resposta: i.tipo_resposta })))}
       />
 
-      {canal === "qr" ? (
+      {canal === "qr" && modoExecutor === "aberto" ? (
+        <div className="rounded-xl border border-slate-200 bg-superficie p-4">
+          <Campo rotulo="Seu nome">
+            <Input name="executor_nome" required maxLength={80} autoComplete="name" placeholder="Nome e sobrenome" />
+          </Campo>
+        </div>
+      ) : canal === "qr" ? (
         <div className="grid grid-cols-3 gap-3 rounded-xl border border-slate-200 bg-superficie p-4">
           <div className="col-span-2">
             <Campo rotulo="Seu nome">

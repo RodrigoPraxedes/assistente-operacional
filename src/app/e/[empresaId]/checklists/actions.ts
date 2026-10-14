@@ -41,6 +41,7 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
     tolerancia_minutos: Number(form.get("tolerancia_minutos") ?? 30) || 0,
     recorrencia,
     publico_qr: form.get("publico_qr") === "on",
+    modo_executor: form.get("modo_executor") === "usuarios" ? "usuarios" : "aberto",
     whatsapp_destino: soDigitos(txt("whatsapp_destino")) || null,
     ativo: form.get("ativo") !== "false",
   };

@@ -24,6 +24,7 @@ export default async function PreencherQr({ params }: { params: Promise<{ token:
         empresaId={central.empresa.id}
         modeloId={modelo.id}
         token={token}
+        modoExecutor={modelo.modo_executor}
         colaboradores={central.colaboradores}
         itens={modelo.itens}
         voltar={{ href: `/qr/${token}`, rotulo: "Voltar à central da unidade" }}
