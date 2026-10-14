@@ -135,6 +135,7 @@ export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, pode
                         {t.origem !== "avulsa" && !etiquetas?.[t.id] && <Etiqueta cor="#7c3aed">{ORIGENS[t.origem]}</Etiqueta>}
                         {t.unidade_id && <Etiqueta>{nomes.unidades[t.unidade_id]}</Etiqueta>}
                         {atrasada && <Etiqueta cor="#dc2626">Atrasada</Etiqueta>}
+                        {t.privado && <Etiqueta>Privada</Etiqueta>}
                       </div>
                       <div className="mt-2 space-y-0.5 text-xs text-slate-500">
                         {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}

@@ -22,6 +22,9 @@ interface Fonte {
   setor_id: string | null;
   categoria_id: string | null;
   responsavel_id: string | null;
+  // ação/alerta privado: as tarefas nascem privadas, de quem criou
+  privado?: boolean;
+  criado_por?: string | null;
   titulo: string;
   descricao?: string | null | ((m: { quando: Date; prazo: Date }) => string);
   // quando cada tarefa aparece e qual o prazo dela, de hoje até "dias" à frente
@@ -97,7 +100,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
   let q = admin
     .from("acoes")
     .select(
-      "id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_inicial, data_final, horario, prazo_horas, recorrencia, empresas(fuso_horario)",
+      "id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_inicial, data_final, horario, prazo_horas, recorrencia, privado, criado_por, empresas(fuso_horario)",
     )
     .eq("ativo", true);
   if (acaoId) q = q.eq("id", acaoId);
@@ -117,6 +120,8 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
       horario: string;
       prazo_horas: number;
       recorrencia: string | null;
+      privado: boolean;
+      criado_por: string | null;
     } & ComFuso)[]
   >();
   if (error) throw error;
@@ -128,6 +133,8 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
     setor_id: a.setor_id,
     categoria_id: a.categoria_id,
     responsavel_id: a.responsavel_id,
+    privado: a.privado,
+    criado_por: a.criado_por,
     titulo: a.nome,
     descricao: a.descricao,
     momentos: porRegra(
@@ -149,7 +156,7 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
   let q = admin
     .from("alerta_avisos")
     .select(
-      "id, dias_antes, titulo, responsavel_id, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, empresas(fuso_horario))",
+      "id, dias_antes, titulo, responsavel_id, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, privado, criado_por, empresas(fuso_horario))",
     )
     .eq("alertas.ativo", true);
   if (alertaId) q = q.eq("alerta_id", alertaId);
@@ -172,6 +179,8 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
         data_evento: string;
         recorrencia: string | null;
         horario: string;
+        privado: boolean;
+        criado_por: string | null;
       } & ComFuso;
     }[]
   >();
@@ -195,6 +204,8 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
       setor_id: a.setor_id,
       categoria_id: a.categoria_id,
       responsavel_id: v.responsavel_id ?? a.responsavel_id,
+      privado: a.privado,
+      criado_por: a.criado_por,
       titulo: v.titulo,
       descricao: (quando) =>
         [`${a.nome}: ${formatarData(quando.prazo.toISOString(), fuso)}`, a.descricao].filter(Boolean).join("\n\n"),
@@ -271,6 +282,8 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           setor_id: f.setor_id,
           categoria_id: f.categoria_id,
           responsavel_id: f.responsavel_id,
+          privado: f.privado ?? false,
+          criado_por: f.criado_por ?? null,
           titulo: f.titulo,
           descricao: typeof f.descricao === "function" ? f.descricao(m) : (f.descricao ?? null),
           origem: f.origem,

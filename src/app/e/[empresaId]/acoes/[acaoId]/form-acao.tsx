@@ -6,6 +6,7 @@ import { RECORRENCIAS_PRONTAS } from "@/lib/recorrencias-prontas";
 import type { Acao } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { CampoVisibilidade } from "@/components/campo-visibilidade";
 
 type Opcao = { id: string; nome: string };
 
@@ -17,9 +18,11 @@ export function FormAcao({
   setores,
   categorias,
   membros,
+  podeMudarPrivado,
 }: {
   empresaId: string;
   acao: Acao | null;
+  podeMudarPrivado: boolean;
   hoje: string;
   unidades: Opcao[];
   setores: Opcao[];
@@ -121,6 +124,7 @@ export function FormAcao({
               ))}
             </Select>
           </Campo>
+          <CampoVisibilidade privado={acao?.privado} podeMudar={podeMudarPrivado} />
           {acao && (
             <Campo rotulo="Situação">
               <Select name="ativo" defaultValue={String(acao.ativo)}>
