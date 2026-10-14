@@ -23,6 +23,7 @@ export default async function LayoutEmpresa({
         membro={{ nome: membro.nome, cargo: membro.cargo }}
         veConfig={veConfig}
         veAdmin={admin}
+        veWhatsApp={pode("whatsapp.gerenciar") || pode("whatsapp.avisos")}
         tema={tema === "claro" || tema === "escuro" ? tema : "auto"}
       />
       <main className="mx-auto w-full max-w-7xl min-w-0 px-4 py-5 sm:px-8 sm:py-8">

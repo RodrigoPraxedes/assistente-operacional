@@ -60,7 +60,11 @@ escalas e alertas de datas, com avisos por WhatsApp e Google Agenda.
   desligado. Não precisa de conta nem chave do Google: o próprio Google busca o link de tempos
   em tempos (pode levar algumas horas para uma novidade aparecer).
 
-Próximo passo: WhatsApp oficial.
+- **WhatsApp (avisos internos):** conexão por empresa ou unidade pela Evolution API (WhatsApp Web
+  via Baileys, não oficial) ou em modo ensaio; a API oficial da Meta já tem lugar reservado.
+  Destinatários autorizados, rascunho → confirmação → fila → aceito → entregue → lido, eventos do
+  webhook sem dados pessoais e regra "check-list enviado → rascunho para revisão". Precisa de um
+  servidor próprio para a Evolution: veja [docs/whatsapp.md](docs/whatsapp.md).
 
 ## Como colocar no ar
 

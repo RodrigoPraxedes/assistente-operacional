@@ -1,0 +1,48 @@
+# Evolution API v2.3.7 (WhatsApp Web via Baileys — NÃO é a API oficial da Meta)
+# Servidor próprio (VPS) com Docker. A Vercel não roda isto.
+# Uso: copie este arquivo e o .env.example para o servidor, renomeie para .env,
+# preencha os valores e rode: docker compose up -d
+# A porta 8080 fica presa ao localhost: exponha só pelo proxy com HTTPS (Caddy abaixo).
+
+services:
+  evolution:
+    image: evoapicloud/evolution-api:v2.3.7 # versão fixa; atualize de propósito (docs/whatsapp.md)
+    restart: always
+    depends_on: [postgres, redis]
+    env_file: .env
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - evolution_instances:/evolution/instances
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  # HTTPS automático (Let's Encrypt) para o endereço da Evolution
+  caddy:
+    image: caddy:2
+    restart: always
+    ports: ["80:80", "443:443"]
+    command: caddy reverse-proxy --from ${EVOLUTION_DOMINIO} --to evolution:8080
+    volumes:
+      - caddy_data:/data
+
+volumes:
+  evolution_instances:
+  postgres_data:
+  redis_data:
+  caddy_data:
