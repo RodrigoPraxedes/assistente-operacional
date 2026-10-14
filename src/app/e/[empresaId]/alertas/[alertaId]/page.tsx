@@ -15,7 +15,7 @@ export default async function EditarAlerta({
 }) {
   const { empresaId, alertaId } = await params;
   const { erro } = await searchParams;
-  const { supabase, empresa } = await exigirPermissao(empresaId, "alertas.editar");
+  const { supabase, empresa, membro } = await exigirPermissao(empresaId, "alertas.editar");
   const novo = alertaId === "novo";
 
   const [
@@ -61,6 +61,7 @@ export default async function EditarAlerta({
         setores={setores ?? []}
         categorias={categorias ?? []}
         membros={membros ?? []}
+        podeMudarPrivado={novo || !alerta!.criado_por || alerta!.criado_por === membro.id}
       />
     </div>
   );

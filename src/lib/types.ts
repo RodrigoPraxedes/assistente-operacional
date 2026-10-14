@@ -92,6 +92,8 @@ export interface Tarefa {
   status_anterior_id: string | null;
   responsavel_id: string | null;
   criado_por: string | null;
+  // privado: só quem criou e o responsável veem
+  privado: boolean;
   prazo: string | null;
   concluida_em: string | null;
   created_at: string;
@@ -178,6 +180,8 @@ export interface Acao {
   prazo_horas: number;
   recorrencia: string | null;
   ativo: boolean;
+  privado: boolean;
+  criado_por: string | null;
   created_at: string;
 }
 
@@ -194,6 +198,8 @@ export interface Alerta {
   recorrencia: string | null;
   horario: string;
   ativo: boolean;
+  privado: boolean;
+  criado_por: string | null;
   created_at: string;
 }
 
