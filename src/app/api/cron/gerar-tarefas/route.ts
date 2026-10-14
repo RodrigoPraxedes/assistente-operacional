@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { gerarTarefasRecorrentes } from "@/lib/gerar-tarefas";
+import { processarFila } from "@/lib/whatsapp-api/fila";
 
 export const dynamic = "force-dynamic";
 
@@ -11,5 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ erro: "não autorizado" }, { status: 401 });
   }
   const resultado = await gerarTarefasRecorrentes();
-  return NextResponse.json(resultado);
+  // rede de segurança do WhatsApp: o que ficou na fila ou sem processar
+  const whatsapp = await processarFila().catch(() => null);
+  return NextResponse.json({ ...resultado, whatsapp });
 }

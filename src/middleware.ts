@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // tudo menos arquivos estáticos, o feed da agenda e o cron
-    "/((?!_next/static|_next/image|favicon.ico|agenda/|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // tudo menos arquivos estáticos, o feed da agenda, o cron e o webhook do WhatsApp
+    "/((?!_next/static|_next/image|favicon.ico|agenda/|api/cron|api/whatsapp/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
