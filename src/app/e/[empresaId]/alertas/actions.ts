@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { gerarTarefasRecorrentes } from "@/lib/gerar-tarefas";
 import { regraValida } from "@/lib/recorrencia";
+import { lerPrivado } from "@/lib/privado";
 
 interface AvisoForm {
   dias_antes: number;
@@ -52,12 +53,14 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
     recorrencia,
     horario: txt("horario") ?? "09:00",
     ativo: form.get("ativo") !== "false",
+    ...(lerPrivado(form) !== undefined && { privado: lerPrivado(form) }),
   };
 
   let alertaId = id;
   if (id) {
-    const { error } = await supabase.from("alertas").update(dados).eq("id", id);
+    const { data, error } = await supabase.from("alertas").update(dados).eq("id", id).select("id");
     if (error) return { erro: error.message };
+    if (!data?.length) return { erro: "Este alerta é privado: só quem criou pode editar" };
     // avisos são substituídos; as tarefas já criadas continuam no Kanban
     const { error: e } = await supabase.from("alerta_avisos").delete().eq("alerta_id", id);
     if (e) return { erro: e.message };

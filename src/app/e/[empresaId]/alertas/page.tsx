@@ -18,7 +18,7 @@ export default async function PaginaAlertas({
   const { salvo } = await searchParams;
   const { supabase, empresa, pode } = await getContexto(empresaId);
 
-  const [{ data: alertas }, { data: avisos }, { data: unidades }] = await Promise.all([
+  const [{ data: alertas, error: erroAlertas }, { data: avisos }, { data: unidades }] = await Promise.all([
     supabase.from("alertas").select("*").eq("empresa_id", empresaId),
     supabase.from("alerta_avisos").select("*").eq("empresa_id", empresaId).order("dias_antes", { ascending: false }),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId),
@@ -64,8 +64,21 @@ export default async function PaginaAlertas({
         Datas que não podem passar batido. Alguns dias antes, cada aviso vira uma tarefa no Kanban para o responsável.
       </p>
 
-      {linhas.length === 0 ? (
-        <Vazio>Nenhum alerta cadastrado. Ex.: vencimento do alvará, AVCB, contrato de aluguel, dedetização.</Vazio>
+      {erroAlertas ? (
+        // ex.: banco sem a migration de alertas aplicada
+        <Aviso>Não foi possível carregar os alertas: {erroAlertas.message}</Aviso>
+      ) : linhas.length === 0 ? (
+        <Vazio>
+          Nenhum alerta cadastrado. Ex.: vencimento do alvará, AVCB, contrato de aluguel, dedetização.
+          {pode("alertas.editar") && (
+            <>
+              {" "}
+              <Link href={`/e/${empresaId}/alertas/novo`} className="font-medium text-blue-700">
+                Cadastrar o primeiro alerta
+              </Link>
+            </>
+          )}
+        </Vazio>
       ) : (
         <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-superficie">
           {linhas.map(({ a, proxima, faltam, avisos: vs }) => (
@@ -80,6 +93,12 @@ export default async function PaginaAlertas({
                   </Link>
                 ) : (
                   <span className="font-medium">{a.nome}</span>
+                )}
+                {a.privado && (
+                  <>
+                    {" "}
+                    <Etiqueta>Privado</Etiqueta>
+                  </>
                 )}
                 <p className="text-xs text-slate-500">
                   {descreverRecorrencia(a.recorrencia)} · {a.unidade_id ? unidade.get(a.unidade_id) : "Empresa toda"}

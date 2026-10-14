@@ -5,7 +5,7 @@ import { formatarDataHora } from "@/lib/formato";
 import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
-import { comentarTarefa } from "../actions";
+import { comentarTarefa, mudarPrivacidadeTarefa } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
 
 const ACOES: Record<string, string> = {
@@ -20,11 +20,11 @@ export default async function DetalheTarefa({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; tarefaId: string }>;
-  searchParams: Promise<{ nova?: string }>;
+  searchParams: Promise<{ nova?: string; erro?: string }>;
 }) {
   const { empresaId, tarefaId } = await params;
-  const { nova } = await searchParams;
-  const { supabase, empresa, pode } = await getContexto(empresaId);
+  const { nova, erro } = await searchParams;
+  const { supabase, empresa, membro, pode } = await getContexto(empresaId);
 
   const { data: tarefa } = await supabase.from("tarefas").select("*").eq("id", tarefaId).maybeSingle<Tarefa>();
   if (!tarefa) notFound();
@@ -62,6 +62,7 @@ export default async function DetalheTarefa({
         ← Voltar ao Kanban
       </Link>
       {nova && <Aviso tipo="sucesso">Tarefa criada.</Aviso>}
+      {erro && <Aviso>{erro}</Aviso>}
       <Titulo>{tarefa.titulo}</Titulo>
 
       <Cartao className="space-y-3">
@@ -69,6 +70,7 @@ export default async function DetalheTarefa({
           {atual && <Etiqueta cor={atual.cor}>{atual.nome}</Etiqueta>}
           <Etiqueta cor="#7c3aed">{ORIGENS[tarefa.origem]}</Etiqueta>
           {unidade && <Etiqueta>{unidade.nome}</Etiqueta>}
+          {tarefa.privado && <Etiqueta>Privada</Etiqueta>}
         </div>
         {tarefa.descricao && <p className="whitespace-pre-wrap text-sm text-slate-700">{tarefa.descricao}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm">
@@ -101,6 +103,11 @@ export default async function DetalheTarefa({
             >
               Ver check-list preenchido
             </Link>
+          )}
+          {(!tarefa.criado_por || tarefa.criado_por === membro.id) && (
+            <form action={mudarPrivacidadeTarefa.bind(null, empresaId, tarefa.id, !tarefa.privado)}>
+              <Botao variante="secundario">{tarefa.privado ? "Tornar pública" : "Tornar privada"}</Botao>
+            </form>
           )}
           {pode("tarefas.excluir") && <BotaoExcluir empresaId={empresaId} tarefaId={tarefa.id} />}
         </div>
