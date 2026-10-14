@@ -23,6 +23,7 @@ export default async function LayoutWhatsApp({
         <NavLink href={`${base}/avisos`}>Avisos</NavLink>
         {gerencia && <NavLink href={`${base}/eventos`}>Eventos</NavLink>}
         {gerencia && <NavLink href={`${base}/destinatarios`}>Destinatários</NavLink>}
+        {gerencia && <NavLink href={`${base}/automacoes`}>Automações</NavLink>}
       </nav>
       {children}
     </div>

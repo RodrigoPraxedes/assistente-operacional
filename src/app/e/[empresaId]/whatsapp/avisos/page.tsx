@@ -39,6 +39,13 @@ interface Mensagem {
   confirmador: { nome: string } | null;
 }
 
+const ORIGEM: Record<string, string> = {
+  checklist: "Gerado pelo check-list",
+  teste: "Teste",
+  tarefa: "Automático: tarefa atribuída",
+  resumo: "Automático: resumo do dia",
+};
+
 export default async function Avisos({
   params,
   searchParams,
@@ -136,7 +143,7 @@ export default async function Avisos({
                     <span className="font-normal text-slate-500">{mascararNumero(m.whatsapp_contatos?.telefone)}</span>
                   </p>
                   <p className="text-xs text-slate-500">
-                    {m.origem === "checklist" ? "Gerado pelo check-list" : m.origem === "teste" ? "Teste" : "Manual"}
+                    {ORIGEM[m.origem] ?? "Manual"}
                     {ensaio.has(m.conexao_id) && " · ensaio"}
                     {m.solicitante && ` · preparado por ${m.solicitante.nome}`}
                     {m.confirmador && ` · confirmado por ${m.confirmador.nome}`}

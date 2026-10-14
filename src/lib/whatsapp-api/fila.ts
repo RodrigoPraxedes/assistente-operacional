@@ -31,6 +31,8 @@ interface Reservada {
 export function textoFinal(m: { empresa_id: string; texto: string; origem: string; origem_id: string | null }) {
   if (m.origem === "checklist" && m.origem_id)
     return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/checklists/execucoes/${m.origem_id}`)}`;
+  if (m.origem === "tarefa" && m.origem_id) return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`)}`;
+  if (m.origem === "resumo") return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas`)}`;
   return m.texto;
 }
 
@@ -172,8 +174,15 @@ export async function processarEvento(eventoId: string) {
   }
 }
 
-// Varredura: chamada pelo cron diário e pelo botão "Processar fila" da tela
-export async function processarFila(limite = 20) {
+// Intervalo entre duas mensagens seguidas: rajadas são o que mais chama a
+// atenção do WhatsApp para números usados por API não oficial
+const INTERVALO_MIN_MS = 3_000;
+const INTERVALO_MAX_MS = 7_000;
+
+// Varredura: chamada pelos crons e pelo botão "Processar fila" da tela.
+// prazoMs: para de enviar quando o tempo acaba (o resto fica para a próxima)
+export async function processarFila(limite = 20, prazoMs = 40_000) {
+  const inicio = Date.now();
   const admin = createAdminClient();
   const limiteTravado = new Date(Date.now() - ENVIANDO_TRAVADO_MIN * 60_000).toISOString();
   await admin
@@ -189,7 +198,15 @@ export async function processarFila(limite = 20) {
     .lte("proxima_tentativa_em", agora())
     .order("proxima_tentativa_em")
     .limit(limite);
-  for (const m of fila ?? []) await processarMensagem(m.id);
+  let enviadas = 0;
+  for (const m of fila ?? []) {
+    if (enviadas > 0) {
+      if (Date.now() - inicio > prazoMs) break;
+      await esperar(INTERVALO_MIN_MS + Math.random() * (INTERVALO_MAX_MS - INTERVALO_MIN_MS));
+    }
+    await processarMensagem(m.id);
+    enviadas++;
+  }
 
   const { data: eventos } = await admin
     .from("whatsapp_eventos")
@@ -199,7 +216,11 @@ export async function processarFila(limite = 20) {
     .limit(limite * 5);
   for (const e of eventos ?? []) await processarEvento(e.id);
 
-  return { mensagens: fila?.length ?? 0, eventos: eventos?.length ?? 0 };
+  return { mensagens: enviadas, eventos: eventos?.length ?? 0 };
+}
+
+function esperar(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 function agora() {

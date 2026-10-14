@@ -10,7 +10,7 @@ import { comoErroProvedor, provedorDe } from "@/lib/whatsapp-api";
 import { processarFila, processarMensagem, textoFinal } from "@/lib/whatsapp-api/fila";
 import { sanitizarErro } from "@/lib/whatsapp-api/sanitizar";
 
-type Aba = "/conexao" | "/avisos" | "/eventos" | "/destinatarios";
+type Aba = "/conexao" | "/avisos" | "/eventos" | "/destinatarios" | "/automacoes";
 
 function voltar(empresaId: string, aba: Aba, params: Record<string, string> = {}): never {
   const q = new URLSearchParams(params).toString();
@@ -140,7 +140,7 @@ export async function pausarEnvios(empresaId: string, conexaoId: string, pausado
 export async function processarAgora(empresaId: string) {
   const { pode } = await getContexto(empresaId);
   if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/avisos", { erro: "Sem permissão." });
-  await processarFila();
+  await processarFila(20, 15_000);
   atualizar(empresaId);
 }
 
@@ -201,6 +201,61 @@ export async function removerGatilho(empresaId: string, gatilhoId: string) {
   const { error } = await supabase.from("whatsapp_gatilhos").delete().eq("id", gatilhoId);
   if (error) voltar(empresaId, "/destinatarios", { erro: error.message });
   atualizar(empresaId);
+}
+
+// ---------------------------------------------------------------------------
+// Automações
+// ---------------------------------------------------------------------------
+
+export async function salvarAutomacoes(empresaId: string, form: FormData) {
+  const { supabase, membro, pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/automacoes", { erro: "Sem permissão." });
+  const hora = String(form.get("resumo_hora") ?? "07:00");
+  const limite = Number(form.get("limite_diario"));
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) voltar(empresaId, "/automacoes", { erro: "Horário inválido." });
+  if (!Number.isInteger(limite) || limite < 1 || limite > 1000)
+    voltar(empresaId, "/automacoes", { erro: "O limite diário deve ficar entre 1 e 1.000." });
+  const { error } = await supabase.from("whatsapp_automacoes").upsert({
+    empresa_id: empresaId,
+    aviso_tarefa: form.get("aviso_tarefa") === "on",
+    resumo_dia: form.get("resumo_dia") === "on",
+    resumo_hora: hora,
+    limite_diario: limite,
+    atualizado_por: membro.id,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) voltar(empresaId, "/automacoes", { erro: error.message });
+  atualizar(empresaId);
+  voltar(empresaId, "/automacoes", { ok: "Automações salvas." });
+}
+
+// Cria destinatários para os colaboradores ativos que têm celular no cadastro
+// e ainda não estão autorizados (nem por número nem por colaborador)
+export async function autorizarEquipe(empresaId: string) {
+  const { supabase, membro, pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/automacoes", { erro: "Sem permissão." });
+  const [{ data: membros }, { data: contatos }] = await Promise.all([
+    supabase.from("membros").select("id, nome, telefone").eq("empresa_id", empresaId).eq("ativo", true),
+    supabase.from("whatsapp_contatos").select("membro_id, telefone").eq("empresa_id", empresaId),
+  ]);
+  const ligados = new Set((contatos ?? []).map((c) => c.membro_id).filter(Boolean));
+  const numeros = new Set((contatos ?? []).map((c) => c.telefone));
+  const novos: { empresa_id: string; nome: string; telefone: string; membro_id: string; autorizado_por: string }[] = [];
+  for (const m of membros ?? []) {
+    let telefone = soDigitos(m.telefone);
+    if (telefone.length === 10 || telefone.length === 11) telefone = `55${telefone}`;
+    if (ligados.has(m.id) || !/^\d{12,13}$/.test(telefone) || numeros.has(telefone)) continue;
+    numeros.add(telefone);
+    novos.push({ empresa_id: empresaId, nome: m.nome, telefone, membro_id: m.id, autorizado_por: membro.id });
+  }
+  if (novos.length) {
+    const { error } = await supabase.from("whatsapp_contatos").insert(novos);
+    if (error) voltar(empresaId, "/automacoes", { erro: error.message });
+  }
+  atualizar(empresaId);
+  voltar(empresaId, "/automacoes", {
+    ok: novos.length ? `${novos.length} colaborador(es) autorizado(s).` : "Nenhum colaborador novo com celular no cadastro.",
+  });
 }
 
 // ---------------------------------------------------------------------------
