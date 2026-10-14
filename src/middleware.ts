@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // tudo menos arquivos estáticos, a central pública (QR) e o cron
-    "/((?!_next/static|_next/image|favicon.ico|qr/|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // tudo menos arquivos estáticos, a central pública (QR), o feed da agenda e o cron
+    "/((?!_next/static|_next/image|favicon.ico|qr/|agenda/|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

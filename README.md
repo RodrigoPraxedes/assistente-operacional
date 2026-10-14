@@ -48,7 +48,15 @@ escalas e alertas de datas, com avisos por WhatsApp e Google Agenda.
 - **Convites:** cadastre o colaborador com e-mail; quando ele criar a conta com o mesmo e-mail,
   já entra vinculado à empresa.
 
-Próximos passos: integrações com Google Agenda e WhatsApp oficial.
+- **Google Agenda:** cada colaborador tem um link secreto de calendário (formato iCal) que
+  adiciona uma vez no Google Agenda (ou iPhone/Outlook). Lá aparecem as tarefas dele, as
+  próximas ocorrências de check-lists, ações e alertas em que ele é o responsável e os turnos,
+  folgas e férias da escala (30 dias para trás e 90 para frente). Quem cadastra colaboradores
+  cria o link de quem não entra no app e manda pelo WhatsApp. O link pode ser trocado ou
+  desligado. Não precisa de conta nem chave do Google: o próprio Google busca o link de tempos
+  em tempos (pode levar algumas horas para uma novidade aparecer).
+
+Próximo passo: WhatsApp oficial.
 
 ## Como colocar no ar
 
