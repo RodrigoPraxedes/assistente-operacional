@@ -64,7 +64,7 @@ export function CalendarioSemana({
                     <>
                       <span className="block text-xs text-slate-500">
                         {typeof e.inicio === "string"
-                          ? "Dia todo"
+                          ? (e.periodo ?? "Dia todo")
                           : e.tipo === "turno" || e.tipo === "google"
                             ? `${hora(e.inicio, fuso)}–${hora(e.fim as Date, fuso)}`
                             : hora(e.inicio, fuso)}

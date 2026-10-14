@@ -332,11 +332,21 @@ export interface Turno {
   empresa_id: string;
   unidade_id: string | null;
   nome: string;
-  inicio: string;
-  fim: string;
+  // turno sem horário: só o período do dia; aí início e fim ficam vazios
+  periodo: Periodo | null;
+  inicio: string | null;
+  fim: string | null;
   cor: string;
   ativo: boolean;
 }
+
+export type Periodo = "manha" | "tarde" | "noite";
+
+export const PERIODOS: Record<Periodo, { rotulo: string; frase: string }> = {
+  manha: { rotulo: "Manhã", frase: "de manhã" },
+  tarde: { rotulo: "Tarde", frase: "à tarde" },
+  noite: { rotulo: "Noite", frase: "à noite" },
+};
 
 export interface Escala {
   id: string;

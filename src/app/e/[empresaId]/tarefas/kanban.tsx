@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
+import { MessageCircle } from "lucide-react";
 import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
 import { ORIGENS, type Status, type Tarefa } from "@/lib/types";
 import { Botao, Etiqueta, Input, Textarea } from "@/components/ui";
@@ -16,13 +17,30 @@ interface Props {
   podeMover: boolean;
   // etiquetas extras por tarefa (ex.: prioridade e número do chamado)
   etiquetas?: Record<string, { texto: string; cor?: string }[]>;
+  // quadro (padrão) ou lista
+  visao?: "kanban" | "lista";
+  // colunas do quadro; sem isso, todos os status
+  colunas?: Status[];
+  // link do WhatsApp com a mensagem pronta, por tarefa
+  whatsapp?: Record<string, string>;
 }
 
 // chamados abrem na própria página; o resto no detalhe da tarefa
 const linkDe = (empresaId: string, t: Tarefa) =>
   t.origem === "chamado" ? `/e/${empresaId}/chamados/${t.id}` : `/e/${empresaId}/tarefas/${t.id}`;
 
-export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, podeMover, etiquetas }: Props) {
+export function Kanban({
+  empresaId,
+  fuso,
+  status,
+  tarefas: iniciais,
+  nomes,
+  podeMover,
+  etiquetas,
+  visao = "kanban",
+  colunas = status,
+  whatsapp,
+}: Props) {
   const [tarefas, setTarefas] = useState(iniciais);
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [adiando, setAdiando] = useState<{ tarefa: Tarefa; statusId: string } | null>(null);
@@ -33,6 +51,8 @@ export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, pode
 
   const tipoDe = (statusId: string) => status.find((s) => s.id === statusId)?.tipo;
   const agora = Date.now();
+  const atrasada = (t: Tarefa) =>
+    ["aberto", "em_andamento"].includes(tipoDe(t.status_id) ?? "") && !!t.prazo && new Date(t.prazo).getTime() < agora;
 
   function aplicar(tarefaId: string, statusId: string, prazo?: string) {
     setTarefas((ts) =>
@@ -79,6 +99,69 @@ export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, pode
     });
   }
 
+  const etiquetasDe = (t: Tarefa) => (
+    <>
+      {etiquetas?.[t.id]?.map((e) => (
+        <Etiqueta key={e.texto} cor={e.cor}>
+          {e.texto}
+        </Etiqueta>
+      ))}
+      {t.origem !== "avulsa" && !etiquetas?.[t.id] && <Etiqueta cor="#7c3aed">{ORIGENS[t.origem]}</Etiqueta>}
+      {t.unidade_id && <Etiqueta>{nomes.unidades[t.unidade_id]}</Etiqueta>}
+      {atrasada(t) && <Etiqueta cor="#dc2626">Atrasada</Etiqueta>}
+      {t.privado && <Etiqueta>Privada</Etiqueta>}
+    </>
+  );
+
+  // trocar status, retornar do adiado e mandar no WhatsApp
+  const controles = (t: Tarefa) => {
+    const atual = status.find((s) => s.id === t.status_id);
+    return (
+      <div className="flex items-center gap-2">
+        {podeMover ? (
+          <select
+            aria-label="Mover para"
+            value={t.status_id}
+            onChange={(e) => mover(t, e.target.value)}
+            className="min-w-0 flex-1 rounded border border-slate-200 bg-superficie px-1 py-1 text-xs"
+          >
+            {/* status de outro módulo (ex.: "Aguardando peça" do chamado) não aparecem */}
+            {status
+              .filter((o) => !o.modulo || o.modulo === t.origem || o.id === t.status_id)
+              .map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.nome}
+                </option>
+              ))}
+          </select>
+        ) : (
+          atual && (
+            <span className="flex-1">
+              <Etiqueta cor={atual.cor}>{atual.nome}</Etiqueta>
+            </span>
+          )
+        )}
+        {podeMover && atual?.tipo === "adiado" && t.status_anterior_id && (
+          <button onClick={() => retornar(t)} className="text-xs font-medium text-blue-600">
+            Retornar
+          </button>
+        )}
+        {whatsapp?.[t.id] && (
+          <a
+            href={whatsapp[t.id]}
+            target="_blank"
+            rel="noopener"
+            title="Enviar no WhatsApp"
+            aria-label={`Enviar "${t.titulo}" no WhatsApp`}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-600 text-white hover:bg-green-700"
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden />
+          </a>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       {erro && (
@@ -90,86 +173,91 @@ export function Kanban({ empresaId, fuso, status, tarefas: iniciais, nomes, pode
         </div>
       )}
 
-      <div className="flex gap-3 overflow-x-auto pb-4">
-        {status.map((s) => {
-          const daColuna = tarefas.filter((t) => t.status_id === s.id);
-          return (
-            <section
-              key={s.id}
-              className="flex w-72 shrink-0 flex-col rounded-xl bg-slate-100 p-2"
-              onDragOver={(e) => podeMover && e.preventDefault()}
-              onDrop={() => {
-                const t = tarefas.find((x) => x.id === arrastando);
-                if (t) mover(t, s.id);
-                setArrastando(null);
-              }}
-            >
-              <header className="mb-2 flex items-center justify-between px-1">
-                <span className="flex items-center gap-2 text-sm font-medium">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.cor }} />
-                  {s.nome}
-                </span>
-                <span className="text-xs text-slate-500">{daColuna.length}</span>
-              </header>
-
-              <div className="flex min-h-16 flex-col gap-2">
-                {daColuna.map((t) => {
-                  const aberta = ["aberto", "em_andamento"].includes(s.tipo);
-                  const atrasada = aberta && t.prazo && new Date(t.prazo).getTime() < agora;
-                  return (
-                    <article
-                      key={t.id}
-                      draggable={podeMover}
-                      onDragStart={() => setArrastando(t.id)}
-                      className={`rounded-lg border bg-superficie p-3 text-sm shadow-sm ${atrasada ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""}`}
-                    >
+      {visao === "lista" ? (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-superficie">
+          {tarefas.length === 0 ? (
+            <p className="p-4 text-sm text-slate-500">Nenhuma tarefa com esses filtros.</p>
+          ) : (
+            <ul className="divide-y divide-slate-200">
+              {tarefas.map((t) => {
+                const s = status.find((x) => x.id === t.status_id);
+                return (
+                  <li
+                    key={t.id}
+                    className={`flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:gap-4 ${atrasada(t) ? "bg-red-50" : ""}`}
+                  >
+                    <span
+                      className="hidden h-2.5 w-2.5 shrink-0 rounded-full sm:block"
+                      style={{ backgroundColor: s?.cor }}
+                      aria-hidden
+                    />
+                    <div className="min-w-0 flex-1">
                       <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
                         {t.titulo}
                       </Link>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {etiquetas?.[t.id]?.map((e) => (
-                          <Etiqueta key={e.texto} cor={e.cor}>
-                            {e.texto}
-                          </Etiqueta>
-                        ))}
-                        {t.origem !== "avulsa" && !etiquetas?.[t.id] && <Etiqueta cor="#7c3aed">{ORIGENS[t.origem]}</Etiqueta>}
-                        {t.unidade_id && <Etiqueta>{nomes.unidades[t.unidade_id]}</Etiqueta>}
-                        {atrasada && <Etiqueta cor="#dc2626">Atrasada</Etiqueta>}
-                        {t.privado && <Etiqueta>Privada</Etiqueta>}
-                      </div>
-                      <div className="mt-2 space-y-0.5 text-xs text-slate-500">
-                        {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}
-                        {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
-                      </div>
-                      {podeMover && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <select
-                            aria-label="Mover para"
-                            value={t.status_id}
-                            onChange={(e) => mover(t, e.target.value)}
-                            className="min-w-0 flex-1 rounded border border-slate-200 bg-superficie px-1 py-1 text-xs"
-                          >
-                            {status.map((o) => (
-                              <option key={o.id} value={o.id}>
-                                {o.nome}
-                              </option>
-                            ))}
-                          </select>
-                          {s.tipo === "adiado" && t.status_anterior_id && (
-                            <button onClick={() => retornar(t)} className="text-xs font-medium text-blue-600">
-                              Retornar
-                            </button>
-                          )}
+                      <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
+                    </div>
+                    <div className="space-y-0.5 text-xs text-slate-500 sm:w-48">
+                      {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}
+                      {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
+                    </div>
+                    <div className="sm:w-56">{controles(t)}</div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      ) : (
+        <div className="flex gap-3 overflow-x-auto pb-4">
+          {colunas.map((s) => {
+            const daColuna = tarefas.filter((t) => t.status_id === s.id);
+            return (
+              <section
+                key={s.id}
+                className="flex w-72 shrink-0 flex-col rounded-xl bg-slate-100 p-2"
+                onDragOver={(e) => podeMover && e.preventDefault()}
+                onDrop={() => {
+                  const t = tarefas.find((x) => x.id === arrastando);
+                  if (t) mover(t, s.id);
+                  setArrastando(null);
+                }}
+              >
+                <header className="mb-2 flex items-center justify-between px-1">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.cor }} />
+                    {s.nome}
+                  </span>
+                  <span className="text-xs text-slate-500">{daColuna.length}</span>
+                </header>
+
+                <div className="flex min-h-16 flex-col gap-2">
+                  {daColuna.map((t) => {
+                    return (
+                      <article
+                        key={t.id}
+                        draggable={podeMover}
+                        onDragStart={() => setArrastando(t.id)}
+                        className={`rounded-lg border bg-superficie p-3 text-sm shadow-sm ${atrasada(t) ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""}`}
+                      >
+                        <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
+                          {t.titulo}
+                        </Link>
+                        <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
+                        <div className="mt-2 space-y-0.5 text-xs text-slate-500">
+                          {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}
+                          {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                         </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })}
-      </div>
+                        {(podeMover || whatsapp?.[t.id]) && <div className="mt-2">{controles(t)}</div>}
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
 
       {adiando && (
         <DialogoAdiar

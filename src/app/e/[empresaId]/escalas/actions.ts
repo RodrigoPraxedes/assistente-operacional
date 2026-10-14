@@ -88,10 +88,13 @@ export async function copiarSemanaAnterior(empresaId: string, form: FormData) {
 export async function salvarTurno(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const id = txt(form, "id");
+  // turno sem horário: só o período (manhã, tarde, noite), sem início nem fim
+  const periodo = txt(form, "periodo");
   const dados = {
     nome: txt(form, "nome") ?? "",
-    inicio: txt(form, "inicio") ?? "08:00",
-    fim: txt(form, "fim") ?? "16:00",
+    periodo,
+    inicio: periodo ? null : (txt(form, "inicio") ?? "08:00"),
+    fim: periodo ? null : (txt(form, "fim") ?? "16:00"),
     cor: txt(form, "cor") ?? "#2563eb",
     unidade_id: txt(form, "unidade_id"),
     ativo: form.get("ativo") !== "false",
