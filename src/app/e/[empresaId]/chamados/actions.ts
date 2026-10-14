@@ -101,26 +101,6 @@ export async function adicionarFotos(empresaId: string, tarefaId: string, form: 
 }
 
 // ---------------------------------------------------------------- cadastros
-export async function salvarEquipamento(empresaId: string, form: FormData) {
-  const { supabase } = await getContexto(empresaId);
-  const id = txt(form, "id");
-  const dados = {
-    nome: txt(form, "nome")!,
-    codigo: txt(form, "codigo"),
-    marca: txt(form, "marca"),
-    modelo: txt(form, "modelo"),
-    unidade_id: txt(form, "unidade_id"),
-    setor_id: txt(form, "setor_id"),
-    observacao: txt(form, "observacao"),
-    ativo: form.get("ativo") !== "false",
-  };
-  const { error } = id
-    ? await supabase.from("equipamentos").update(dados).eq("id", id)
-    : await supabase.from("equipamentos").insert({ ...dados, empresa_id: empresaId });
-  if (error) redirect(`/e/${empresaId}/chamados/cadastros?erro=${encodeURIComponent(error.message)}`);
-  revalidatePath(`/e/${empresaId}/chamados/cadastros`);
-}
-
 export async function salvarFornecedor(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const id = txt(form, "id");
