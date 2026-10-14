@@ -8,6 +8,8 @@
 --
 -- Tipos de serviço: lista por empresa, já vem com uma sugestão e a empresa
 -- cadastra mais. Um prestador pode ter vários tipos.
+-- A função definir_tipos_prestador checa permissão por tem_permissao, que já
+-- bloqueia empresa suspensa (empresa_liberada, migration 11).
 -- =============================================================================
 
 insert into public.permissoes (chave, modulo, descricao, usa_escopo, ordem) values
