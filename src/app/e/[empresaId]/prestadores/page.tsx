@@ -53,6 +53,9 @@ export default async function Prestadores({
               <LinkBotao variante="secundario" href={`/e/${empresaId}/prestadores/tipos`}>
                 Tipos de serviço
               </LinkBotao>
+              <LinkBotao variante="secundario" href={`/e/${empresaId}/prestadores/importar`}>
+                Importar planilha
+              </LinkBotao>
               <LinkBotao href={`/e/${empresaId}/prestadores/novo`}>Novo prestador</LinkBotao>
             </>
           )
