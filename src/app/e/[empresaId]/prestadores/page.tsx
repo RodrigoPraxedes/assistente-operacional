@@ -47,6 +47,7 @@ export default async function Prestadores({
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <Titulo
+        voltar={{ href: `/e/${empresaId}/chamados`, rotulo: "Manutenções" }}
         acoes={
           gerencia && (
             <>

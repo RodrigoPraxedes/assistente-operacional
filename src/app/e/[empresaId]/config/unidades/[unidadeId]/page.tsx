@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { getContexto } from "@/lib/contexto";
@@ -27,10 +26,7 @@ export default async function PaginaUnidade({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/config/geral`} className="text-sm text-slate-500 print:hidden">
-        ← Configurações
-      </Link>
-      <Titulo>{unidade.nome}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/config/geral`, rotulo: "Configurações" }}>{unidade.nome}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
 
       <Cartao className="space-y-3 text-center">

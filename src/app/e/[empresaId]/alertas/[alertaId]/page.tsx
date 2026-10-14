@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import { hojeNoFuso } from "@/lib/formato";
@@ -44,10 +43,7 @@ export default async function EditarAlerta({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/alertas`} className="text-sm text-slate-500">
-        ← Alertas de datas
-      </Link>
-      <Titulo>{novo ? "Novo alerta" : `Editar: ${alerta!.nome}`}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/alertas`, rotulo: "Alertas de datas" }}>{novo ? "Novo alerta" : `Editar: ${alerta!.nome}`}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       {!novo && (
         <p className="text-xs text-slate-500">Mudanças valem para as próximas tarefas. As já criadas não mudam.</p>

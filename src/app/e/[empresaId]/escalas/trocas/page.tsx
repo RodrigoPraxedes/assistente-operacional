@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { hojeIso, horarioTurno, rotuloDia, somarDias } from "@/lib/escala";
 import { formatarDataHora } from "@/lib/formato";
@@ -78,10 +77,7 @@ export default async function Trocas({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/escalas`} className="text-sm text-slate-500">
-        ← Escalas
-      </Link>
-      <Titulo>Trocas de turno</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/escalas`, rotulo: "Escalas" }}>Trocas de turno</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       {aviso && AVISOS[aviso] && <Aviso tipo="sucesso">{AVISOS[aviso]}</Aviso>}
 

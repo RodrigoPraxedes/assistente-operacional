@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import type { TipoServico } from "@/lib/types";
 import { Aviso, Titulo } from "@/components/ui";
@@ -23,10 +22,7 @@ export default async function NovoPrestador({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/prestadores`} className="text-sm text-slate-500">
-        ← Prestadores
-      </Link>
-      <Titulo>Novo prestador</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/prestadores`, rotulo: "Prestadores" }}>Novo prestador</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       <FormPrestador empresaId={empresaId} tipos={tipos ?? []} marcados={[]} />
     </div>

@@ -10,13 +10,11 @@ import {
   CalendarSync,
   ChartGantt,
   ClipboardCheck,
-  HardHat,
   ListChecks,
   LogOut,
   Menu,
   MessageCircle,
   Monitor,
-  Package,
   Moon,
   Repeat,
   Settings,
@@ -43,7 +41,7 @@ interface Item {
   href: string;
   rotulo: string;
   icone: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
-  ativoEm?: string;
+  ativoEm?: string | string[];
 }
 
 // Menu à esquerda em todas as telas. Abaixo de 900 px vira gaveta aberta pelo botão Menu.
@@ -59,16 +57,14 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
     { href: `${base}/acoes`, rotulo: "Ações", icone: Repeat },
     { href: `${base}/alertas`, rotulo: "Alertas", icone: CalendarClock },
     { href: `${base}/planos`, rotulo: "Planos", icone: ChartGantt },
-    { href: `${base}/chamados`, rotulo: "Manutenções", icone: Wrench },
-    { href: `${base}/prestadores`, rotulo: "Prestadores", icone: HardHat },
-    { href: `${base}/patrimonio`, rotulo: "Patrimônio", icone: Package },
+    { href: `${base}/chamados`, rotulo: "Manutenções", icone: Wrench, ativoEm: [`${base}/chamados`, `${base}/prestadores`, `${base}/patrimonio`] },
     { href: `${base}/escalas`, rotulo: "Escalas", icone: CalendarDays },
     { href: `${base}/agenda`, rotulo: "Agenda", icone: CalendarSync },
     ...(veWhatsApp ? [{ href: `${base}/whatsapp`, rotulo: "WhatsApp", icone: MessageCircle }] : []),
     ...(veConfig ? [{ href: `${base}/config/geral`, rotulo: "Configurações", icone: Settings, ativoEm: `${base}/config` }] : []),
     ...(veAdmin ? [{ href: "/admin", rotulo: "Admin Master", icone: ShieldCheck }] : []),
   ];
-  const atual = itens.find((i) => pathname.startsWith(i.ativoEm ?? i.href));
+  const atual = itens.find((i) => [i.ativoEm ?? i.href].flat().some((p) => pathname.startsWith(p)));
 
   // fecha a gaveta ao navegar
   useEffect(() => setAberto(false), [pathname]);

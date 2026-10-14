@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import { hojeNoFuso } from "@/lib/formato";
@@ -34,10 +33,7 @@ export default async function EditarAcao({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/acoes`} className="text-sm text-slate-500">
-        ← Ações recorrentes
-      </Link>
-      <Titulo>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações recorrentes" }}>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       {!novo && (
         <p className="text-xs text-slate-500">Mudanças valem para as próximas ocorrências. As tarefas já criadas não mudam.</p>

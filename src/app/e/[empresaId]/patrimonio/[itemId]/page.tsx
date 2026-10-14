@@ -126,15 +126,13 @@ export default async function DetalheItem({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/patrimonio`} className="text-sm text-slate-500">
-        ← Patrimônio
-      </Link>
       {avisos.novo && <Aviso tipo="sucesso">Item cadastrado.</Aviso>}
       {avisos.salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
       {avisos.registrado && <Aviso tipo="sucesso">Registrado no histórico.</Aviso>}
       {avisos.erro && <Aviso>{avisos.erro}</Aviso>}
 
       <Titulo
+        voltar={{ href: `/e/${empresaId}/patrimonio`, rotulo: "Patrimônio" }}
         acoes={
           <>
             {gerencia && !editando && (

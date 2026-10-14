@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { Aviso, Titulo } from "@/components/ui";
 import { FormPlano } from "../form-plano";
@@ -18,10 +17,7 @@ export default async function NovoPlano({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/planos`} className="text-sm text-slate-500">
-        ← Planos
-      </Link>
-      <Titulo>Novo plano</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/planos`, rotulo: "Planos" }}>Novo plano</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       <p className="text-sm text-slate-500">Depois de criar o plano você inclui as etapas.</p>
       <FormPlano empresaId={empresaId} plano={null} {...opcoes} />

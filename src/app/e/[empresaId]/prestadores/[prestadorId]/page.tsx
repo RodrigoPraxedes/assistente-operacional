@@ -45,10 +45,7 @@ export default async function EditarPrestador({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/prestadores`} className="text-sm text-slate-500">
-        ← Prestadores
-      </Link>
-      <Titulo>{prestador.nome}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/prestadores`, rotulo: "Prestadores" }}>{prestador.nome}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       <FormPrestador
         empresaId={empresaId}

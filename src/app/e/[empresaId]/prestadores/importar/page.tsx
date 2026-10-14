@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { Titulo } from "@/components/ui";
 import { ImportarPlanilha } from "@/components/importacao/importar-planilha";
@@ -11,10 +10,7 @@ export default async function ImportarPrestadores({ params }: { params: Promise<
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={base} className="text-sm text-slate-500">
-        ← Prestadores
-      </Link>
-      <Titulo>Importar planilha</Titulo>
+      <Titulo voltar={{ href: base, rotulo: "Prestadores" }}>Importar planilha</Titulo>
       <ImportarPlanilha
         ler={lerPrestadores.bind(null, empresaId)}
         importar={importarPrestadores.bind(null, empresaId)}

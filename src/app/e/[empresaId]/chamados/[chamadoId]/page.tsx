@@ -73,14 +73,11 @@ export default async function DetalheChamado({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Link href={`/e/${empresaId}/chamados`} className="text-sm text-slate-500">
-        ← Manutenções
-      </Link>
       {avisos.novo && <Aviso tipo="sucesso">Chamado aberto.</Aviso>}
       {avisos.salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
       {avisos.erro && <Aviso>{avisos.erro}</Aviso>}
 
-      <Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/chamados`, rotulo: "Manutenções" }}>
         <span className="text-slate-400">#{chamado.numero}</span> {t.titulo}
       </Titulo>
 

@@ -27,10 +27,7 @@ export default async function Execucao({ params }: { params: Promise<{ empresaId
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Link href={`/e/${empresaId}/checklists`} className="text-sm text-slate-500">
-        ← Check-lists
-      </Link>
-      <Titulo>{exec.modelo_nome}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/checklists`, rotulo: "Check-lists" }}>{exec.modelo_nome}</Titulo>
       <Cartao className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
         <p>
           <span className="text-slate-500">Unidade:</span> {exec.unidades?.nome}
