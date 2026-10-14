@@ -247,6 +247,56 @@ export interface Equipamento {
   modelo: string | null;
   observacao: string | null;
   ativo: boolean;
+  tipo: TipoPatrimonio;
+  situacao: SituacaoPatrimonio;
+  data_compra: string | null;
+  valor_compra: number | null;
+  comprado_de: string | null;
+  nota_fiscal: string | null;
+  garantia_ate: string | null;
+  foto_path: string | null;
+}
+
+export type TipoPatrimonio = "equipamento" | "movel" | "outro";
+export const TIPOS_PATRIMONIO: Record<TipoPatrimonio, string> = {
+  equipamento: "Equipamento",
+  movel: "Móvel",
+  outro: "Outro",
+};
+
+export type SituacaoPatrimonio = "em_uso" | "em_manutencao" | "parado" | "vendido" | "aposentado";
+export const SITUACOES_PATRIMONIO: Record<SituacaoPatrimonio, { rotulo: string; cor: string }> = {
+  em_uso: { rotulo: "Em uso", cor: "#16a34a" },
+  em_manutencao: { rotulo: "Em manutenção", cor: "#d97706" },
+  parado: { rotulo: "Parado", cor: "#64748b" },
+  vendido: { rotulo: "Vendido", cor: "#2563eb" },
+  aposentado: { rotulo: "Aposentado", cor: "#475569" },
+};
+
+export type TipoEventoPatrimonio = "manutencao" | "transferencia" | "situacao" | "venda" | "aposentadoria" | "observacao";
+export const EVENTOS_PATRIMONIO: Record<TipoEventoPatrimonio, string> = {
+  manutencao: "Manutenção",
+  transferencia: "Mudança de unidade",
+  situacao: "Mudança de situação",
+  venda: "Venda",
+  aposentadoria: "Aposentadoria (baixa)",
+  observacao: "Anotação",
+};
+
+export interface EventoPatrimonio {
+  id: string;
+  empresa_id: string;
+  equipamento_id: string;
+  tipo: TipoEventoPatrimonio;
+  data: string;
+  valor: number | null;
+  descricao: string | null;
+  situacao_nova: SituacaoPatrimonio | null;
+  unidade_origem_id: string | null;
+  unidade_destino_id: string | null;
+  membro_id: string | null;
+  membro_nome: string | null;
+  created_at: string;
 }
 
 export interface Fornecedor {

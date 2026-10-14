@@ -107,7 +107,16 @@ export default async function DetalheChamado({
           </div>
           <div>
             <dt className="text-slate-500">Equipamento</dt>
-            <dd>{equipamento ? `${equipamento.nome}${equipamento.codigo ? ` (${equipamento.codigo})` : ""}` : "—"}</dd>
+            <dd>
+              {equipamento ? (
+                <Link href={`/e/${empresaId}/patrimonio/${equipamento.id}`} className="text-blue-600 hover:underline">
+                  {equipamento.nome}
+                  {equipamento.codigo ? ` (${equipamento.codigo})` : ""}
+                </Link>
+              ) : (
+                "—"
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-slate-500">Local</dt>

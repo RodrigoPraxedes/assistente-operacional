@@ -19,6 +19,8 @@ export function FormChamado({
   equipamentos,
   membros,
   fornecedores,
+  equipamentoInicial,
+  unidadeInicial,
 }: {
   empresaId: string;
   gerencia: boolean;
@@ -29,6 +31,8 @@ export function FormChamado({
   equipamentos: Opcao[];
   membros: Opcao[];
   fornecedores: Opcao[];
+  equipamentoInicial?: string;
+  unidadeInicial?: string;
 }) {
   const [estado, acao] = useActionState(abrirChamado.bind(null, empresaId), undefined);
   const opcoes = (lista: Opcao[], vazio = "—") => (
@@ -62,12 +66,14 @@ export function FormChamado({
             </Select>
           </Campo>
           <Campo rotulo="Unidade">
-            <Select name="unidade_id" defaultValue={unidades.length === 1 ? unidades[0].id : ""} required>
+            <Select name="unidade_id" defaultValue={unidadeInicial ?? (unidades.length === 1 ? unidades[0].id : "")} required>
               {opcoes(unidades, "Escolha...")}
             </Select>
           </Campo>
-          <Campo rotulo="Equipamento">
-            <Select name="equipamento_id">{opcoes(equipamentos)}</Select>
+          <Campo rotulo="Equipamento ou móvel" dica="Do patrimônio; o chamado entra no histórico do item">
+            <Select name="equipamento_id" defaultValue={equipamentoInicial ?? ""}>
+              {opcoes(equipamentos)}
+            </Select>
           </Campo>
           <Campo rotulo="Local" dica="Ex.: cozinha, banheiro dos clientes">
             <Input name="local" />
