@@ -58,11 +58,17 @@ export default async function PaginaChamados({
       <Titulo
         acoes={
           <>
+            <LinkBotao variante="secundario" href={`/e/${empresaId}/prestadores`}>
+              Prestadores
+            </LinkBotao>
+            <LinkBotao variante="secundario" href={`/e/${empresaId}/patrimonio`}>
+              Patrimônio
+            </LinkBotao>
             {pode("chamados.abrir") && <LinkBotao href={`/e/${empresaId}/chamados/novo`}>Abrir chamado</LinkBotao>}
           </>
         }
       >
-        Chamados de manutenção
+        Manutenções
       </Titulo>
 
       <form className="mb-4 flex flex-wrap items-end gap-2">
