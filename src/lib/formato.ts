@@ -13,6 +13,13 @@ export function formatarData(iso: string | null | undefined, fuso = "America/Sao
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: fuso }).format(new Date(iso));
 }
 
+// Data sem hora ("2026-10-13", coluna date) → "13/10/2026"
+export function formatarDia(data: string | null | undefined) {
+  if (!data) return "";
+  const [y, m, d] = data.slice(0, 10).split("-");
+  return `${d}/${m}/${y}`;
+}
+
 // Converte "2026-10-13T14:30" (horário local da empresa) para ISO em UTC
 export function localParaUtc(valor: string, fuso: string): string {
   const [data, hora = "00:00"] = valor.split("T");
@@ -68,4 +75,18 @@ export function hojeNoFuso(fuso: string, base = new Date()) {
 
 export function soDigitos(valor: string | null | undefined) {
   return (valor ?? "").replace(/\D/g, "");
+}
+
+// "21999998888" → "(21) 99999-8888"; outros formatos ficam como vieram
+export function formatarTelefone(valor: string | null | undefined) {
+  const n = soDigitos(valor);
+  if (n.length === 11) return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`;
+  if (n.length === 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
+  return valor ?? "";
+}
+
+// "João · Eletricista, Encanador" para escolher o prestador num chamado
+export function rotuloPrestador(p: { nome: string; tipos_servico?: { nome: string }[] | null }) {
+  const tipos = (p.tipos_servico ?? []).map((t) => t.nome).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return tipos.length ? `${p.nome} · ${tipos.join(", ")}` : p.nome;
 }

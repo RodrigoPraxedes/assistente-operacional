@@ -42,6 +42,15 @@ export default async function DetalheTarefa({
       supabase.from("tarefa_comentarios").select("*").eq("tarefa_id", tarefaId).order("created_at"),
     ]);
 
+  // etapa de plano (PMLP): nome do plano e equipe da etapa
+  const [{ data: plano }, { data: equipe }] =
+    tarefa.origem === "plano" && tarefa.origem_id
+      ? await Promise.all([
+          supabase.from("planos").select("id, nome").eq("id", tarefa.origem_id).maybeSingle(),
+          supabase.from("plano_etapa_equipe").select("membro_id").eq("etapa_id", tarefa.id),
+        ])
+      : [{ data: null }, { data: [] }];
+
   const st = new Map((status ?? []).map((s) => [s.id, s]));
   const mb = new Map((membros ?? []).map((m) => [m.id, m]));
   const atual = st.get(tarefa.status_id);
@@ -76,6 +85,22 @@ export default async function DetalheTarefa({
         <dl className="grid grid-cols-2 gap-2 text-sm">
           <dt className="text-slate-500">Responsável</dt>
           <dd>{responsavel?.nome ?? "—"}</dd>
+          {plano && (
+            <>
+              <dt className="text-slate-500">Plano</dt>
+              <dd>
+                <Link href={`/e/${empresaId}/planos/${plano.id}`} className="text-blue-700">
+                  {plano.nome}
+                </Link>
+              </dd>
+            </>
+          )}
+          {(equipe ?? []).length > 0 && (
+            <>
+              <dt className="text-slate-500">Equipe</dt>
+              <dd>{(equipe ?? []).map((q) => mb.get(q.membro_id)?.nome).join(", ")}</dd>
+            </>
+          )}
           <dt className="text-slate-500">Prazo</dt>
           <dd>{formatarDataHora(tarefa.prazo, empresa.fuso_horario) || "—"}</dd>
           <dt className="text-slate-500">Criada em</dt>

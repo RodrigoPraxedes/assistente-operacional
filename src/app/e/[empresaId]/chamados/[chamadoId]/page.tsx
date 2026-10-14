@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
-import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
+import { formatarDataHora, rotuloPrestador, utcParaLocalInput } from "@/lib/formato";
 import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
 import { PRIORIDADES, type Chamado, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Textarea, Titulo } from "@/components/ui";
@@ -37,7 +37,7 @@ export default async function DetalheChamado({
       supabase.from("membros").select("id, nome, telefone, ativo").eq("empresa_id", empresaId).order("nome"),
       supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId),
       supabase.from("equipamentos").select("id, nome, codigo, ativo").eq("empresa_id", empresaId).order("nome"),
-      supabase.from("fornecedores").select("id, nome, telefone, ativo").eq("empresa_id", empresaId).order("nome"),
+      supabase.from("fornecedores").select("id, nome, telefone, ativo, tipos_servico(nome)").eq("empresa_id", empresaId).order("nome"),
       supabase.from("chamado_fotos").select("id, path, created_at").eq("tarefa_id", chamadoId).order("created_at"),
       supabase.from("tarefa_comentarios").select("*").eq("tarefa_id", chamadoId).order("created_at"),
       supabase.from("tarefa_historico").select("*").eq("tarefa_id", chamadoId).order("created_at"),
@@ -127,7 +127,7 @@ export default async function DetalheChamado({
             <dd>{responsavel?.nome ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Fornecedor</dt>
+            <dt className="text-slate-500">Prestador</dt>
             <dd>{fornecedor?.nome ?? "—"}</dd>
           </div>
           <div>
@@ -233,12 +233,12 @@ export default async function DetalheChamado({
                 ))}
               </Select>
             </Campo>
-            <Campo rotulo="Fornecedor externo">
+            <Campo rotulo="Prestador que atendeu">
               <Select name="fornecedor_id" defaultValue={chamado.fornecedor_id ?? ""}>
                 <option value="">—</option>
                 {(fornecedores ?? []).filter((f) => f.ativo || f.id === chamado.fornecedor_id).map((f) => (
                   <option key={f.id} value={f.id}>
-                    {f.nome}
+                    {rotuloPrestador(f)}
                   </option>
                 ))}
               </Select>

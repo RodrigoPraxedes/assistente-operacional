@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { exigirPermissao } from "@/lib/contexto";
 import { Titulo } from "@/components/ui";
+import { rotuloPrestador } from "@/lib/formato";
 import { FormChamado } from "./form";
 
 export default async function NovoChamado({
@@ -24,7 +25,12 @@ export default async function NovoChamado({
       supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
       supabase.from("equipamentos").select("id, nome, unidade_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
       ativos("membros"),
-      ativos("fornecedores"),
+      supabase
+        .from("fornecedores")
+        .select("id, nome, tipos_servico(nome)")
+        .eq("empresa_id", empresaId)
+        .eq("ativo", true)
+        .order("nome"),
     ]);
 
   // vindo do patrimônio: item e unidade dele já escolhidos
@@ -47,7 +53,7 @@ export default async function NovoChamado({
         equipamentoInicial={doItem?.id}
         unidadeInicial={doItem?.unidade_id ?? undefined}
         membros={(membros ?? []) as { id: string; nome: string }[]}
-        fornecedores={(fornecedores ?? []) as { id: string; nome: string }[]}
+        fornecedores={(fornecedores ?? []).map((f) => ({ id: f.id, nome: rotuloPrestador(f) }))}
       />
     </div>
   );
