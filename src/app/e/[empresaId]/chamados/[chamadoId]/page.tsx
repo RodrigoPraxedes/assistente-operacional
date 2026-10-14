@@ -74,7 +74,7 @@ export default async function DetalheChamado({
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <Link href={`/e/${empresaId}/chamados`} className="text-sm text-slate-500">
-        ← Chamados
+        ← Manutenções
       </Link>
       {avisos.novo && <Aviso tipo="sucesso">Chamado aberto.</Aviso>}
       {avisos.salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}

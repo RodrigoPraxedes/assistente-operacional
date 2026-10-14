@@ -39,7 +39,7 @@ export default async function NovoChamado({
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <Link href={`/e/${empresaId}/chamados`} className="text-sm text-slate-500">
-        ← Chamados
+        ← Manutenções
       </Link>
       <Titulo>Abrir chamado</Titulo>
       <FormChamado
