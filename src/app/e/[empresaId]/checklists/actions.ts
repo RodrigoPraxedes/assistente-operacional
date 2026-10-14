@@ -98,3 +98,12 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
   revalidatePath(`/e/${empresaId}/checklists`);
   redirect(`/e/${empresaId}/checklists?salvo=1`);
 }
+
+// Exclui o check-list; os preenchimentos já enviados continuam no histórico
+export async function excluirChecklist(empresaId: string, modeloId: string) {
+  const { supabase } = await getContexto(empresaId);
+  const { error } = await supabase.rpc("excluir_checklist", { p_modelo: modeloId });
+  if (error) redirect(`/e/${empresaId}/checklists/${modeloId}?erro=${encodeURIComponent(error.message)}`);
+  revalidatePath(`/e/${empresaId}/checklists`);
+  redirect(`/e/${empresaId}/checklists?excluido=1`);
+}

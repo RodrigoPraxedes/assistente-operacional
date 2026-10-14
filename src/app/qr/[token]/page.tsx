@@ -50,7 +50,7 @@ export default async function CentralQr({ params }: { params: Promise<{ token: s
       )}
       {central.colaboradores.length === 0 && central.modelos.some((m) => m.modo_executor === "usuarios") && (
         <p className="text-center text-xs text-slate-500">
-          Nenhum colaborador com PIN nesta unidade. Peça ao gerente para cadastrar o seu PIN.
+          Nenhum colaborador com PIN nesta unidade. Peça ao gestor para cadastrar o seu PIN.
         </p>
       )}
     </>
