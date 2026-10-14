@@ -20,6 +20,7 @@ interface ItemEnviado {
 }
 
 const ROTULO = Object.fromEntries(RESPOSTAS_SIM_NAO.map((r) => [r.valor, r.rotulo]));
+const MARCA: Record<string, string> = { sim: "✅", nao: "❌", em_processo: "⏳" };
 
 // Recebe o formulário de preenchimento (app ou QR), sobe as fotos e grava.
 // Salvar sempre grava no banco; o WhatsApp é aberto depois com o resumo.
@@ -122,21 +123,25 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
       const valor =
         i.tipo_resposta === "sim_nao" ? ROTULO[r.resposta] : i.tipo_resposta === "numero" ? r.valor_numero : r.valor_texto;
       if (!valor) return null;
-      const marca = r.resposta === "nao" ? "❌" : r.resposta === "sim" ? "✅" : "•";
+      const marca = MARCA[r.resposta] ?? "•";
       return `${marca} ${i.texto}: ${valor}${r.observacao ? ` (${r.observacao})` : ""}`;
     })
     .filter(Boolean);
 
+  const emProcesso = respostas.filter((r) => r.resposta === "em_processo").length;
   const resumo = [
     `*${exec?.modelo_nome}* — ${exec?.unidades?.nome ?? ""}`,
     `Por ${exec?.executor_nome} em ${formatarDataHora(exec?.enviado_em, exec?.empresas?.fuso_horario)}`,
-    exec?.qtd_nao ? `⚠️ ${exec.qtd_nao} item(ns) com "Não"` : "Tudo certo ✅",
+    exec?.qtd_nao ? `⚠️ ${exec.qtd_nao} item(ns) com "Não"` : emProcesso ? null : "Tudo certo ✅",
+    emProcesso ? `⏳ ${emProcesso} item(ns) em processo` : null,
     "",
     ...linhas,
     observacao ? `\nObs.: ${observacao}` : "",
     "",
     `Detalhes e fotos: ${urlDoSite(`/e/${empresaId}/checklists/execucoes/${execucaoId}`)}`,
-  ].join("\n");
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
 
   return {
     ok: true,

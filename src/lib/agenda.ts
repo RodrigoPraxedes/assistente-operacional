@@ -4,6 +4,7 @@ import { previsoesDoMembro } from "@/lib/gerar-tarefas";
 import type { EventoIcal } from "@/lib/ical";
 import { formatarDataHora, horaLocalParaUtc } from "@/lib/formato";
 import { somarDias } from "@/lib/escala";
+import { PERIODOS, type Periodo } from "@/lib/types";
 
 // Agenda de uma pessoa: tarefas do Kanban em que ela é responsável, próximas
 // ocorrências que o Kanban ainda não criou e a escala. Usada pelo feed do
@@ -17,6 +18,8 @@ export interface EventoAgenda extends EventoIcal {
   atrasada?: boolean;
   // caminho dentro do app (/e/...)
   caminho?: string;
+  // turno sem horário: o período do dia aparece no lugar de "Dia todo"
+  periodo?: string;
 }
 
 const MINUTO = 60_000;
@@ -66,7 +69,7 @@ export async function eventosDoMembro(
     db.from("unidades").select("id, nome").eq("empresa_id", empresaId),
     db
       .from("escalas")
-      .select("id, data, tipo, unidade_id, observacao, turnos(nome, inicio, fim)")
+      .select("id, data, tipo, unidade_id, observacao, turnos(nome, inicio, fim, periodo)")
       .eq("membro_id", membroId)
       // um turno da véspera pode entrar pela madrugada
       .gte("data", somarDias(diaLocal(de, fuso), -1))
@@ -78,7 +81,7 @@ export async function eventosDoMembro(
           tipo: string;
           unidade_id: string;
           observacao: string | null;
-          turnos: { nome: string; inicio: string; fim: string } | null;
+          turnos: { nome: string; inicio: string | null; fim: string | null; periodo: Periodo | null } | null;
         }[]
       >(),
     diasFuturos >= 0 ? previsoesDoMembro(db, empresaId, membroId, diasFuturos) : Promise.resolve([]),
@@ -138,11 +141,30 @@ export async function eventosDoMembro(
     });
   }
 
-  // escala: turnos com horário; folga e férias como dia inteiro
+  // escala: turnos com horário; turno sem horário, folga e férias como dia inteiro
   for (const e of escalas ?? []) {
     const local = nomeUnidade(e.unidade_id);
     const caminho = `/e/${empresaId}/escalas`;
-    if (e.tipo === "turno" && e.turnos) {
+    if (e.tipo === "turno" && e.turnos && (e.turnos.periodo || !e.turnos.inicio || !e.turnos.fim)) {
+      if (e.data < diaLocal(de, fuso)) continue;
+      const periodo = e.turnos.periodo ? PERIODOS[e.turnos.periodo] : null;
+      // "Turno: Cozinha (manhã)"; sem repetir quando o nome já é o período
+      const extra =
+        periodo && periodo.rotulo.toLowerCase() !== e.turnos.nome.trim().toLowerCase()
+          ? ` (${periodo.rotulo.toLowerCase()})`
+          : "";
+      eventos.push({
+        tipo: "turno",
+        uid: `escala-${e.id}@assistente-operacional`,
+        titulo: `Turno: ${e.turnos.nome}${extra}`,
+        descricao: [periodo ? `Período: ${periodo.rotulo} (sem horário fixo)` : null, e.observacao].filter(Boolean).join("\n\n"),
+        local,
+        caminho,
+        periodo: periodo?.rotulo,
+        inicio: e.data,
+        fim: somarDias(e.data, 1),
+      });
+    } else if (e.tipo === "turno" && e.turnos?.inicio && e.turnos.fim) {
       const [y, m, d] = e.data.split("-").map(Number);
       const [hi, mi] = e.turnos.inicio.split(":").map(Number);
       const [hf, mf] = e.turnos.fim.split(":").map(Number);

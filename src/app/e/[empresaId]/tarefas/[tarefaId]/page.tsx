@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { formatarDataHora } from "@/lib/formato";
-import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
+import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
 import { comentarTarefa, mudarPrivacidadeTarefa } from "../actions";
@@ -56,14 +56,12 @@ export default async function DetalheTarefa({
   const atual = st.get(tarefa.status_id);
   const responsavel = tarefa.responsavel_id ? mb.get(tarefa.responsavel_id) : null;
 
-  const texto = [
-    `*Tarefa:* ${tarefa.titulo}`,
-    tarefa.prazo ? `*Prazo:* ${formatarDataHora(tarefa.prazo, empresa.fuso_horario)}` : null,
-    tarefa.descricao,
-    urlDoSite(`/e/${empresaId}/tarefas/${tarefa.id}`),
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const texto = mensagemTarefa(tarefa, {
+    empresaId,
+    fuso: empresa.fuso_horario,
+    responsavel: responsavel?.telefone ? responsavel.nome : null,
+    status: atual?.nome,
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">

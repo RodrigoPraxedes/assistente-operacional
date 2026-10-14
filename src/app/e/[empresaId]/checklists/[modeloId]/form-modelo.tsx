@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState, type PointerEvent } from "react";
+import { GripVertical } from "lucide-react";
 import { salvarModelo } from "../actions";
 import { RECORRENCIAS_PRONTAS } from "@/lib/recorrencias-prontas";
 import { PRIORIDADES, type ChecklistItem, type ChecklistModelo, type Prioridade, type TipoResposta } from "@/lib/types";
@@ -62,6 +63,34 @@ export function FormModelo({
       [c[i], c[j]] = [c[j], c[i]];
       return c;
     });
+
+  // arrastar pela alça (mouse ou dedo): o item vai para onde o ponteiro passa
+  const lista = useRef<HTMLDivElement>(null);
+  const [arrastando, setArrastando] = useState<string | null>(null);
+  function iniciarArraste(e: PointerEvent<HTMLButtonElement>, chave: string) {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setArrastando(chave);
+  }
+  function arrastar(e: PointerEvent<HTMLButtonElement>) {
+    if (!arrastando || !lista.current) return;
+    // nova posição = quantos outros itens têm o meio acima do ponteiro
+    const outros = Array.from(lista.current.querySelectorAll<HTMLElement>("[data-item]")).filter(
+      (el) => el.dataset.item !== arrastando,
+    );
+    const alvo = outros.filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.top + r.height / 2 < e.clientY;
+    }).length;
+    setItens((xs) => {
+      const de = xs.findIndex((x) => x.chave === arrastando);
+      if (de < 0 || de === alvo) return xs;
+      const c = [...xs];
+      const [item] = c.splice(de, 1);
+      c.splice(alvo, 0, item);
+      return c;
+    });
+  }
 
   return (
     <form action={acao} className="space-y-4">
@@ -159,78 +188,101 @@ export function FormModelo({
       </Cartao>
 
       <Cartao className="space-y-3">
-        <h2 className="font-medium">Itens</h2>
-        {itens.map((item, i) => (
-          <div key={item.chave} className="space-y-2 rounded-lg border border-slate-200 p-3">
-            <div className="flex gap-2">
-              <span className="pt-2 text-sm text-slate-400">{i + 1}.</span>
-              <Input
-                value={item.texto}
-                onChange={(e) => alterar(item.chave, { texto: e.target.value })}
-                placeholder="Ex.: Freezer funcionando?"
-              />
-              <Select
-                value={item.tipo_resposta}
-                onChange={(e) => alterar(item.chave, { tipo_resposta: e.target.value as TipoResposta })}
-                className="w-40"
-              >
-                <option value="sim_nao">Sim / Não</option>
-                <option value="numero">Número</option>
-                <option value="texto">Texto</option>
-              </Select>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 pl-6 text-xs text-slate-600">
-              <label className="flex items-center gap-1">
-                <input type="checkbox" checked={item.obrigatorio} onChange={(e) => alterar(item.chave, { obrigatorio: e.target.checked })} />
-                Obrigatório
-              </label>
-              <label className="flex items-center gap-1">
-                <input type="checkbox" checked={item.permite_foto} onChange={(e) => alterar(item.chave, { permite_foto: e.target.checked })} />
-                Permite foto
-              </label>
-              {item.tipo_resposta === "sim_nao" && item.permite_foto && (
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={item.foto_obrigatoria_se_nao}
-                    onChange={(e) => alterar(item.chave, { foto_obrigatoria_se_nao: e.target.checked })}
-                  />
-                  Foto obrigatória se &quot;Não&quot;
-                </label>
-              )}
-              {item.tipo_resposta === "sim_nao" && (
-                <label className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={item.abre_chamado_se_nao}
-                    onChange={(e) => alterar(item.chave, { abre_chamado_se_nao: e.target.checked })}
-                  />
-                  Abrir chamado se &quot;Não&quot;
-                  {item.abre_chamado_se_nao && (
-                    <select
-                      value={item.prioridade_chamado}
-                      onChange={(e) => alterar(item.chave, { prioridade_chamado: e.target.value as Prioridade })}
-                      className="ml-1 rounded border border-slate-200 bg-superficie px-1 py-0.5"
-                    >
-                      {Object.entries(PRIORIDADES).map(([k, v]) => (
-                        <option key={k} value={k}>
-                          {v.rotulo}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </label>
-              )}
-              <span className="ml-auto flex gap-2">
-                <button type="button" onClick={() => mover(i, -1)} disabled={i === 0} className="disabled:opacity-30">↑</button>
-                <button type="button" onClick={() => mover(i, 1)} disabled={i === itens.length - 1} className="disabled:opacity-30">↓</button>
-                <button type="button" onClick={() => setItens((xs) => xs.filter((x) => x.chave !== item.chave))} className="text-red-600">
-                  Remover
+        <div>
+          <h2 className="font-medium">Itens</h2>
+          <p className="text-xs text-slate-500">Arraste pela alça ⋮⋮ para mudar a ordem.</p>
+        </div>
+        <div ref={lista} className="space-y-3">
+          {itens.map((item, i) => (
+            <div
+              key={item.chave}
+              data-item={item.chave}
+              className={`space-y-2 rounded-lg border p-3 ${
+                arrastando === item.chave ? "border-blue-500 bg-blue-50 shadow-md" : "border-slate-200"
+              }`}
+            >
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  aria-label="Arrastar para mudar a ordem"
+                  title="Arrastar para mudar a ordem"
+                  onPointerDown={(e) => iniciarArraste(e, item.chave)}
+                  onPointerMove={arrastar}
+                  onPointerUp={() => setArrastando(null)}
+                  onPointerCancel={() => setArrastando(null)}
+                  className="-ml-1 flex shrink-0 cursor-grab touch-none items-center text-slate-400 hover:text-slate-600 active:cursor-grabbing"
+                >
+                  <GripVertical size={18} />
                 </button>
-              </span>
+                <span className="pt-2 text-sm text-slate-400">{i + 1}.</span>
+                <Input
+                  value={item.texto}
+                  onChange={(e) => alterar(item.chave, { texto: e.target.value })}
+                  placeholder="Ex.: Freezer funcionando?"
+                />
+                <Select
+                  value={item.tipo_resposta}
+                  onChange={(e) => alterar(item.chave, { tipo_resposta: e.target.value as TipoResposta })}
+                  className="w-56"
+                >
+                  <option value="sim_nao">Sim / Não / Em processo</option>
+                  <option value="numero">Número</option>
+                  <option value="texto">Texto</option>
+                </Select>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 pl-6 text-xs text-slate-600">
+                <label className="flex items-center gap-1">
+                  <input type="checkbox" checked={item.obrigatorio} onChange={(e) => alterar(item.chave, { obrigatorio: e.target.checked })} />
+                  Obrigatório
+                </label>
+                <label className="flex items-center gap-1">
+                  <input type="checkbox" checked={item.permite_foto} onChange={(e) => alterar(item.chave, { permite_foto: e.target.checked })} />
+                  Permite foto
+                </label>
+                {item.tipo_resposta === "sim_nao" && item.permite_foto && (
+                  <label className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={item.foto_obrigatoria_se_nao}
+                      onChange={(e) => alterar(item.chave, { foto_obrigatoria_se_nao: e.target.checked })}
+                    />
+                    Foto obrigatória se &quot;Não&quot;
+                  </label>
+                )}
+                {item.tipo_resposta === "sim_nao" && (
+                  <label className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={item.abre_chamado_se_nao}
+                      onChange={(e) => alterar(item.chave, { abre_chamado_se_nao: e.target.checked })}
+                    />
+                    Abrir chamado se &quot;Não&quot;
+                    {item.abre_chamado_se_nao && (
+                      <select
+                        value={item.prioridade_chamado}
+                        onChange={(e) => alterar(item.chave, { prioridade_chamado: e.target.value as Prioridade })}
+                        className="ml-1 rounded border border-slate-200 bg-superficie px-1 py-0.5"
+                      >
+                        {Object.entries(PRIORIDADES).map(([k, v]) => (
+                          <option key={k} value={k}>
+                            {v.rotulo}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </label>
+                )}
+                <span className="ml-auto flex gap-2">
+                  <button type="button" onClick={() => mover(i, -1)} disabled={i === 0} className="disabled:opacity-30">↑</button>
+                  <button type="button" onClick={() => mover(i, 1)} disabled={i === itens.length - 1} className="disabled:opacity-30">↓</button>
+                  <button type="button" onClick={() => setItens((xs) => xs.filter((x) => x.chave !== item.chave))} className="text-red-600">
+                    Remover
+                  </button>
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
         <Botao type="button" variante="secundario" onClick={() => setItens((xs) => [...xs, novoItem()])}>
           + Adicionar item
         </Botao>

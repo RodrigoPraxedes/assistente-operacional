@@ -6,6 +6,7 @@ import {
   diasDaSemana,
   hojeIso,
   horarioTurno,
+  ordenarTurnos,
   rotuloDia,
   rotuloSemana,
   segundaDaSemana,
@@ -53,7 +54,7 @@ export default async function PaginaEscalas({
         .eq("ativo", true)
         .order("nome"),
       supabase.from("membro_unidades").select("membro_id").eq("unidade_id", unidade.id),
-      supabase.from("turnos").select("*").eq("empresa_id", empresaId).order("inicio"),
+      supabase.from("turnos").select("*").eq("empresa_id", empresaId),
       supabase
         .from("escalas")
         .select("*")
@@ -74,7 +75,7 @@ export default async function PaginaEscalas({
         .eq("status", "pendente"),
     ]);
 
-  const todosTurnos = (turnos ?? []) as Turno[];
+  const todosTurnos = ordenarTurnos((turnos ?? []) as Turno[]);
   const turnoPorId = new Map(todosTurnos.map((t) => [t.id, t]));
   const turnosDaUnidade = todosTurnos.filter((t) => t.ativo && (!t.unidade_id || t.unidade_id === unidade.id));
   const lancamentos = (escalas ?? []) as Escala[];
@@ -233,7 +234,7 @@ export default async function PaginaEscalas({
 
       {podeEditar && turnosDaUnidade.length === 0 && (
         <Aviso tipo="info">
-          Comece cadastrando os turnos (ex.: Abertura 06:00–14:00, Fechamento 14:00–22:00) em{" "}
+          Comece cadastrando os turnos (ex.: Abertura 06:00–14:00, Fechamento 14:00–22:00, ou só Manhã/Tarde/Noite) em{" "}
           <Link href={`/e/${empresaId}/escalas/turnos`} className="font-medium underline">
             Turnos
           </Link>

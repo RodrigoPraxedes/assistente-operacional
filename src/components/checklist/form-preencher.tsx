@@ -7,6 +7,14 @@ import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { trocarPorReduzidas } from "@/lib/foto";
 
+// Sim, Não, Em processo (começou e não terminou) e N/A, cada um com sua cor
+const COR_ESCOLHIDA: Record<string, string> = {
+  sim: "border-green-500 bg-green-50 text-green-700",
+  nao: "border-red-500 bg-red-50 text-red-700",
+  em_processo: "border-blue-500 bg-blue-50 text-blue-700",
+  na: "border-slate-400 bg-slate-100 text-slate-700",
+};
+
 export interface ItemPreencher {
   id: string;
   texto: string;
@@ -108,11 +116,7 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, co
                     <label
                       key={r.valor}
                       className={`cursor-pointer rounded-lg border px-3 py-2 text-center text-sm ${
-                        resposta === r.valor
-                          ? r.valor === "nao"
-                            ? "border-red-500 bg-red-50 text-red-700"
-                            : "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-slate-200"
+                        resposta === r.valor ? COR_ESCOLHIDA[r.valor] : "border-slate-200"
                       }`}
                     >
                       <input

@@ -1,5 +1,5 @@
 import { hojeNoFuso } from "@/lib/formato";
-import type { Turno } from "@/lib/types";
+import { PERIODOS, type Turno } from "@/lib/types";
 
 // Datas da escala são dias de calendário ("2026-10-13"), sem horário nem fuso.
 const DIA = 86_400_000;
@@ -46,7 +46,15 @@ export function rotuloSemana(segunda: string) {
   return `${segunda.slice(8, 10)}/${segunda.slice(5, 7)} a ${fim.slice(8, 10)}/${fim.slice(5, 7)}`;
 }
 
-// "06:00–14:00"
-export function horarioTurno(t: Pick<Turno, "inicio" | "fim">) {
+// "06:00–14:00", ou "de manhã" no turno sem horário
+export function horarioTurno(t: Pick<Turno, "inicio" | "fim" | "periodo">) {
+  if (t.periodo || !t.inicio || !t.fim) return t.periodo ? PERIODOS[t.periodo].frase : "";
   return `${t.inicio.slice(0, 5)}–${t.fim.slice(0, 5)}`;
+}
+
+// ordem do dia: turnos sem horário entram no começo do seu período
+const INICIO_PERIODO = { manha: "06:00", tarde: "12:00", noite: "18:00" } as const;
+export function ordenarTurnos<T extends Pick<Turno, "inicio" | "periodo">>(turnos: T[]) {
+  const chave = (t: T) => (t.periodo ? INICIO_PERIODO[t.periodo] : (t.inicio ?? "").slice(0, 5));
+  return [...turnos].sort((a, b) => chave(a).localeCompare(chave(b)));
 }

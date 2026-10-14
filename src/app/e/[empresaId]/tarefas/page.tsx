@@ -1,20 +1,41 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getContexto } from "@/lib/contexto";
 import { hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
 import { ORIGENS, type Origem, type Status, type Tarefa } from "@/lib/types";
+import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { LinkBotao, Select, Titulo } from "@/components/ui";
 import { Kanban } from "./kanban";
+import { TrocarVisao, type Visao } from "./trocar-visao";
+
+// "pendentes" = tudo que não foi concluído nem cancelado
+const PENDENTES = ["aberto", "em_andamento", "adiado"];
 
 export default async function PaginaTarefas({
   params,
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string }>;
+  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string }>;
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
   const { supabase, empresa, membro, pode } = await getContexto(empresaId);
+  const visao: Visao = (await cookies()).get("visao_tarefas")?.value === "lista" ? "lista" : "kanban";
+
+  const { data: status } = await supabase
+    .from("status")
+    .select("*")
+    .eq("empresa_id", empresaId)
+    .eq("ativo", true)
+    .order("ordem");
+  const todosStatus = (status ?? []) as Status[];
+  // filtro de status: um status, ou "pendentes"
+  const statusEscolhidos = !filtros.status
+    ? null
+    : filtros.status === "pendentes"
+      ? todosStatus.filter((s) => PENDENTES.includes(s.tipo)).map((s) => s.id)
+      : [filtros.status];
 
   // fim de hoje no fuso da empresa: ocorrências futuras (amanhã...) ficam escondidas
   const hoje = hojeNoFuso(empresa.fuso_horario);
@@ -32,9 +53,9 @@ export default async function PaginaTarefas({
   if (filtros.origem) consulta = consulta.eq("origem", filtros.origem);
   if (filtros.unidade) consulta = consulta.eq("unidade_id", filtros.unidade);
   if (filtros.minhas) consulta = consulta.eq("responsavel_id", membro.id);
+  if (statusEscolhidos) consulta = consulta.in("status_id", statusEscolhidos);
 
-  const [{ data: status }, { data: tarefas }, { data: membros }, { data: unidades }] = await Promise.all([
-    supabase.from("status").select("*").eq("empresa_id", empresaId).eq("ativo", true).order("ordem"),
+  const [{ data: tarefas }, { data: membros }, { data: unidades }] = await Promise.all([
     consulta,
     supabase.from("membros").select("id, nome, telefone").eq("empresa_id", empresaId),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
@@ -45,9 +66,32 @@ export default async function PaginaTarefas({
     unidades: Object.fromEntries((unidades ?? []).map((u) => [u.id, u.nome])),
   };
 
+  // botão do WhatsApp em cada tarefa: mensagem pronta para o responsável
+  const membroPorId = new Map((membros ?? []).map((m) => [m.id, m]));
+  const nomeStatus = new Map(todosStatus.map((s) => [s.id, s.nome]));
+  const whatsapp = Object.fromEntries(
+    ((tarefas ?? []) as Tarefa[]).map((t) => {
+      const resp = t.responsavel_id ? membroPorId.get(t.responsavel_id) : null;
+      const texto = mensagemTarefa(t, {
+        empresaId,
+        fuso: empresa.fuso_horario,
+        responsavel: resp?.telefone ? resp.nome : null,
+        status: nomeStatus.get(t.status_id),
+      });
+      return [t.id, linkWhatsApp(texto, resp?.telefone)];
+    }),
+  );
+
   return (
     <div>
-      <Titulo acoes={pode("tarefas.criar") && <LinkBotao href={`/e/${empresaId}/tarefas/nova`}>Nova tarefa</LinkBotao>}>
+      <Titulo
+        acoes={
+          <>
+            <TrocarVisao inicial={visao} />
+            {pode("tarefas.criar") && <LinkBotao href={`/e/${empresaId}/tarefas/nova`}>Nova tarefa</LinkBotao>}
+          </>
+        }
+      >
         Tarefas
       </Titulo>
 
@@ -70,11 +114,20 @@ export default async function PaginaTarefas({
             ))}
           </Select>
         )}
+        <Select name="status" defaultValue={filtros.status ?? ""} className="w-auto">
+          <option value="">Todos os status</option>
+          <option value="pendentes">Pendentes (não concluídas)</option>
+          {todosStatus.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.nome}
+            </option>
+          ))}
+        </Select>
         <label className="flex items-center gap-2 px-2 text-sm">
           <input type="checkbox" name="minhas" value="1" defaultChecked={!!filtros.minhas} /> Só as minhas
         </label>
         <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
-        {(filtros.origem || filtros.unidade || filtros.minhas) && (
+        {(filtros.origem || filtros.unidade || filtros.minhas || filtros.status) && (
           <Link href={`/e/${empresaId}/tarefas`} className="px-2 py-2 text-sm text-slate-500">
             Limpar
           </Link>
@@ -84,13 +137,20 @@ export default async function PaginaTarefas({
       <Kanban
         empresaId={empresaId}
         fuso={empresa.fuso_horario}
-        status={((status ?? []) as Status[]).filter(
-          // status de um módulo só (ex.: "Aguardando peça") aparecem aqui quando têm tarefas
-          (s) => !s.modulo || (tarefas ?? []).some((t) => t.status_id === s.id),
+        visao={visao}
+        status={todosStatus}
+        colunas={todosStatus.filter(
+          // status de um módulo só (ex.: "Aguardando peça") aparecem aqui quando têm tarefas;
+          // com filtro de status, só as colunas escolhidas
+          (s) =>
+            statusEscolhidos
+              ? statusEscolhidos.includes(s.id)
+              : !s.modulo || (tarefas ?? []).some((t) => t.status_id === s.id),
         )}
         tarefas={(tarefas ?? []) as Tarefa[]}
         nomes={nomes}
         podeMover={pode("tarefas.mudar_status")}
+        whatsapp={whatsapp}
       />
     </div>
   );
