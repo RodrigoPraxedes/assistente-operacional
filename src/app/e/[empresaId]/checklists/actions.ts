@@ -15,6 +15,7 @@ interface ItemForm {
   obrigatorio: boolean;
   permite_foto: boolean;
   foto_obrigatoria_se_nao: boolean;
+  permite_na?: boolean;
   abre_chamado_se_nao?: boolean;
   prioridade_chamado?: string;
 }
@@ -41,6 +42,7 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
     tolerancia_minutos: Number(form.get("tolerancia_minutos") ?? 30) || 0,
     recorrencia,
     publico_qr: form.get("publico_qr") === "on",
+    modo_executor: form.get("modo_executor") === "usuarios" ? "usuarios" : "aberto",
     whatsapp_destino: soDigitos(txt("whatsapp_destino")) || null,
     ativo: form.get("ativo") !== "false",
   };
@@ -73,6 +75,7 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
       obrigatorio: item.obrigatorio,
       permite_foto: item.permite_foto,
       foto_obrigatoria_se_nao: item.tipo_resposta === "sim_nao" && item.foto_obrigatoria_se_nao,
+      permite_na: item.permite_na ?? true,
       abre_chamado_se_nao: item.tipo_resposta === "sim_nao" && !!item.abre_chamado_se_nao,
       prioridade_chamado: item.prioridade_chamado ?? "media",
       ordem: ordem + 1,

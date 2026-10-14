@@ -32,20 +32,31 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
   const token = String(form.get("token") ?? "");
   const membroId = String(form.get("membro_id") ?? "");
   const pin = String(form.get("pin") ?? "");
+  // check-list aberto: nome digitado, sem PIN (o banco confere se o modelo é aberto)
+  const aberto = form.get("modo_executor") === "aberto";
+  const executorNome = String(form.get("executor_nome") ?? "").trim();
   const itens: ItemEnviado[] = JSON.parse(String(form.get("itens") ?? "[]"));
 
   let supabase: SupabaseQualquer;
   if (canal === "qr") {
-    if (!membroId) return { erro: "Escolha o seu nome." };
     supabase = createAdminClient();
-    const { data: resultado, error } = await supabase.rpc("qr_validar_pin", {
-      p_token: token,
-      p_membro: membroId,
-      p_pin: pin,
-    });
-    if (error) return { erro: error.message };
-    if (resultado === "bloqueado") return { erro: "Muitas tentativas erradas. Aguarde 15 minutos ou fale com o gerente." };
-    if (resultado !== "ok") return { erro: "PIN incorreto." };
+    if (aberto) {
+      if (!executorNome) return { erro: "Digite o seu nome." };
+      // confere antes de subir fotos: sem PIN, só vale para check-list aberto
+      const { data: modelo } = await supabase.rpc("qr_modelo", { p_token: token, p_modelo: modeloId });
+      if ((modelo as { modo_executor?: string } | null)?.modo_executor !== "aberto")
+        return { erro: "Este check-list pede nome e PIN. Atualize a página." };
+    } else {
+      if (!membroId) return { erro: "Escolha o seu nome." };
+      const { data: resultado, error } = await supabase.rpc("qr_validar_pin", {
+        p_token: token,
+        p_membro: membroId,
+        p_pin: pin,
+      });
+      if (error) return { erro: error.message };
+      if (resultado === "bloqueado") return { erro: "Muitas tentativas erradas. Aguarde 15 minutos ou fale com o gerente." };
+      if (resultado !== "ok") return { erro: "PIN incorreto." };
+    }
     // no canal público a empresa vem do QR, nunca do formulário
     const { data: central } = await supabase.rpc("qr_central", { p_token: token });
     if (!central) return { erro: "QR Code inválido." };
@@ -84,7 +95,15 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
 
   const observacao = String(form.get("observacao") ?? "");
   const { data: execucaoId, error } =
-    canal === "qr"
+    canal === "qr" && aberto
+      ? await supabase.rpc("qr_enviar_checklist_aberto", {
+          p_token: token,
+          p_modelo: modeloId,
+          p_nome: executorNome,
+          p_respostas: respostas,
+          p_observacao: observacao,
+        })
+      : canal === "qr"
       ? await supabase.rpc("qr_enviar_checklist", {
           p_token: token,
           p_modelo: modeloId,

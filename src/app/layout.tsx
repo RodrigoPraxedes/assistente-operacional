@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,8 +17,10 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // tema escolhido no menu (claro/escuro); sem cookie segue o sistema
-  const tema = (await cookies()).get("tema")?.value;
+  // tema escolhido no menu (claro/escuro); sem cookie segue o sistema.
+  // A central pública do QR sempre segue o sistema (marcada no middleware).
+  const sistema = (await headers()).get("x-tema-sistema") === "1";
+  const tema = sistema ? undefined : (await cookies()).get("tema")?.value;
   return (
     <html lang="pt-BR" data-tema={tema === "claro" || tema === "escuro" ? tema : undefined}>
       <body className="min-h-screen font-sans">{children}</body>

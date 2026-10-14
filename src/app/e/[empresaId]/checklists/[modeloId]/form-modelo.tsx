@@ -11,7 +11,7 @@ import { BotaoEnviar } from "@/components/botao-enviar";
 type Opcao = { id: string; nome: string };
 type ItemEditavel = Pick<
   ChecklistItem,
-  "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria_se_nao" | "abre_chamado_se_nao" | "prioridade_chamado"
+  "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria_se_nao" | "permite_na" | "abre_chamado_se_nao" | "prioridade_chamado"
 > & {
   id?: string;
   chave: string;
@@ -25,6 +25,7 @@ const novoItem = (): ItemEditavel => ({
   obrigatorio: true,
   permite_foto: true,
   foto_obrigatoria_se_nao: false,
+  permite_na: true,
   abre_chamado_se_nao: false,
   prioridade_chamado: "media",
 });
@@ -183,8 +184,14 @@ export function FormModelo({
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="publico_qr" defaultChecked={modelo?.publico_qr ?? true} />
-          Disponível no QR Code da unidade (preenchimento sem login, com nome + PIN)
+          Disponível no QR Code da unidade (preenchimento sem login)
         </label>
+        <Campo rotulo="Quem preenche pelo QR Code">
+          <Select name="modo_executor" defaultValue={modelo?.modo_executor ?? "aberto"}>
+            <option value="aberto">Aberto: a pessoa digita o próprio nome, sem PIN</option>
+            <option value="usuarios">Só usuários: escolhe o nome na lista e digita o PIN</option>
+          </Select>
+        </Campo>
       </Cartao>
 
       <Cartao className="space-y-3">
@@ -239,6 +246,12 @@ export function FormModelo({
                   <input type="checkbox" checked={item.permite_foto} onChange={(e) => alterar(item.chave, { permite_foto: e.target.checked })} />
                   Permite foto
                 </label>
+                {item.tipo_resposta === "sim_nao" && (
+                  <label className="flex items-center gap-1">
+                    <input type="checkbox" checked={item.permite_na} onChange={(e) => alterar(item.chave, { permite_na: e.target.checked })} />
+                    Mostrar N/A
+                  </label>
+                )}
                 {item.tipo_resposta === "sim_nao" && item.permite_foto && (
                   <label className="flex items-center gap-1">
                     <input

@@ -101,6 +101,8 @@ export interface Tarefa {
 
 export type TipoResposta = "sim_nao" | "numero" | "texto";
 
+export type ModoExecutor = "aberto" | "usuarios";
+
 export interface ChecklistModelo {
   id: string;
   empresa_id: string;
@@ -114,6 +116,8 @@ export interface ChecklistModelo {
   tolerancia_minutos: number;
   recorrencia: string;
   publico_qr: boolean;
+  // aberto: nome digitado sem PIN; usuarios: escolhe o nome + PIN
+  modo_executor: ModoExecutor;
   whatsapp_destino: string | null;
   versao: number;
   ativo: boolean;
@@ -130,6 +134,8 @@ export interface ChecklistItem {
   obrigatorio: boolean;
   permite_foto: boolean;
   foto_obrigatoria_se_nao: boolean;
+  // mostra a opção N/A (não se aplica) nos itens Sim/Não
+  permite_na: boolean;
   abre_chamado_se_nao: boolean;
   prioridade_chamado: Prioridade;
   ativo: boolean;
