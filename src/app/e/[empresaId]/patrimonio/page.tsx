@@ -48,7 +48,18 @@ export default async function PaginaPatrimonio({
 
   return (
     <div className="space-y-4">
-      <Titulo acoes={pode("patrimonio.gerenciar") && <LinkBotao href={`/e/${empresaId}/patrimonio/novo`}>Novo item</LinkBotao>}>
+      <Titulo
+        acoes={
+          pode("patrimonio.gerenciar") && (
+            <>
+              <LinkBotao variante="secundario" href={`/e/${empresaId}/patrimonio/importar`}>
+                Importar planilha
+              </LinkBotao>
+              <LinkBotao href={`/e/${empresaId}/patrimonio/novo`}>Novo item</LinkBotao>
+            </>
+          )
+        }
+      >
         Patrimônio
       </Titulo>
 
