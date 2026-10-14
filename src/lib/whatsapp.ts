@@ -11,6 +11,9 @@ export function linkWhatsApp(texto: string, telefone?: string | null) {
 }
 
 export function urlDoSite(caminho: string) {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  let base = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  // na Vercel, variável vazia ou esquecida com "localhost" usa o endereço de produção
+  const producao = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (producao && (!base || /localhost|127\.0\.0\.1/.test(base))) base = `https://${producao}`;
   return `${base}${caminho}`;
 }
