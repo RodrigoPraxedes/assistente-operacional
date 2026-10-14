@@ -13,6 +13,13 @@ export function formatarData(iso: string | null | undefined, fuso = "America/Sao
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: fuso }).format(new Date(iso));
 }
 
+// Data sem hora ("2026-10-13", coluna date) → "13/10/2026"
+export function formatarDia(data: string | null | undefined) {
+  if (!data) return "";
+  const [y, m, d] = data.slice(0, 10).split("-");
+  return `${d}/${m}/${y}`;
+}
+
 // Converte "2026-10-13T14:30" (horário local da empresa) para ISO em UTC
 export function localParaUtc(valor: string, fuso: string): string {
   const [data, hora = "00:00"] = valor.split("T");

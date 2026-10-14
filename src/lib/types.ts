@@ -1,6 +1,6 @@
 export type TipoStatus = "aberto" | "em_andamento" | "adiado" | "concluido" | "cancelado";
 export type Escopo = "proprias" | "setor" | "unidade" | "empresa";
-export type Origem = "avulsa" | "checklist" | "acao" | "chamado" | "alerta";
+export type Origem = "avulsa" | "checklist" | "acao" | "chamado" | "alerta" | "plano";
 
 export interface Empresa {
   id: string;
@@ -134,6 +134,7 @@ export const ORIGENS: Record<Origem, string> = {
   acao: "Ação recorrente",
   chamado: "Chamado",
   alerta: "Alerta",
+  plano: "Plano (PMLP)",
 };
 
 export const TIPOS_STATUS: Record<TipoStatus, string> = {
@@ -300,4 +301,46 @@ export interface EscalaTroca {
   decidido_por: string | null;
   decidido_em: string | null;
   created_at: string;
+}
+
+export type Horizonte = "medio" | "longo";
+
+export const HORIZONTES: Record<Horizonte, { rotulo: string; dica: string }> = {
+  medio: { rotulo: "Médio prazo", dica: "3 a 6 meses" },
+  longo: { rotulo: "Longo prazo", dica: "6 a 12 meses" },
+};
+
+export type SituacaoPlano = "planejamento" | "em_andamento" | "pausado" | "concluido" | "cancelado";
+
+export const SITUACOES_PLANO: Record<SituacaoPlano, { rotulo: string; cor: string }> = {
+  planejamento: { rotulo: "Em planejamento", cor: "#64748b" },
+  em_andamento: { rotulo: "Em andamento", cor: "#2563eb" },
+  pausado: { rotulo: "Pausado", cor: "#d97706" },
+  concluido: { rotulo: "Concluído", cor: "#16a34a" },
+  cancelado: { rotulo: "Cancelado", cor: "#dc2626" },
+};
+
+export interface Plano {
+  id: string;
+  empresa_id: string;
+  unidade_id: string | null;
+  setor_id: string | null;
+  categoria_id: string | null;
+  nome: string;
+  objetivo: string | null;
+  horizonte: Horizonte;
+  inicio: string | null;
+  fim_previsto: string | null;
+  responsavel_id: string | null;
+  situacao: SituacaoPlano;
+  criado_por: string | null;
+  created_at: string;
+}
+
+export interface PlanoEtapa {
+  tarefa_id: string;
+  empresa_id: string;
+  plano_id: string;
+  ordem: number;
+  inicio_previsto: string | null;
 }
