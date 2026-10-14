@@ -28,11 +28,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     admin.from("membros").select("nome, ativo").eq("id", link.membro_id).maybeSingle<{ nome: string; ativo: boolean }>(),
     admin
       .from("empresas")
-      .select("nome, fuso_horario")
+      .select("nome, fuso_horario, situacao")
       .eq("id", link.empresa_id)
-      .maybeSingle<{ nome: string; fuso_horario: string }>(),
+      .maybeSingle<{ nome: string; fuso_horario: string; situacao: string }>(),
   ]);
-  if (!membro?.ativo || !empresa) return new NextResponse("Link desligado ou inexistente", { status: 404 });
+  if (!membro?.ativo || empresa?.situacao !== "ativa") return new NextResponse("Link desligado ou inexistente", { status: 404 });
 
   const { membro_id: membroId, empresa_id: empresaId } = link;
   const agora = Date.now();
