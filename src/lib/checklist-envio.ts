@@ -54,7 +54,7 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
         p_pin: pin,
       });
       if (error) return { erro: error.message };
-      if (resultado === "bloqueado") return { erro: "Muitas tentativas erradas. Aguarde 15 minutos ou fale com o gerente." };
+      if (resultado === "bloqueado") return { erro: "Muitas tentativas erradas. Aguarde 15 minutos ou fale com o gestor." };
       if (resultado !== "ok") return { erro: "PIN incorreto." };
     }
     // no canal público a empresa vem do QR, nunca do formulário

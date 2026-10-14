@@ -10,10 +10,10 @@ export default async function PaginaChecklists({
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ salvo?: string }>;
+  searchParams: Promise<{ salvo?: string; excluido?: string }>;
 }) {
   const { empresaId } = await params;
-  const { salvo } = await searchParams;
+  const { salvo, excluido } = await searchParams;
   const { supabase, empresa, pode } = await getContexto(empresaId);
 
   const [{ data: modelos }, { data: unidades }, { data: execucoes }] = await Promise.all([
@@ -37,6 +37,7 @@ export default async function PaginaChecklists({
         Check-lists
       </Titulo>
       {salvo && <Aviso tipo="sucesso">Check-list salvo.</Aviso>}
+      {excluido && <Aviso tipo="sucesso">Check-list excluído. Os preenchimentos já enviados continuam no histórico.</Aviso>}
 
       {(modelos ?? []).length === 0 ? (
         <Vazio>Nenhum check-list cadastrado ainda.</Vazio>
