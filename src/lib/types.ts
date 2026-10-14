@@ -2,10 +2,13 @@ export type TipoStatus = "aberto" | "em_andamento" | "adiado" | "concluido" | "c
 export type Escopo = "proprias" | "setor" | "unidade" | "empresa";
 export type Origem = "avulsa" | "checklist" | "acao" | "chamado" | "alerta" | "plano";
 
+export type SituacaoEmpresa = "pendente" | "ativa" | "suspensa";
+
 export interface Empresa {
   id: string;
   nome: string;
   fuso_horario: string;
+  situacao: SituacaoEmpresa;
 }
 
 export interface Unidade {
@@ -69,6 +72,8 @@ export interface Membro {
   setor_id: string | null;
   todas_unidades: boolean;
   dono: boolean;
+  // Admin Master que entrou na empresa: tem acesso total, como o dono
+  admin_master: boolean;
   ativo: boolean;
 }
 

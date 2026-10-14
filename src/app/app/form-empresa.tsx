@@ -8,7 +8,7 @@ import { BotaoEnviar } from "@/components/botao-enviar";
 export function FormEmpresa() {
   const [estado, acao] = useActionState(criarEmpresa, undefined);
   return (
-    <form action={acao} className="space-y-3">
+    <form action={acao} className="mt-3 space-y-3">
       <Campo rotulo="Nome da empresa">
         <Input name="nome" placeholder="Ex.: Mercado Souza" required />
       </Campo>
