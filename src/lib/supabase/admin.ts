@@ -2,7 +2,8 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 // Cliente com a chave service_role: ignora RLS. Usar SÓ no servidor e só para
-// o que não tem usuário logado (central pública via QR Code e o job de recorrência).
+// o que não tem usuário logado (central pública via QR Code, feed da agenda e o
+// job de recorrência).
 export function createAdminClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {

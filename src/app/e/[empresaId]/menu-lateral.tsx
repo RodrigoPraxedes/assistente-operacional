@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   CalendarClock,
   CalendarDays,
+  CalendarSync,
   ClipboardCheck,
   ListChecks,
   LogOut,
@@ -52,6 +53,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, tema: temaInicial
     { href: `${base}/chamados`, rotulo: "Chamados", icone: Wrench },
     { href: `${base}/alertas`, rotulo: "Alertas", icone: CalendarClock },
     { href: `${base}/escalas`, rotulo: "Escalas", icone: CalendarDays },
+    { href: `${base}/agenda`, rotulo: "Google Agenda", icone: CalendarSync },
     ...(veConfig ? [{ href: `${base}/config/geral`, rotulo: "Configurações", icone: Settings, ativoEm: `${base}/config` }] : []),
   ];
   const atual = itens.find((i) => pathname.startsWith(i.ativoEm ?? i.href));
