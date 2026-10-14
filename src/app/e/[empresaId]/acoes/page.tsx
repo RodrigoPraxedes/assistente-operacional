@@ -58,6 +58,12 @@ export default async function PaginaAcoes({
                 ) : (
                   <span className="font-medium">{a.nome}</span>
                 )}
+                {a.privado && (
+                  <>
+                    {" "}
+                    <Etiqueta>Privada</Etiqueta>
+                  </>
+                )}
                 <p className="text-xs text-slate-500">
                   {descreverRecorrencia(a.recorrencia)} · {a.horario.slice(0, 5)} ·{" "}
                   {a.unidade_id ? unidade.get(a.unidade_id) : "Todas as unidades"}

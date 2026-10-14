@@ -5,6 +5,7 @@ import { excluirAlerta, salvarAlerta } from "../actions";
 import type { Alerta, AlertaAviso } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { CampoVisibilidade } from "@/components/campo-visibilidade";
 
 type Opcao = { id: string; nome: string };
 type LinhaAviso = {
@@ -31,9 +32,11 @@ export function FormAlerta({
   setores,
   categorias,
   membros,
+  podeMudarPrivado,
 }: {
   empresaId: string;
   alerta: Alerta | null;
+  podeMudarPrivado: boolean;
   avisos: AlertaAviso[];
   hoje: string;
   unidades: Opcao[];
@@ -136,6 +139,7 @@ export function FormAlerta({
               ))}
             </Select>
           </Campo>
+          <CampoVisibilidade privado={alerta?.privado} podeMudar={podeMudarPrivado} />
           {alerta && (
             <Campo rotulo="Situação">
               <Select name="ativo" defaultValue={String(alerta.ativo)}>

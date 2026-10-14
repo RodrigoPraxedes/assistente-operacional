@@ -15,7 +15,7 @@ export default async function EditarAcao({
 }) {
   const { empresaId, acaoId } = await params;
   const { erro } = await searchParams;
-  const { supabase, empresa } = await exigirPermissao(empresaId, "acoes.editar");
+  const { supabase, empresa, membro } = await exigirPermissao(empresaId, "acoes.editar");
   const novo = acaoId === "novo";
 
   const [{ data: acao }, { data: unidades }, { data: setores }, { data: categorias }, { data: membros }] = await Promise.all([
@@ -50,6 +50,7 @@ export default async function EditarAcao({
         setores={setores ?? []}
         categorias={categorias ?? []}
         membros={membros ?? []}
+        podeMudarPrivado={novo || !acao!.criado_por || acao!.criado_por === membro.id}
       />
     </div>
   );

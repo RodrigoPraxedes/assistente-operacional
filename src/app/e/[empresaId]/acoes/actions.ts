@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { gerarTarefasRecorrentes } from "@/lib/gerar-tarefas";
 import { regraValida } from "@/lib/recorrencia";
+import { lerPrivado } from "@/lib/privado";
 
 export async function salvarAcao(empresaId: string, _: { erro?: string } | undefined, form: FormData) {
   const { supabase, membro } = await getContexto(empresaId);
@@ -31,12 +32,14 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
     prazo_horas: Math.max(0, Number(form.get("prazo_horas") ?? 8) || 0),
     recorrencia,
     ativo: form.get("ativo") !== "false",
+    ...(lerPrivado(form) !== undefined && { privado: lerPrivado(form) }),
   };
 
   let acaoId = id;
   if (id) {
-    const { error } = await supabase.from("acoes").update(dados).eq("id", id);
+    const { data, error } = await supabase.from("acoes").update(dados).eq("id", id).select("id");
     if (error) return { erro: error.message };
+    if (!data?.length) return { erro: "Esta ação é privada: só quem criou pode editar" };
   } else {
     const { data, error } = await supabase
       .from("acoes")
