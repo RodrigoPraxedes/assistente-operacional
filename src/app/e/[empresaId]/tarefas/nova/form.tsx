@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { criarTarefa } from "../actions";
 import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { CampoVisibilidade } from "@/components/campo-visibilidade";
 
 type Opcao = { id: string; nome: string };
 
@@ -73,6 +74,7 @@ export function FormTarefa({
             ))}
           </Select>
         </Campo>
+        <CampoVisibilidade podeMudar />
       </div>
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <BotaoEnviar>Criar tarefa</BotaoEnviar>

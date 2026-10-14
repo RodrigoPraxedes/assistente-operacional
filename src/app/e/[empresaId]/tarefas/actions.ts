@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { localParaUtc } from "@/lib/formato";
+import { lerPrivado } from "@/lib/privado";
 
 export async function moverTarefa(
   empresaId: string,
@@ -54,6 +55,7 @@ export async function criarTarefa(empresaId: string, _: { erro?: string } | unde
       prazo: prazo ? localParaUtc(prazo, empresa.fuso_horario) : null,
       status_id: statusInicial,
       criado_por: membro.id,
+      privado: lerPrivado(form) ?? false,
       origem: "avulsa",
     })
     .select("id")
@@ -67,6 +69,16 @@ export async function excluirTarefa(empresaId: string, tarefaId: string) {
   const { error } = await supabase.from("tarefas").delete().eq("id", tarefaId);
   if (error) return { erro: error.message };
   redirect(`/e/${empresaId}/tarefas`);
+}
+
+// Privada: só quem criou e o responsável veem. Só quem criou pode trocar (o banco confere).
+export async function mudarPrivacidadeTarefa(empresaId: string, tarefaId: string, privado: boolean) {
+  const { supabase } = await getContexto(empresaId);
+  const voltar = `/e/${empresaId}/tarefas/${tarefaId}`;
+  const { error } = await supabase.from("tarefas").update({ privado }).eq("id", tarefaId);
+  if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
+  revalidatePath(voltar);
+  revalidatePath(`/e/${empresaId}/tarefas`);
 }
 
 export async function comentarTarefa(empresaId: string, tarefaId: string, voltar: string, form: FormData) {
