@@ -306,11 +306,12 @@ create policy plano_etapa_equipe_select on public.plano_etapa_equipe for select 
   using (exists (select 1 from public.plano_etapas e where e.tarefa_id = etapa_id));
 
 -- tarefas das etapas: visíveis a quem vê o plano; a equipe pode movê-las
+-- (etapa marcada como privada segue só as regras normais de tarefas)
 create policy tarefas_select_plano on public.tarefas for select to authenticated
-  using (origem = 'plano' and public.pode_ver_plano(origem_id));
+  using (origem = 'plano' and not privado and public.pode_ver_plano(origem_id));
 create policy tarefas_update_equipe on public.tarefas for update to authenticated
-  using (origem = 'plano' and public.estou_na_etapa(id))
-  with check (origem = 'plano' and public.estou_na_etapa(id));
+  using (origem = 'plano' and not privado and public.estou_na_etapa(id))
+  with check (origem = 'plano' and not privado and public.estou_na_etapa(id));
 
 -- -----------------------------------------------------------------------------
 -- Criar / editar etapa (tarefa + etapa + dependências + equipe de uma vez)
