@@ -120,17 +120,47 @@ revisão" com o link do relatório; alguém confirma em Avisos.
 - **Trocar a chave:** gere outra `AUTHENTICATION_API_KEY`, atualize servidor e Vercel juntos.
   Trocar `WHATSAPP_WEBHOOK_SECRET`: atualize na Vercel e clique "Reconectar" (reconfigura o webhook).
 
-## 6. Limites conhecidos
+## 6. Automações (envio sem confirmar)
+
+Aba **Automações** (só quem gerencia). Tudo começa desligado.
+
+- **Tarefa atribuída:** quando alguém recebe uma tarefa (nova ou trocando o responsável), sai uma
+  mensagem com título, prazo, unidade, quem atribuiu e o link. Ficam de fora a rotina de check-list
+  e de ação recorrente (vão no resumo), tarefa privada, tarefa já concluída e quem atribui a si mesmo.
+  Feito no banco: gatilho `whatsapp_tarefa_atribuida` em `tarefas` (migration 24).
+- **Resumo do dia:** no horário escolhido (fuso da empresa), uma mensagem por pessoa com o turno de
+  hoje, as tarefas que vencem hoje e as atrasadas. Quem não tem nada no dia não recebe. Se o relógio
+  atrasar mais de 3 h, o resumo do dia é pulado. Código: `src/lib/whatsapp-api/automacoes.ts`.
+- **Quem recebe:** só destinatários autorizados **ligados a um colaborador**. O botão "Autorizar a
+  equipe" cria os destinatários a partir do telefone do cadastro de cada colaborador.
+- **Proteções:** limite diário de envios automáticos por conexão (passou, vira rascunho na aba
+  Avisos); 3 a 7 s entre uma mensagem e outra; "Pausar envios" segura tudo; a mesma tarefa ou resumo
+  nunca sai duas vezes (coluna `chave`). Tarefas privadas aparecem no resumo só como contagem.
+
+### Relógio (obrigatório para as automações)
+
+O cron da Vercel Hobby roda 1x por dia, então o servidor da Evolution chama o app a cada minuto.
+No servidor (SSH), rode `crontab -e` e acrescente a linha (troque o segredo pelo valor de
+`CRON_SECRET` da Vercel):
+
+```
+* * * * * curl -s -m 70 -H "Authorization: Bearer SEU_CRON_SECRET" https://assistente-operacional-eta.vercel.app/api/cron/whatsapp > /dev/null
+```
+
+Cada chamada gera os resumos na hora certa e envia até 12 mensagens da fila, espaçadas.
+
+## 7. Limites conhecidos
 
 - Baileys não é oficial: pode parar quando o WhatsApp Web muda, e a Meta pode bloquear números
   com comportamento de spam. Use um número da empresa, poucos avisos e só para quem autorizou.
 - Sem resposta automática, sem mídia, sem grupos, sem agendamento nesta fase (agendamentos
   ficam pausados até você escolher horário, fuso, público e conteúdo).
-- Na Vercel Hobby o cron roda 1x por dia; o envio normal não depende dele (`after()`).
+- Na Vercel Hobby o cron roda 1x por dia; o envio confirmado na tela não depende dele (`after()`),
+  mas as automações dependem do relógio do servidor (seção 6).
 - "Verificar no WhatsApp" depende da Evolution guardar mensagens (`DATABASE_SAVE_DATA_NEW_MESSAGE`,
   ligado por padrão).
 
-## 7. Fontes consultadas
+## 8. Fontes consultadas
 
 - Código da Evolution v2.3.7 (github.com/evolution-foundation/evolution-api, `package.json` 2.3.7):
   `src/api/routes/instance.router.ts`, `src/api/controllers/instance.controller.ts`,
