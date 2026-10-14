@@ -48,6 +48,10 @@ escalas e alertas de datas, com avisos por WhatsApp e Google Agenda.
 - **Convites:** cadastre o colaborador com e-mail; quando ele criar a conta com o mesmo e-mail,
   já entra vinculado à empresa.
 
+- **Agenda:** tela com a semana de cada pessoa (tarefas, o que está programado, turnos, folgas),
+  com quem cadastra colaboradores podendo ver a agenda de qualquer um.
+  Cada pessoa pode colar o "endereço secreto no formato iCal" da própria agenda do Google para
+  ver também os eventos pessoais dela (só ela vê).
 - **Google Agenda:** cada colaborador tem um link secreto de calendário (formato iCal) que
   adiciona uma vez no Google Agenda (ou iPhone/Outlook). Lá aparecem as tarefas dele, as
   próximas ocorrências de check-lists, ações e alertas em que ele é o responsável e os turnos,

@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { avisosDeAlerta, ocorrencias, type RegraRecorrencia } from "@/lib/recorrencia";
 import { formatarData } from "@/lib/formato";
@@ -6,7 +7,8 @@ import type { Origem } from "@/lib/types";
 
 const DIAS_A_FRENTE = 2;
 
-type Admin = ReturnType<typeof createAdminClient>;
+// chave do servidor (job) ou o cliente do usuário logado (tela da agenda, com RLS)
+type Admin = SupabaseClient;
 
 // O que cada módulo informa ao motor: de onde vem, quando acontece e como
 // fica a tarefa no Kanban.
