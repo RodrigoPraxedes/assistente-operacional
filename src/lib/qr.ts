@@ -33,3 +33,8 @@ export async function carregarModeloQr(token: string, modeloId: string) {
       }
     | null;
 }
+
+export async function carregarDadosChamado(token: string) {
+  const { data } = await anon().rpc("qr_dados_chamado", { p_token: token });
+  return (data as { setores: { id: string; nome: string }[]; equipamentos: { id: string; nome: string }[] } | null) ?? null;
+}

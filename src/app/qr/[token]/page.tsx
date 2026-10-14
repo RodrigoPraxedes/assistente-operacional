@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wrench } from "lucide-react";
 import { notFound } from "next/navigation";
 import { carregarCentral } from "@/lib/qr";
 import { Vazio } from "@/components/ui";
@@ -17,6 +18,16 @@ export default async function CentralQr({ params }: { params: Promise<{ token: s
         <h1 className="text-2xl font-semibold">{central.unidade.nome}</h1>
         <p className="text-sm text-slate-500">Escolha o check-list para preencher</p>
       </div>
+      <Link
+        href={`/qr/${token}/chamado`}
+        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-superficie p-4 shadow-sm hover:border-blue-400"
+      >
+        <Wrench size={20} className="shrink-0 text-blue-600" />
+        <span>
+          <span className="block font-medium">Solicitar manutenção</span>
+          <span className="text-sm text-slate-500">Algo quebrado ou com problema? Abra um chamado.</span>
+        </span>
+      </Link>
       {central.modelos.length === 0 ? (
         <Vazio>Nenhum check-list disponível nesta unidade.</Vazio>
       ) : (

@@ -4,6 +4,7 @@
 --   * usuarios: escolhe o nome na lista de colaboradores + PIN (como era)
 --   * aberto  : nome digitado livremente; a execução guarda só o nome
 -- Os check-lists que já existiam continuam "usuarios"; os novos nascem "aberto".
+-- Também: N/A configurável por item e chamado de manutenção aberto pelo QR Code.
 -- =============================================================================
 
 alter table public.checklist_modelos
@@ -11,9 +12,12 @@ alter table public.checklist_modelos
     check (modo_executor in ('aberto', 'usuarios'));
 alter table public.checklist_modelos alter column modo_executor set default 'aberto';
 
+-- Cada item Sim/Não escolhe se mostra a opção N/A (não se aplica)
+alter table public.checklist_itens add column permite_na boolean not null default true;
+
 -- -----------------------------------------------------------------------------
 -- Registro da execução aceita executor sem cadastro (p_executor nulo + nome)
--- (mesma função da migration 6, com o executor opcional)
+-- (mesma função da migration 6, com o executor opcional e o N/A por item)
 -- -----------------------------------------------------------------------------
 drop function public._registrar_execucao(uuid, uuid, uuid, text, jsonb, text);
 
@@ -101,6 +105,8 @@ begin
         end if;
       elsif v_resp ->> 'resposta' not in ('sim', 'nao', 'em_processo', 'na') then
         raise exception 'Resposta inválida no item: %', v_item.texto;
+      elsif v_resp ->> 'resposta' = 'na' and not v_item.permite_na then
+        raise exception 'Este item não aceita N/A: %', v_item.texto;
       end if;
       if v_resp ->> 'resposta' = 'nao' then
         v_qtd_nao := v_qtd_nao + 1;
@@ -237,7 +243,8 @@ as $$
       select jsonb_agg(jsonb_build_object(
         'id', i.id, 'texto', i.texto, 'tipo_resposta', i.tipo_resposta,
         'obrigatorio', i.obrigatorio, 'permite_foto', i.permite_foto,
-        'foto_obrigatoria_se_nao', i.foto_obrigatoria_se_nao
+        'foto_obrigatoria_se_nao', i.foto_obrigatoria_se_nao,
+        'permite_na', i.permite_na
       ) order by i.ordem, i.created_at)
       from public.checklist_itens i where i.modelo_id = cm.id and i.ativo
     ), '[]'::jsonb)
@@ -283,6 +290,89 @@ end;
 $$;
 
 -- -----------------------------------------------------------------------------
+-- Chamado de manutenção pela central pública (QR Code), sem login: a pessoa
+-- digita o nome, diz o que está com problema e onde. A gestão acompanha em
+-- Chamados, como os abertos pelo app.
+-- -----------------------------------------------------------------------------
+-- Opções do formulário: setores da empresa e equipamentos em uso na unidade
+create or replace function public.qr_dados_chamado(p_token text)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'setores', coalesce((
+      select jsonb_agg(jsonb_build_object('id', s.id, 'nome', s.nome) order by s.nome)
+      from public.setores s where s.empresa_id = u.empresa_id and s.ativo
+    ), '[]'::jsonb),
+    'equipamentos', coalesce((
+      select jsonb_agg(jsonb_build_object('id', q.id, 'nome', q.nome) order by q.nome)
+      from public.equipamentos q
+      where q.empresa_id = u.empresa_id and q.ativo
+        and (q.unidade_id is null or q.unidade_id = u.id)
+    ), '[]'::jsonb)
+  )
+  from public.unidades u
+  join public.empresas e on e.id = u.empresa_id
+  where u.qr_token = p_token and u.ativo and e.situacao = 'ativa'
+$$;
+
+-- Abertura. Só o servidor (service_role) chama, depois de subir as fotos.
+create or replace function public.qr_abrir_chamado(
+  p_token text,
+  p_nome text,
+  p_titulo text,
+  p_descricao text default null,
+  p_setor uuid default null,
+  p_equipamento uuid default null,
+  p_local text default null,
+  p_fotos text[] default '{}'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_unidade public.unidades;
+  v_nome text;
+begin
+  select u.* into v_unidade
+  from public.unidades u join public.empresas e on e.id = u.empresa_id
+  where u.qr_token = p_token and u.ativo and e.situacao = 'ativa';
+  if v_unidade.id is null then
+    raise exception 'QR Code inválido';
+  end if;
+
+  v_nome := left(regexp_replace(trim(coalesce(p_nome, '')), '\s+', ' ', 'g'), 80);
+  if v_nome = '' then
+    raise exception 'Informe o seu nome';
+  end if;
+  if p_setor is not null and not exists (
+    select 1 from public.setores where id = p_setor and empresa_id = v_unidade.empresa_id and ativo
+  ) then
+    raise exception 'Área inválida';
+  end if;
+  if p_equipamento is not null and not exists (
+    select 1 from public.equipamentos
+    where id = p_equipamento and empresa_id = v_unidade.empresa_id and ativo
+      and (unidade_id is null or unidade_id = v_unidade.id)
+  ) then
+    raise exception 'Equipamento inválido';
+  end if;
+
+  return public._criar_chamado(
+    v_unidade.empresa_id, left(p_titulo, 200), p_descricao, v_unidade.id, p_setor, null, 'media',
+    p_equipamento, left(p_local, 120), null, null, null, v_nome, null, coalesce(p_fotos[1:5], '{}')
+  );
+end;
+$$;
+
+grant execute on function public.qr_dados_chamado(text) to anon, authenticated;
+
+-- -----------------------------------------------------------------------------
 -- Permissões. O "alter default privileges ... in schema" da migration 4 não tira
 -- o execute que o Postgres dá a PUBLIC em toda função nova; então funções
 -- internas criadas depois dela ficaram chamáveis pela API. Fecha essas e corta
@@ -293,11 +383,13 @@ alter default privileges revoke execute on functions from public;
 revoke execute on function
   public._registrar_execucao(uuid, uuid, uuid, text, jsonb, text, text),
   public.qr_enviar_checklist_aberto(text, uuid, text, jsonb, text),
+  public.qr_abrir_chamado(text, text, text, text, uuid, uuid, text, text[]),
   public._criar_chamado(uuid, text, text, uuid, uuid, uuid, text, uuid, text, uuid, uuid, uuid, text, uuid, text[]),
   public._tipos_servico_padrao(uuid)
 from public, anon, authenticated;
 
 grant execute on function
   public._registrar_execucao(uuid, uuid, uuid, text, jsonb, text, text),
-  public.qr_enviar_checklist_aberto(text, uuid, text, jsonb, text)
+  public.qr_enviar_checklist_aberto(text, uuid, text, jsonb, text),
+  public.qr_abrir_chamado(text, text, text, text, uuid, uuid, text, text[])
 to service_role;

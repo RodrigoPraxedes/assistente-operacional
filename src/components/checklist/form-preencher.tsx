@@ -22,6 +22,7 @@ export interface ItemPreencher {
   obrigatorio: boolean;
   permite_foto: boolean;
   foto_obrigatoria_se_nao: boolean;
+  permite_na?: boolean;
 }
 
 interface Props {
@@ -120,7 +121,7 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, mo
 
               {item.tipo_resposta === "sim_nao" && (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {RESPOSTAS_SIM_NAO.map((r) => (
+                  {RESPOSTAS_SIM_NAO.filter((r) => r.valor !== "na" || item.permite_na !== false).map((r) => (
                     <label
                       key={r.valor}
                       className={`cursor-pointer rounded-lg border px-3 py-2 text-center text-sm ${
