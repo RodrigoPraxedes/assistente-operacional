@@ -8,10 +8,15 @@ export default async function Preencher({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; modeloId: string }>;
-  searchParams: Promise<{ unidade?: string }>;
+  searchParams: Promise<{ unidade?: string; de?: string }>;
 }) {
   const { empresaId, modeloId } = await params;
-  const { unidade: unidadeParam } = await searchParams;
+  const { unidade: unidadeParam, de } = await searchParams;
+  // aberto pelo cartão do Kanban: volta para Tarefas
+  const voltar =
+    de === "tarefas"
+      ? { href: `/e/${empresaId}/tarefas`, rotulo: "Tarefas" }
+      : { href: `/e/${empresaId}/checklists`, rotulo: "Check-lists" };
   const { supabase, membro } = await exigirPermissao(empresaId, "checklist.executar");
 
   const [{ data: modelo }, { data: itens }] = await Promise.all([
@@ -28,7 +33,7 @@ export default async function Preencher({
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <Titulo voltar={{ href: `/e/${empresaId}/checklists`, rotulo: "Check-lists" }}>{modelo.nome}</Titulo>
+      <Titulo voltar={voltar}>{modelo.nome}</Titulo>
       <p className="-mt-3 text-sm text-slate-500">
         {unidade.nome}
         {modelo.descricao ? ` · ${modelo.descricao}` : ""}
@@ -40,7 +45,7 @@ export default async function Preencher({
         unidadeId={unidade.id}
         executor={membro.nome}
         itens={(itens ?? []) as ItemPreencher[]}
-        voltar={{ href: `/e/${empresaId}/checklists`, rotulo: "Voltar aos check-lists" }}
+        voltar={{ href: voltar.href, rotulo: `Voltar para ${voltar.rotulo}` }}
       />
     </div>
   );

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
-import { MessageCircle } from "lucide-react";
+import { ListChecks, MessageCircle } from "lucide-react";
+import { linkPreencher } from "@/lib/checklist-link";
 import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
 import { ORIGENS, type Status, type Tarefa } from "@/lib/types";
 import { Botao, Etiqueta, Input, Textarea } from "@/components/ui";
@@ -23,6 +24,8 @@ interface Props {
   colunas?: Status[];
   // link do WhatsApp com a mensagem pronta, por tarefa
   whatsapp?: Record<string, string>;
+  // quem pode preencher check-list ganha o atalho para o formulário
+  podePreencher?: boolean;
 }
 
 // chamados abrem na própria página; o resto no detalhe da tarefa
@@ -40,6 +43,7 @@ export function Kanban({
   visao = "kanban",
   colunas = status,
   whatsapp,
+  podePreencher = false,
 }: Props) {
   const [tarefas, setTarefas] = useState(iniciais);
   const [arrastando, setArrastando] = useState<string | null>(null);
@@ -120,7 +124,14 @@ export function Kanban({
     </>
   );
 
-  // trocar status, retornar do adiado e mandar no WhatsApp
+  // check-list ainda pendente: atalho para preencher
+  const preenchivel = (t: Tarefa) =>
+    podePreencher &&
+    t.origem === "checklist" &&
+    !!t.origem_id &&
+    ["aberto", "em_andamento", "adiado"].includes(tipoDe(t.status_id) ?? "");
+
+  // trocar status, retornar do adiado, abrir o check-list e mandar no WhatsApp
   const controles = (t: Tarefa) => {
     const atual = status.find((s) => s.id === t.status_id);
     return (
@@ -152,6 +163,16 @@ export function Kanban({
           <button onClick={() => retornar(t)} className="text-xs font-medium text-blue-600">
             Retornar
           </button>
+        )}
+        {preenchivel(t) && (
+          <Link
+            href={linkPreencher(empresaId, t)}
+            title="Abrir check-list"
+            aria-label={`Abrir o check-list "${t.titulo}"`}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <ListChecks className="h-4 w-4" aria-hidden />
+          </Link>
         )}
         {whatsapp?.[t.id] && (
           <a
@@ -265,7 +286,7 @@ export function Kanban({
                           )}
                           {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                         </div>
-                        {(podeMover || whatsapp?.[t.id]) && <div className="mt-2">{controles(t)}</div>}
+                        {(podeMover || whatsapp?.[t.id] || preenchivel(t)) && <div className="mt-2">{controles(t)}</div>}
                       </article>
                     );
                   })}

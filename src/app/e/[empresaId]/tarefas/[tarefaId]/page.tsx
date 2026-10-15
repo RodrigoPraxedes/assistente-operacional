@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { formatarDataHora } from "@/lib/formato";
+import { linkPreencher } from "@/lib/checklist-link";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
@@ -40,7 +41,7 @@ export default async function DetalheTarefa({
     { data: comentarios },
     { data: setores },
   ] = await Promise.all([
-      supabase.from("status").select("id, nome, cor").eq("empresa_id", empresaId),
+      supabase.from("status").select("id, nome, cor, tipo").eq("empresa_id", empresaId),
       supabase.from("membros").select("id, nome, telefone, setor_id, ativo").eq("empresa_id", empresaId).order("nome"),
       supabase.from("tarefa_historico").select("*").eq("tarefa_id", tarefaId).order("created_at"),
       tarefa.unidade_id
@@ -70,6 +71,13 @@ export default async function DetalheTarefa({
   const encerrada = !!tarefa.concluida_em || !!tarefa.cancelada_em;
   const souResponsavel = tarefa.responsaveis.includes(membro.id);
   const minhaParteFeita = tarefa.partes_feitas.includes(membro.id);
+  // check-list ainda pendente: botão para abrir o formulário
+  const podePreencher =
+    tarefa.origem === "checklist" &&
+    !!tarefa.origem_id &&
+    !execucao &&
+    ["aberto", "em_andamento", "adiado"].includes(atual?.tipo ?? "") &&
+    pode("checklist.executar");
   const podeExcluir = pode("tarefas.excluir") || (tarefa.origem === "avulsa" && tarefa.criado_por === membro.id);
 
   const texto = mensagemTarefa(tarefa, {
@@ -125,6 +133,14 @@ export default async function DetalheTarefa({
           )}
         </dl>
         <div className="flex flex-wrap gap-2 pt-2">
+          {podePreencher && (
+            <Link
+              href={linkPreencher(empresaId, tarefa)}
+              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Abrir check-list
+            </Link>
+          )}
           <a
             href={linkWhatsApp(texto, responsavel?.telefone)}
             target="_blank"
