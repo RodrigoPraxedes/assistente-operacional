@@ -126,7 +126,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Acompanhar e mover",
         passos: [
-          "Arraste o cartão para outra coluna ou use a caixa de status no próprio cartão.",
+          "Arraste o cartão para outra coluna ou use a caixa de status no próprio cartão. No celular, segure o cartão um instante até ele se soltar e arraste. Perto da borda, o quadro rola para os lados.",
           "Ao mover para Adiado, o app pede a nova data. Depois, o botão Retornar devolve a tarefa ao status anterior.",
           "Tarefas com prazo vencido ganham a etiqueta vermelha Atrasada.",
           "Em check-list pendente, o botão azul de lista no cartão abre o formulário para preencher na hora. Ao salvar, a tarefa vai sozinha para Concluído.",

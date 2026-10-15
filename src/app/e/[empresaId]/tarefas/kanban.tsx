@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ListChecks, MessageCircle } from "lucide-react";
 import { linkPreencher } from "@/lib/checklist-link";
 import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
@@ -52,6 +52,89 @@ export function Kanban({
   const [, startTransition] = useTransition();
 
   useEffect(() => setTarefas(iniciais), [iniciais]);
+
+  // arrastar pelo toque (celular): segurar o cartão um instante e arrastar até a coluna.
+  // O arrastar nativo do navegador (draggable) só funciona com mouse.
+  const [mouse, setMouse] = useState(true);
+  const [toque, setToque] = useState<{ id: string; x: number; y: number; coluna: string | null } | null>(null);
+  const quadro = useRef<HTMLDivElement>(null);
+  const gesto = useRef<{ id: string; x: number; y: number; timer?: ReturnType<typeof setTimeout>; ativo: boolean } | null>(null);
+  const soltarEm = useRef<(id: string, statusId: string) => void>(() => {});
+  soltarEm.current = (id, statusId) => {
+    const t = tarefas.find((x) => x.id === id);
+    if (t) mover(t, statusId);
+  };
+
+  useEffect(() => {
+    setMouse(window.matchMedia("(pointer: fine)").matches);
+  }, []);
+
+  useEffect(() => {
+    if (!podeMover) return;
+    let rolagem: number | null = null;
+    let dx = 0;
+    const colunaEm = (x: number, y: number) =>
+      (document.elementFromPoint(x, y)?.closest("[data-coluna]") as HTMLElement | null)?.dataset.coluna ?? null;
+    const rolar = () => {
+      if (quadro.current && dx) quadro.current.scrollLeft += dx;
+      rolagem = dx ? requestAnimationFrame(rolar) : null;
+    };
+    const parar = () => {
+      if (gesto.current?.timer) clearTimeout(gesto.current.timer);
+      gesto.current = null;
+      dx = 0;
+      setToque(null);
+    };
+    const aoMover = (e: TouchEvent) => {
+      const g = gesto.current;
+      if (!g) return;
+      const { clientX: x, clientY: y } = e.touches[0];
+      if (!g.ativo) {
+        // mexeu antes de segurar: é rolagem normal da tela
+        if (Math.hypot(x - g.x, y - g.y) > 8) parar();
+        return;
+      }
+      e.preventDefault();
+      // perto da borda do quadro, rola para os lados
+      const r = quadro.current?.getBoundingClientRect();
+      dx = r ? (x < r.left + 40 ? -8 : x > r.right - 40 ? 8 : 0) : 0;
+      if (dx && rolagem === null) rolagem = requestAnimationFrame(rolar);
+      setToque({ id: g.id, x, y, coluna: colunaEm(x, y) });
+    };
+    const aoSoltar = (e: TouchEvent) => {
+      const g = gesto.current;
+      if (g?.ativo) {
+        e.preventDefault(); // não abre o link do cartão
+        const { clientX: x, clientY: y } = e.changedTouches[0];
+        const coluna = colunaEm(x, y);
+        if (coluna) soltarEm.current(g.id, coluna);
+      }
+      parar();
+    };
+    document.addEventListener("touchmove", aoMover, { passive: false });
+    document.addEventListener("touchend", aoSoltar, { passive: false });
+    document.addEventListener("touchcancel", parar);
+    return () => {
+      document.removeEventListener("touchmove", aoMover);
+      document.removeEventListener("touchend", aoSoltar);
+      document.removeEventListener("touchcancel", parar);
+      if (rolagem !== null) cancelAnimationFrame(rolagem);
+    };
+  }, [podeMover]);
+
+  function segurar(e: React.TouchEvent, id: string) {
+    if (!podeMover || e.touches.length > 1) return;
+    // não começa ao tocar na caixa de status ou nos botões
+    if ((e.target as HTMLElement).closest("select, button, [data-sem-arrastar]")) return;
+    const { clientX: x, clientY: y } = e.touches[0];
+    const g = { id, x, y, ativo: false } as NonNullable<typeof gesto.current>;
+    g.timer = setTimeout(() => {
+      g.ativo = true;
+      navigator.vibrate?.(15);
+      setToque({ id, x, y, coluna: null });
+    }, 350);
+    gesto.current = g;
+  }
 
   const tipoDe = (statusId: string) => status.find((s) => s.id === statusId)?.tipo;
   const agora = Date.now();
@@ -242,13 +325,14 @@ export function Kanban({
           )}
         </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div ref={quadro} className="flex gap-3 overflow-x-auto pb-4">
           {colunas.map((s) => {
             const daColuna = tarefas.filter((t) => t.status_id === s.id);
             return (
               <section
                 key={s.id}
-                className="flex w-72 shrink-0 flex-col rounded-xl bg-slate-100 p-2"
+                data-coluna={s.id}
+                className={`flex w-72 shrink-0 flex-col rounded-xl bg-slate-100 p-2 ${toque?.coluna === s.id ? "ring-2 ring-blue-500" : ""}`}
                 onDragOver={(e) => podeMover && e.preventDefault()}
                 onDrop={() => {
                   const t = tarefas.find((x) => x.id === arrastando);
@@ -269,9 +353,11 @@ export function Kanban({
                     return (
                       <article
                         key={t.id}
-                        draggable={podeMover}
+                        draggable={podeMover && mouse}
                         onDragStart={() => setArrastando(t.id)}
-                        className={`rounded-lg border bg-superficie p-3 text-sm shadow-sm ${atrasada(t) ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""}`}
+                        onTouchStart={(e) => segurar(e, t.id)}
+                        onContextMenu={(e) => toque?.id === t.id && e.preventDefault()}
+                        className={`select-none rounded-lg border bg-superficie p-3 text-sm shadow-sm [-webkit-touch-callout:none] ${atrasada(t) ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""} ${toque?.id === t.id ? "opacity-40" : ""}`}
                       >
                         <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
                           {t.titulo}
@@ -294,6 +380,16 @@ export function Kanban({
               </section>
             );
           })}
+        </div>
+      )}
+
+      {toque && (
+        // cópia do cartão que segue o dedo
+        <div
+          className="pointer-events-none fixed z-40 w-64 -translate-x-1/2 -translate-y-1/2 rotate-2 rounded-lg border border-blue-300 bg-superficie p-3 text-sm font-medium shadow-lg"
+          style={{ left: toque.x, top: toque.y }}
+        >
+          {tarefas.find((t) => t.id === toque.id)?.titulo}
         </div>
       )}
 
