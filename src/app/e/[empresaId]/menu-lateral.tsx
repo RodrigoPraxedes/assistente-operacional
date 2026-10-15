@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   ArrowLeftRight,
+  BookOpen,
   CalendarClock,
   CalendarDays,
   CalendarSync,
@@ -77,6 +78,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
     { href: `${base}/agenda`, rotulo: "Agenda", icone: CalendarSync },
     ...(veWhatsApp ? [{ href: `${base}/whatsapp`, rotulo: "WhatsApp", icone: MessageCircle }] : []),
     ...(veConfig ? [{ href: `${base}/config/geral`, rotulo: "Configurações", icone: Settings, ativoEm: `${base}/config` }] : []),
+    { href: `${base}/guia`, rotulo: "Guia", icone: BookOpen },
     ...(veAdmin ? [{ href: "/admin", rotulo: "Admin Master", icone: ShieldCheck }] : []),
   ];
   const atual = itens.find((i) => [i.ativoEm ?? i.href].flat().some((p) => pathname.startsWith(p)));
