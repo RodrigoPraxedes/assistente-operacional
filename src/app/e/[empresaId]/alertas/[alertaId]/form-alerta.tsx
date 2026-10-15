@@ -142,7 +142,7 @@ export function FormAlerta({
               ))}
             </Select>
           </Campo>
-          <CampoVisibilidade privado={alerta?.privado} podeMudar={podeMudarPrivado} />
+          <CampoVisibilidade privado={alerta?.privado} podeMudar={podeMudarPrivado} perguntar={!alerta} />
           {alerta && (
             <Campo rotulo="Situação">
               <Select name="ativo" defaultValue={String(alerta.ativo)}>
