@@ -85,6 +85,28 @@ export async function copiarSemanaAnterior(empresaId: string, form: FormData) {
   redirect(voltar("&aviso=copiada"));
 }
 
+// Liga (com a semana aberta como modelo) ou desliga a repetição de um colaborador
+export async function repetirEscala(
+  empresaId: string,
+  unidadeId: string,
+  membroId: string,
+  semana: string,
+  ativo: boolean,
+): Promise<{ erro?: string; ok?: boolean }> {
+  const { supabase } = await getContexto(empresaId);
+  if (!dataValida(semana)) return { erro: "Semana inválida" };
+  const { error } = await supabase.rpc("repetir_escala", {
+    p_empresa: empresaId,
+    p_unidade: unidadeId,
+    p_membro: membroId,
+    p_semana: semana,
+    p_ativo: ativo,
+  });
+  if (error) return { erro: error.message };
+  revalidatePath(`/e/${empresaId}/escalas`);
+  return { ok: true };
+}
+
 export async function salvarTurno(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const id = txt(form, "id");

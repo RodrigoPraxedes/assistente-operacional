@@ -373,6 +373,8 @@ export interface Escala {
   tipo: TipoEscala;
   turno_id: string | null;
   observacao: string | null;
+  // gerado pela repetição automática e ainda não alterado
+  automatica: boolean;
 }
 
 export type StatusTroca = "pendente" | "aprovada" | "recusada" | "cancelada";

@@ -45,8 +45,15 @@ export default async function PaginaEscalas({
     unidades.find((u) => u.id === filtros.unidade) ?? unidades.find((u) => minhas.has(u.id)) ?? unidades[0];
   const setorFiltro = setores?.find((s) => s.id === filtros.setor)?.id ?? null;
 
-  const [{ data: membros }, { data: daUnidade }, { data: turnos }, { data: escalas }, { data: meus }, { count: pendentes }] =
-    await Promise.all([
+  const [
+    { data: membros },
+    { data: daUnidade },
+    { data: turnos },
+    { data: escalas },
+    { data: meus },
+    { count: pendentes },
+    { data: repeticoes },
+  ] = await Promise.all([
       supabase
         .from("membros")
         .select("id, nome, cargo, telefone, setor_id, todas_unidades")
@@ -73,7 +80,9 @@ export default async function PaginaEscalas({
         .select("id", { count: "exact", head: true })
         .eq("empresa_id", empresaId)
         .eq("status", "pendente"),
+      supabase.from("escala_repeticoes").select("membro_id, semana_base").eq("empresa_id", empresaId),
     ]);
+  const repeteDesde = new Map((repeticoes ?? []).map((r) => [r.membro_id, r.semana_base as string]));
 
   const todosTurnos = ordenarTurnos((turnos ?? []) as Turno[]);
   const turnoPorId = new Map(todosTurnos.map((t) => [t.id, t]));
@@ -115,6 +124,7 @@ export default async function PaginaEscalas({
         cargo: m.cargo,
         setor: m.setor_id ? (nomeSetor.get(m.setor_id) ?? "Sem setor") : "Sem setor",
         whatsapp: semana.length ? linkWhatsApp(texto, m.telefone) : null,
+        repeteDesde: repeteDesde.has(m.id) ? rotuloDia(repeteDesde.get(m.id)!).slice(4) : null,
       };
     })
     .sort((a, b) => (a.setor === "Sem setor" ? 1 : 0) - (b.setor === "Sem setor" ? 1 : 0) || a.setor.localeCompare(b.setor));
@@ -224,6 +234,7 @@ export default async function PaginaEscalas({
           key={`${unidade.id}|${segunda}|${setorFiltro}`}
           empresaId={empresaId}
           unidadeId={unidade.id}
+          segunda={segunda}
           dias={dias.map((d) => ({ data: d, rotulo: rotuloDia(d) }))}
           hoje={hoje}
           linhas={linhas}
