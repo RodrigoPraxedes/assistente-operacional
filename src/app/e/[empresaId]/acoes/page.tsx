@@ -67,7 +67,7 @@ export default async function PaginaAcoes({
                 <p className="text-xs text-slate-500">
                   {descreverRecorrencia(a.recorrencia)} · {a.horario.slice(0, 5)} ·{" "}
                   {a.unidade_id ? unidade.get(a.unidade_id) : "Todas as unidades"}
-                  {a.responsavel_id && ` · ${membro.get(a.responsavel_id)}`}
+                  {a.responsaveis.length > 0 && ` · ${a.responsaveis.map((id) => membro.get(id)).join(", ")}`}
                   {a.data_final && ` · até ${formatarData(`${a.data_final}T12:00:00Z`, fuso)}`}
                 </p>
               </div>

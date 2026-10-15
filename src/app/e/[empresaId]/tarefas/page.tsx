@@ -11,12 +11,21 @@ import { TrocarVisao, type Visao } from "./trocar-visao";
 // "pendentes" = tudo que não foi concluído nem cancelado
 const PENDENTES = ["aberto", "em_andamento", "adiado"];
 
+// recortes vindos dos números do Painel
+const RECORTES = {
+  atrasadas: "Atrasadas",
+  hoje: "Vencem hoje",
+  andamento: "Em andamento",
+  concluidas_hoje: "Concluídas hoje",
+} as const;
+type Recorte = keyof typeof RECORTES;
+
 export default async function PaginaTarefas({
   params,
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string }>;
+  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string }>;
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
@@ -41,6 +50,14 @@ export default async function PaginaTarefas({
   const hoje = hojeNoFuso(empresa.fuso_horario);
   const fimDeHoje = horaLocalParaUtc(hoje.y, hoje.m, hoje.d, 23, 59, empresa.fuso_horario).toISOString();
   const seteDiasAtras = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  // canceladas somem depois de 48 h (continuam guardadas)
+  const doisDiasAtras = new Date(Date.now() - 2 * 86_400_000).toISOString();
+  // check-list só aparece 1 hora antes do horário
+  const daquiUmaHora = new Date(Date.now() + 3_600_000).toISOString();
+
+  const recorte = filtros.recorte && filtros.recorte in RECORTES ? (filtros.recorte as Recorte) : null;
+  const idsPendentes = todosStatus.filter((s) => PENDENTES.includes(s.tipo)).map((s) => s.id);
+  const agora = new Date().toISOString();
 
   let consulta = supabase
     .from("tarefas")
@@ -48,12 +65,20 @@ export default async function PaginaTarefas({
     .eq("empresa_id", empresaId)
     .or(`ocorrencia_em.is.null,ocorrencia_em.lte.${fimDeHoje}`)
     .or(`concluida_em.is.null,concluida_em.gte.${seteDiasAtras}`)
+    .or(`cancelada_em.is.null,cancelada_em.gte.${doisDiasAtras}`)
+    .or(`origem.neq.checklist,ocorrencia_em.lte.${daquiUmaHora}`)
     .order("prazo", { ascending: true, nullsFirst: false })
     .limit(500);
   if (filtros.origem) consulta = consulta.eq("origem", filtros.origem);
   if (filtros.unidade) consulta = consulta.eq("unidade_id", filtros.unidade);
-  if (filtros.minhas) consulta = consulta.eq("responsavel_id", membro.id);
+  if (filtros.minhas) consulta = consulta.contains("responsaveis", [membro.id]);
   if (statusEscolhidos) consulta = consulta.in("status_id", statusEscolhidos);
+  if (recorte === "atrasadas") consulta = consulta.in("status_id", idsPendentes).lt("prazo", agora);
+  if (recorte === "hoje") consulta = consulta.in("status_id", idsPendentes).gte("prazo", agora).lte("prazo", fimDeHoje);
+  if (recorte === "andamento")
+    consulta = consulta.in("status_id", todosStatus.filter((s) => s.tipo === "em_andamento").map((s) => s.id));
+  if (recorte === "concluidas_hoje")
+    consulta = consulta.gte("concluida_em", horaLocalParaUtc(hoje.y, hoje.m, hoje.d, 0, 0, empresa.fuso_horario).toISOString());
 
   const [{ data: tarefas }, { data: membros }, { data: unidades }] = await Promise.all([
     consulta,
@@ -67,11 +92,12 @@ export default async function PaginaTarefas({
   };
 
   // botão do WhatsApp em cada tarefa: mensagem pronta para o responsável
+  // (com vários, sem número: a pessoa escolhe o contato ou o grupo)
   const membroPorId = new Map((membros ?? []).map((m) => [m.id, m]));
   const nomeStatus = new Map(todosStatus.map((s) => [s.id, s.nome]));
   const whatsapp = Object.fromEntries(
     ((tarefas ?? []) as Tarefa[]).map((t) => {
-      const resp = t.responsavel_id ? membroPorId.get(t.responsavel_id) : null;
+      const resp = t.responsaveis.length === 1 ? membroPorId.get(t.responsaveis[0]) : null;
       const texto = mensagemTarefa(t, {
         empresaId,
         fuso: empresa.fuso_horario,
@@ -123,11 +149,35 @@ export default async function PaginaTarefas({
             </option>
           ))}
         </Select>
-        <label className="flex items-center gap-2 px-2 text-sm">
-          <input type="checkbox" name="minhas" value="1" defaultChecked={!!filtros.minhas} /> Só as minhas
-        </label>
+        {/* liga/desliga na hora, mantendo os outros filtros */}
+        <Link
+          href={`/e/${empresaId}/tarefas?${new URLSearchParams(
+            Object.entries({ ...filtros, minhas: filtros.minhas ? undefined : "1" }).filter((e): e is [string, string] => !!e[1]),
+          )}`}
+          className={`rounded-lg border px-3 py-2 text-sm ${
+            filtros.minhas ? "border-blue-600 bg-blue-50 font-medium text-blue-700" : "border-slate-300 bg-superficie"
+          }`}
+        >
+          Minhas tarefas
+          {filtros.minhas && <span className="sr-only"> (filtro ativo)</span>}
+        </Link>
+        {filtros.minhas && <input type="hidden" name="minhas" value="1" />}
+        {recorte && (
+          <>
+            <input type="hidden" name="recorte" value={recorte} />
+            <Link
+              href={`/e/${empresaId}/tarefas?${new URLSearchParams(
+                Object.entries({ ...filtros, recorte: undefined }).filter((e): e is [string, string] => !!e[1]),
+              )}`}
+              className="rounded-lg border border-blue-600 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+              title="Tirar este filtro"
+            >
+              {RECORTES[recorte]} ✕
+            </Link>
+          </>
+        )}
         <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
-        {(filtros.origem || filtros.unidade || filtros.minhas || filtros.status) && (
+        {(filtros.origem || filtros.unidade || filtros.minhas || filtros.status || recorte) && (
           <Link href={`/e/${empresaId}/tarefas`} className="px-2 py-2 text-sm text-slate-500">
             Limpar
           </Link>

@@ -139,7 +139,7 @@ Aba **Automações** (só quem gerencia). Tudo começa desligado.
 - **Lembrete de check-list:** `lembrete_minutos` antes do horário (cadastro do check-list, padrão 30,
   0 = sem), o responsável recebe um aviso para puxar a equipe. Feito pelo relógio; não manda depois
   que o horário passou. Todo check-list exige responsável; "Recebe o resultado" (também no cadastro)
-  recebe o aviso de conclusão junto com as regras da aba Destinatários (migration 26).
+  recebe o aviso de conclusão junto com as regras da aba Destinatários (migration 29).
 - **Boas-vindas:** ao autorizar um destinatário, ele recebe uma apresentação pedindo para salvar o
   número. Uma vez só por destinatário (reativar não repete).
 - **Quem recebe:** só destinatários autorizados **ligados a um colaborador**. O botão "Autorizar a

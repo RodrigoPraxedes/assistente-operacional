@@ -36,6 +36,7 @@ export async function retornarTarefa(empresaId: string, tarefaId: string) {
 }
 
 const vazioParaNull = (v: FormDataEntryValue | null) => (v ? String(v) : null);
+const lerResponsaveis = (form: FormData) => form.getAll("responsaveis").map(String).filter(Boolean);
 
 export async function criarTarefa(empresaId: string, _: { erro?: string } | undefined, form: FormData) {
   const { supabase, empresa, membro } = await getContexto(empresaId);
@@ -51,7 +52,7 @@ export async function criarTarefa(empresaId: string, _: { erro?: string } | unde
       unidade_id: vazioParaNull(form.get("unidade_id")),
       setor_id: vazioParaNull(form.get("setor_id")),
       categoria_id: vazioParaNull(form.get("categoria_id")),
-      responsavel_id: vazioParaNull(form.get("responsavel_id")),
+      responsaveis: lerResponsaveis(form),
       prazo: prazo ? localParaUtc(prazo, empresa.fuso_horario) : null,
       status_id: statusInicial,
       criado_por: membro.id,
@@ -64,11 +65,24 @@ export async function criarTarefa(empresaId: string, _: { erro?: string } | unde
   redirect(`/e/${empresaId}/tarefas/${data.id}?nova=1`);
 }
 
+// Quem tem a permissão, ou quem criou a tarefa avulsa / manutenção (o banco confere)
 export async function excluirTarefa(empresaId: string, tarefaId: string) {
   const { supabase } = await getContexto(empresaId);
-  const { error } = await supabase.from("tarefas").delete().eq("id", tarefaId);
+  const { data, error } = await supabase.from("tarefas").delete().eq("id", tarefaId).select("origem");
   if (error) return { erro: error.message };
-  redirect(`/e/${empresaId}/tarefas`);
+  if (!data?.length) return { erro: "Você não pode excluir esta tarefa" };
+  redirect(`/e/${empresaId}/${data[0].origem === "chamado" ? "chamados" : "tarefas"}`);
+}
+
+// Tarefa em conjunto: marca (ou desmarca) a parte de quem está logado.
+// Quando todos marcam, o banco conclui a tarefa.
+export async function marcarMinhaParte(empresaId: string, tarefaId: string, feita: boolean) {
+  const { supabase } = await getContexto(empresaId);
+  const voltar = `/e/${empresaId}/tarefas/${tarefaId}`;
+  const { error } = await supabase.rpc("marcar_minha_parte", { p_tarefa: tarefaId, p_feita: feita });
+  if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
+  revalidatePath(voltar);
+  revalidatePath(`/e/${empresaId}/tarefas`);
 }
 
 // Privada: só quem criou e o responsável veem. Só quem criou pode trocar (o banco confere).
@@ -79,6 +93,22 @@ export async function mudarPrivacidadeTarefa(empresaId: string, tarefaId: string
   if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
   revalidatePath(voltar);
   revalidatePath(`/e/${empresaId}/tarefas`);
+}
+
+// Troca quem é responsável (uma ou mais pessoas). Quem entrar recebe o aviso no WhatsApp.
+export async function mudarResponsaveis(empresaId: string, tarefaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const voltar = `/e/${empresaId}/tarefas/${tarefaId}`;
+  const { data, error } = await supabase
+    .from("tarefas")
+    .update({ responsaveis: lerResponsaveis(form) })
+    .eq("id", tarefaId)
+    .select("id");
+  if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
+  if (!data?.length) redirect(`${voltar}?erro=${encodeURIComponent("Sem permissão para mudar esta tarefa")}`);
+  revalidatePath(voltar);
+  revalidatePath(`/e/${empresaId}/tarefas`);
+  redirect(`${voltar}?responsaveis=1`);
 }
 
 export async function comentarTarefa(empresaId: string, tarefaId: string, voltar: string, form: FormData) {

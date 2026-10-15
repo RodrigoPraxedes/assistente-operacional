@@ -49,7 +49,7 @@ export function montarIcal({ nome, fuso, eventos }: { nome: string; fuso: string
   const linhas = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Assistente Operacional//Agenda//PT-BR",
+    "PRODID:-//Atalaia//Agenda//PT-BR",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapar(nome)}`,

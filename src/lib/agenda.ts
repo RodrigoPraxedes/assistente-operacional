@@ -60,7 +60,7 @@ export async function eventosDoMembro(
       .from("tarefas")
       .select("id, titulo, descricao, origem, origem_id, unidade_id, status_id, ocorrencia_em, prazo")
       .eq("empresa_id", empresaId)
-      .eq("responsavel_id", membroId)
+      .contains("responsaveis", [membroId])
       .or(
         `and(ocorrencia_em.gte.${deIso},ocorrencia_em.lte.${ateIso}),and(ocorrencia_em.is.null,prazo.gte.${deIso},prazo.lte.${ateIso})`,
       )

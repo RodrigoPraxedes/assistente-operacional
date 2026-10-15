@@ -5,6 +5,7 @@ import { criarTarefa } from "../actions";
 import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
 type Opcao = { id: string; nome: string };
 
@@ -19,7 +20,7 @@ export function FormTarefa({
   unidades: Opcao[];
   setores: Opcao[];
   categorias: Opcao[];
-  membros: Opcao[];
+  membros: (Opcao & { setor_id: string | null })[];
 }) {
   const [estado, acao] = useActionState(criarTarefa.bind(null, empresaId), undefined);
   return (
@@ -30,17 +31,13 @@ export function FormTarefa({
       <Campo rotulo="Detalhes">
         <Textarea name="descricao" rows={3} />
       </Campo>
+      <SeletorResponsaveis
+        name="responsaveis"
+        membros={membros}
+        setores={setores}
+        dica="Uma ou mais pessoas: todas cuidam da mesma tarefa (um cartão só no Kanban)"
+      />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Campo rotulo="Responsável">
-          <Select name="responsavel_id" defaultValue="">
-            <option value="">Sem responsável</option>
-            {membros.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.nome}
-              </option>
-            ))}
-          </Select>
-        </Campo>
         <Campo rotulo="Prazo">
           <Input type="datetime-local" name="prazo" />
         </Campo>
@@ -74,7 +71,7 @@ export function FormTarefa({
             ))}
           </Select>
         </Campo>
-        <CampoVisibilidade podeMudar />
+        <CampoVisibilidade podeMudar perguntar />
       </div>
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <BotaoEnviar>Criar tarefa</BotaoEnviar>

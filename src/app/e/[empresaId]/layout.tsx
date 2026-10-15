@@ -13,10 +13,11 @@ export default async function LayoutEmpresa({
   const { empresaId } = await params;
   const [{ empresa, membro, pode }, admin] = await Promise.all([getContexto(empresaId), ehAdminMaster()]);
   const veConfig = ["config.empresa", "config.setores", "config.membros", "config.perfis", "config.status"].some(pode);
-  const tema = (await cookies()).get("tema")?.value;
+  const jar = await cookies();
+  const tema = jar.get("tema")?.value;
 
   return (
-    <div className="min-h-dvh min-[900px]:grid min-[900px]:grid-cols-[226px_minmax(0,1fr)]">
+    <div className="min-h-dvh min-[900px]:grid min-[900px]:grid-cols-[auto_minmax(0,1fr)]">
       <MenuLateral
         base={`/e/${empresaId}`}
         empresa={empresa.nome}
@@ -25,6 +26,7 @@ export default async function LayoutEmpresa({
         veAdmin={admin}
         veWhatsApp={pode("whatsapp.gerenciar") || pode("whatsapp.avisos")}
         tema={tema === "claro" || tema === "escuro" ? tema : "auto"}
+        recolhido={jar.get("menu")?.value === "recolhido"}
       />
       <main className="mx-auto w-full max-w-7xl min-w-0 px-4 py-5 sm:px-8 sm:py-8">
         {empresa.situacao !== "ativa" && (

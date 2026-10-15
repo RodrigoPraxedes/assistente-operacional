@@ -69,8 +69,15 @@ export function Kanban({
     );
   }
 
+  // check-list é feito ou não feito: só vai para Concluído
+  const podeIrPara = (t: Tarefa, statusId: string) => t.origem !== "checklist" || tipoDe(statusId) === "concluido";
+
   function mover(tarefa: Tarefa, statusId: string) {
     if (tarefa.status_id === statusId) return;
+    if (!podeIrPara(tarefa, statusId)) {
+      setErro("Check-list só pode ir para Concluído (feito ou não feito)");
+      return;
+    }
     if (tipoDe(statusId) === "adiado") {
       setAdiando({ tarefa, statusId });
       return;
@@ -127,7 +134,7 @@ export function Kanban({
           >
             {/* status de outro módulo (ex.: "Aguardando peça" do chamado) não aparecem */}
             {status
-              .filter((o) => !o.modulo || o.modulo === t.origem || o.id === t.status_id)
+              .filter((o) => (!o.modulo || o.modulo === t.origem || o.id === t.status_id) && (o.id === t.status_id || podeIrPara(t, o.id)))
               .map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.nome}
@@ -198,7 +205,12 @@ export function Kanban({
                       <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
                     </div>
                     <div className="space-y-0.5 text-xs text-slate-500 sm:w-48">
-                      {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}
+                      {t.responsaveis.length > 0 && <p>{rotuloResponsaveis(t, nomes.membros)}</p>}
+                          {t.responsaveis.length > 1 && (
+                            <p>
+                              Partes feitas: {t.partes_feitas.length} de {t.responsaveis.length}
+                            </p>
+                          )}
                       {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                     </div>
                     <div className="sm:w-56">{controles(t)}</div>
@@ -245,7 +257,12 @@ export function Kanban({
                         </Link>
                         <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
                         <div className="mt-2 space-y-0.5 text-xs text-slate-500">
-                          {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}
+                          {t.responsaveis.length > 0 && <p>{rotuloResponsaveis(t, nomes.membros)}</p>}
+                          {t.responsaveis.length > 1 && (
+                            <p>
+                              Partes feitas: {t.partes_feitas.length} de {t.responsaveis.length}
+                            </p>
+                          )}
                           {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                         </div>
                         {(podeMover || whatsapp?.[t.id]) && <div className="mt-2">{controles(t)}</div>}
@@ -326,4 +343,9 @@ function DialogoAdiar({
       </form>
     </div>
   );
+}
+
+function rotuloResponsaveis(t: Tarefa, membros: Record<string, string>) {
+  const lista = t.responsaveis.map((id) => membros[id]).filter(Boolean);
+  return `${lista.length > 1 ? "Responsáveis" : "Responsável"}: ${lista.join(", ")}`;
 }

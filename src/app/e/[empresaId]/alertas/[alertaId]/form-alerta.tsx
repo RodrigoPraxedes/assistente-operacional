@@ -6,12 +6,14 @@ import type { Alerta, AlertaAviso } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
 type Opcao = { id: string; nome: string };
 type LinhaAviso = {
+  id?: string;
   dias_antes: number;
   titulo: string;
-  responsavel_id: string;
+  responsaveis: string[];
 };
 
 // datas importantes costumam ser anuais ou únicas; mensal cobre contas e taxas
@@ -42,17 +44,18 @@ export function FormAlerta({
   unidades: Opcao[];
   setores: Opcao[];
   categorias: Opcao[];
-  membros: Opcao[];
+  membros: (Opcao & { setor_id: string | null })[];
 }) {
   const [estado, acaoForm] = useActionState(salvarAlerta.bind(null, empresaId), undefined);
   const [avisos, setAvisos] = useState<LinhaAviso[]>(
     iniciais.length
       ? iniciais.map((a) => ({
+          id: a.id,
           dias_antes: a.dias_antes,
           titulo: a.titulo,
-          responsavel_id: a.responsavel_id ?? "",
+          responsaveis: a.responsaveis,
         }))
-      : [{ dias_antes: 30, titulo: "", responsavel_id: "" }],
+      : [{ dias_antes: 30, titulo: "", responsaveis: [] }],
   );
   const regraAtual = alerta?.recorrencia ?? "";
   const repeticoes = REPETICOES.some((r) => r.regra === regraAtual)
@@ -139,7 +142,7 @@ export function FormAlerta({
               ))}
             </Select>
           </Campo>
-          <CampoVisibilidade privado={alerta?.privado} podeMudar={podeMudarPrivado} />
+          <CampoVisibilidade privado={alerta?.privado} podeMudar={podeMudarPrivado} perguntar={!alerta} />
           {alerta && (
             <Campo rotulo="Situação">
               <Select name="ativo" defaultValue={String(alerta.ativo)}>
@@ -155,56 +158,54 @@ export function FormAlerta({
         <div>
           <h2 className="font-medium">Avisos</h2>
           <p className="text-xs text-slate-500">
-            Cada aviso cria uma tarefa no Kanban com antecedência. O prazo da tarefa é a própria data.
+            Cada aviso cria uma tarefa no Kanban com antecedência. O prazo da tarefa é a própria data. Com
+            várias pessoas no aviso, a tarefa é uma só para todas. Remover um aviso apaga a tarefa dele que
+            ainda não começou.
           </p>
         </div>
         {avisos.map((a, i) => (
-          <div
-            key={i}
-            className="grid gap-2 rounded-lg border border-slate-200 p-3 sm:grid-cols-[7rem_1fr_12rem_auto] sm:items-end"
-          >
-            <Campo rotulo="Dias antes">
-              <Input
-                type="number"
-                min={0}
-                max={365}
-                value={a.dias_antes}
-                onChange={(e) => mudar(i, { dias_antes: Number(e.target.value) })}
-                required
-              />
-            </Campo>
-            <Campo rotulo="Tarefa">
-              <Input
-                value={a.titulo}
-                onChange={(e) => mudar(i, { titulo: e.target.value })}
-                placeholder="Ex.: Pedir renovação ao despachante"
-                required
-              />
-            </Campo>
-            <Campo rotulo="Responsável">
-              <Select value={a.responsavel_id} onChange={(e) => mudar(i, { responsavel_id: e.target.value })}>
-                <option value="">Padrão do alerta</option>
-                {membros.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nome}
-                  </option>
-                ))}
-              </Select>
-            </Campo>
-            <button
-              type="button"
-              className="pb-2 text-sm text-red-600 disabled:opacity-30"
-              disabled={avisos.length === 1}
-              onClick={() => setAvisos((xs) => xs.filter((_, j) => j !== i))}
-            >
-              Remover
-            </button>
+          <div key={a.id ?? `novo-${i}`} className="space-y-3 rounded-lg border border-slate-200 p-3">
+            <div className="grid gap-2 sm:grid-cols-[7rem_1fr_auto] sm:items-end">
+              <Campo rotulo="Dias antes">
+                <Input
+                  type="number"
+                  min={0}
+                  max={365}
+                  value={a.dias_antes}
+                  onChange={(e) => mudar(i, { dias_antes: Number(e.target.value) })}
+                  required
+                />
+              </Campo>
+              <Campo rotulo="Tarefa">
+                <Input
+                  value={a.titulo}
+                  onChange={(e) => mudar(i, { titulo: e.target.value })}
+                  placeholder="Ex.: Pedir renovação ao despachante"
+                  required
+                />
+              </Campo>
+              <button
+                type="button"
+                className="pb-2 text-sm text-red-600 disabled:opacity-30"
+                disabled={avisos.length === 1}
+                onClick={() => setAvisos((xs) => xs.filter((_, j) => j !== i))}
+              >
+                Remover
+              </button>
+            </div>
+            <SeletorResponsaveis
+              membros={membros}
+              setores={setores}
+              valor={a.responsaveis}
+              onChange={(ids) => mudar(i, { responsaveis: ids })}
+              vazio="Responsável padrão do alerta"
+            />
           </div>
         ))}
         <Botao
           type="button"
           variante="secundario"
-          onClick={() => setAvisos((xs) => [...xs, { dias_antes: 7, titulo: "", responsavel_id: "" }])}
+          onClick={() => setAvisos((xs) => [...xs, { dias_antes: 7, titulo: "", responsaveis: [] }])}
         >
           + Aviso
         </Botao>

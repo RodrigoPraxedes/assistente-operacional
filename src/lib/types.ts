@@ -90,12 +90,18 @@ export interface Tarefa {
   ocorrencia_em: string | null;
   status_id: string;
   status_anterior_id: string | null;
+  // primeiro de "responsaveis" (mantido pelo banco)
   responsavel_id: string | null;
+  // todos os responsáveis (força-tarefa)
+  responsaveis: string[];
+  // tarefa em conjunto: quem já marcou "minha parte feita"
+  partes_feitas: string[];
   criado_por: string | null;
   // privado: só quem criou e o responsável veem
   privado: boolean;
   prazo: string | null;
   concluida_em: string | null;
+  cancelada_em: string | null;
   created_at: string;
 }
 
@@ -183,6 +189,7 @@ export interface Acao {
   setor_id: string | null;
   categoria_id: string | null;
   responsavel_id: string | null;
+  responsaveis: string[];
   nome: string;
   descricao: string | null;
   data_inicial: string;
@@ -221,6 +228,8 @@ export interface AlertaAviso {
   dias_antes: number;
   titulo: string;
   responsavel_id: string | null;
+  // vazio = usa o responsável padrão do alerta
+  responsaveis: string[];
 }
 
 export type Prioridade = "baixa" | "media" | "alta" | "urgente";
@@ -368,6 +377,8 @@ export interface Escala {
   tipo: TipoEscala;
   turno_id: string | null;
   observacao: string | null;
+  // gerado pela repetição automática e ainda não alterado
+  automatica: boolean;
 }
 
 export type StatusTroca = "pendente" | "aprovada" | "recusada" | "cancelada";

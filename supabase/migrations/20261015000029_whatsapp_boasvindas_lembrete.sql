@@ -65,7 +65,7 @@ begin
   perform public.whatsapp_enfileirar_contato(
     new.empresa_id, v_conexao, new.id,
     format(
-      E'Olá, %s! 👋\nEste é o WhatsApp do *Assistente Operacional* da %s.\nPor aqui você vai receber avisos de tarefas, check-lists e o resumo do seu dia.\n\n*Salve este número nos seus contatos* para não perder nenhum aviso.',
+      E'Olá, %s! 👋\nEste é o WhatsApp do *Atalaia*, o sistema de avisos da %s.\nPor aqui você vai receber avisos de tarefas, check-lists e o resumo do seu dia.\n\n*Salve este número nos seus contatos* para não perder nenhum aviso.',
       split_part(trim(new.nome), ' ', 1), v_empresa
     ),
     'boasvindas', null,
