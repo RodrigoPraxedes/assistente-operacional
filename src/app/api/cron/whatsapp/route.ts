@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { gerarResumosDoDia } from "@/lib/whatsapp-api/automacoes";
+import { gerarLembretesChecklist, gerarResumosDoDia } from "@/lib/whatsapp-api/automacoes";
 import { processarFila } from "@/lib/whatsapp-api/fila";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ erro: "não autorizado" }, { status: 401 });
   }
   const resumos = await gerarResumosDoDia().catch(() => null);
+  const lembretes = await gerarLembretesChecklist().catch(() => null);
   const fila = await processarFila(12, 40_000).catch(() => null);
-  return NextResponse.json({ resumos, fila });
+  return NextResponse.json({ resumos, lembretes, fila });
 }

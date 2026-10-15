@@ -21,7 +21,7 @@ export default async function Automacoes({
   const [{ data: config }, { data: conexoes }, { data: contatos }, { data: membros }, { count: enviadas }] = await Promise.all([
     supabase
       .from("whatsapp_automacoes")
-      .select("aviso_tarefa, resumo_dia, aviso_conclusao, checklist_auto, resumo_hora, limite_diario")
+      .select("aviso_tarefa, resumo_dia, aviso_conclusao, checklist_auto, boas_vindas, lembrete_checklist, resumo_hora, limite_diario")
       .eq("empresa_id", empresaId)
       .maybeSingle(),
     supabase.from("whatsapp_conexoes").select("status, envio_pausado").eq("empresa_id", empresaId),
@@ -88,6 +88,26 @@ export default async function Automacoes({
               <span className="block text-slate-500">
                 Os avisos de check-list cadastrados na aba Destinatários saem sozinhos, com quem enviou e os itens marcados “Não”.
                 Desligado, eles continuam virando rascunho para alguém confirmar.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="lembrete_checklist" defaultChecked={config?.lembrete_checklist ?? false} className="mt-1 h-4 w-4" />
+            <span className="text-sm">
+              <span className="font-medium text-slate-900">Lembrete de check-list</span>
+              <span className="block text-slate-500">
+                Antes do horário do check-list, o responsável recebe um lembrete para puxar a equipe. A antecedência fica no cadastro de cada check-list (padrão 30 min).
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="boas_vindas" defaultChecked={config?.boas_vindas ?? false} className="mt-1 h-4 w-4" />
+            <span className="text-sm">
+              <span className="font-medium text-slate-900">Boas-vindas</span>
+              <span className="block text-slate-500">
+                Quem é autorizado como destinatário recebe uma mensagem de apresentação pedindo para salvar o número. Ajuda a pessoa a reconhecer os avisos e protege o número de bloqueio.
               </span>
             </span>
           </label>

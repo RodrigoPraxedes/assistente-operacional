@@ -31,7 +31,7 @@ interface Reservada {
 export function textoFinal(m: { empresa_id: string; texto: string; origem: string; origem_id: string | null }) {
   if (m.origem === "checklist" && m.origem_id)
     return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/checklists/execucoes/${m.origem_id}`)}`;
-  if ((m.origem === "tarefa" || m.origem === "conclusao") && m.origem_id) return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`)}`;
+  if ((m.origem === "tarefa" || m.origem === "conclusao" || m.origem === "lembrete") && m.origem_id) return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`)}`;
   if (m.origem === "resumo") return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas`)}`;
   return m.texto;
 }
