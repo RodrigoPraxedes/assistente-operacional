@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Marca } from "@/components/marca";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
@@ -93,7 +94,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-slate-900">{empresa}</p>
-          <p className="truncate text-xs text-slate-500">Atalaia</p>
+          <p className="truncate text-xs text-slate-500"><Marca /></p>
         </div>
       </div>
       <Link
