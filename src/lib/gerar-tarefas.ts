@@ -21,7 +21,8 @@ interface Fonte {
   porUnidade?: boolean;
   setor_id: string | null;
   categoria_id: string | null;
-  responsavel_id: string | null;
+  // uma ou mais pessoas (força-tarefa): a tarefa é uma só para todas
+  responsaveis: string[];
   // ação/alerta privado: as tarefas nascem privadas, de quem criou
   privado?: boolean;
   criado_por?: string | null;
@@ -82,7 +83,7 @@ async function fontesChecklist(admin: Admin, { id: modeloId, empresaId }: Filtro
     unidade_id: m.unidade_id,
     setor_id: m.setor_id,
     categoria_id: m.categoria_id,
-    responsavel_id: m.responsavel_id,
+    responsaveis: m.responsavel_id ? [m.responsavel_id] : [],
     titulo: `Check-list: ${m.nome}`,
     momentos: porRegra(
       {
@@ -100,7 +101,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
   let q = admin
     .from("acoes")
     .select(
-      "id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_inicial, data_final, horario, prazo_horas, recorrencia, privado, criado_por, empresas(fuso_horario)",
+      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, nome, descricao, data_inicial, data_final, horario, prazo_horas, recorrencia, privado, criado_por, empresas(fuso_horario)",
     )
     .eq("ativo", true);
   if (acaoId) q = q.eq("id", acaoId);
@@ -112,7 +113,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
       unidade_id: string | null;
       setor_id: string | null;
       categoria_id: string | null;
-      responsavel_id: string | null;
+      responsaveis: string[];
       nome: string;
       descricao: string | null;
       data_inicial: string;
@@ -132,7 +133,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
     unidade_id: a.unidade_id,
     setor_id: a.setor_id,
     categoria_id: a.categoria_id,
-    responsavel_id: a.responsavel_id,
+    responsaveis: a.responsaveis,
     privado: a.privado,
     criado_por: a.criado_por,
     titulo: a.nome,
@@ -156,7 +157,7 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
   let q = admin
     .from("alerta_avisos")
     .select(
-      "id, dias_antes, titulo, responsavel_id, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, privado, criado_por, empresas(fuso_horario))",
+      "id, dias_antes, titulo, responsaveis, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, privado, criado_por, empresas(fuso_horario))",
     )
     .eq("alertas.ativo", true);
   if (alertaId) q = q.eq("alerta_id", alertaId);
@@ -166,7 +167,7 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
       id: string;
       dias_antes: number;
       titulo: string;
-      responsavel_id: string | null;
+      responsaveis: string[];
       alertas: {
         id: string;
         empresa_id: string;
@@ -203,7 +204,8 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
       porUnidade: false,
       setor_id: a.setor_id,
       categoria_id: a.categoria_id,
-      responsavel_id: v.responsavel_id ?? a.responsavel_id,
+      // aviso sem ninguém: responsável padrão do alerta
+      responsaveis: v.responsaveis.length ? v.responsaveis : a.responsavel_id ? [a.responsavel_id] : [],
       privado: a.privado,
       criado_por: a.criado_por,
       titulo: v.titulo,
@@ -281,7 +283,7 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           unidade_id: unidadeId,
           setor_id: f.setor_id,
           categoria_id: f.categoria_id,
-          responsavel_id: f.responsavel_id,
+          responsaveis: f.responsaveis,
           privado: f.privado ?? false,
           criado_por: f.criado_por ?? null,
           titulo: f.titulo,
@@ -307,13 +309,13 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
 }
 
 // Agenda: as próximas ocorrências (que o job ainda não criou no Kanban) de tudo
-// que é recorrente e tem esta pessoa como responsável.
+// que é recorrente e tem esta pessoa entre os responsáveis.
 export async function previsoesDoMembro(admin: Admin, empresaId: string, membroId: string, dias: number) {
   const fontes = [
     ...(await fontesChecklist(admin, { empresaId })),
     ...(await fontesAcoes(admin, { empresaId })),
     ...(await fontesAlertas(admin, { empresaId })),
-  ].filter((f) => f.responsavel_id === membroId);
+  ].filter((f) => f.responsaveis.includes(membroId));
 
   const previsoes = [];
   for (const f of fontes) {

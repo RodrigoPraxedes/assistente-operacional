@@ -90,7 +90,10 @@ export interface Tarefa {
   ocorrencia_em: string | null;
   status_id: string;
   status_anterior_id: string | null;
+  // primeiro de "responsaveis" (mantido pelo banco)
   responsavel_id: string | null;
+  // todos os responsáveis (força-tarefa)
+  responsaveis: string[];
   criado_por: string | null;
   // privado: só quem criou e o responsável veem
   privado: boolean;
@@ -179,6 +182,7 @@ export interface Acao {
   setor_id: string | null;
   categoria_id: string | null;
   responsavel_id: string | null;
+  responsaveis: string[];
   nome: string;
   descricao: string | null;
   data_inicial: string;
@@ -217,6 +221,8 @@ export interface AlertaAviso {
   dias_antes: number;
   titulo: string;
   responsavel_id: string | null;
+  // vazio = usa o responsável padrão do alerta
+  responsaveis: string[];
 }
 
 export type Prioridade = "baixa" | "media" | "alta" | "urgente";

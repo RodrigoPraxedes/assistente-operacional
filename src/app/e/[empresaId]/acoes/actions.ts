@@ -25,7 +25,7 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
     unidade_id: txt("unidade_id"),
     setor_id: txt("setor_id"),
     categoria_id: txt("categoria_id"),
-    responsavel_id: txt("responsavel_id"),
+    responsaveis: form.getAll("responsaveis").map(String).filter(Boolean),
     data_inicial: dataInicial,
     data_final: dataFinal,
     horario: txt("horario") ?? "09:00",
