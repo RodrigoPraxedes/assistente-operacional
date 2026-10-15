@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Atalaia",
-  description: "Atalaia · a operação à vista",
+  description: "Atalaia · Veja antes, aja a tempo",
 };
 
 export const viewport: Viewport = {
