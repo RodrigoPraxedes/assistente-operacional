@@ -1,4 +1,4 @@
-# Assistente Operacional
+# Atalaia
 
 App para delegar e acompanhar tarefas da operação: check-lists, chamados de manutenção,
 escalas e alertas de datas, com avisos por WhatsApp e Google Agenda.

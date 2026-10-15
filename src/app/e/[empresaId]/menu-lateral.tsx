@@ -93,7 +93,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-slate-900">{empresa}</p>
-          <p className="truncate text-xs text-slate-500">Assistente Operacional</p>
+          <p className="truncate text-xs text-slate-500">Atalaia</p>
         </div>
       </div>
       <Link

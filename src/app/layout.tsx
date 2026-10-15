@@ -3,8 +3,8 @@ import { cookies, headers } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Assistente Operacional",
-  description: "Check-lists, tarefas e acompanhamento da operação",
+  title: "Atalaia",
+  description: "Atalaia · a operação à vista",
 };
 
 export const viewport: Viewport = {
