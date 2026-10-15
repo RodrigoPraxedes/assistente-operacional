@@ -94,11 +94,14 @@ export interface Tarefa {
   responsavel_id: string | null;
   // todos os responsáveis (força-tarefa)
   responsaveis: string[];
+  // tarefa em conjunto: quem já marcou "minha parte feita"
+  partes_feitas: string[];
   criado_por: string | null;
   // privado: só quem criou e o responsável veem
   privado: boolean;
   prazo: string | null;
   concluida_em: string | null;
+  cancelada_em: string | null;
   created_at: string;
 }
 

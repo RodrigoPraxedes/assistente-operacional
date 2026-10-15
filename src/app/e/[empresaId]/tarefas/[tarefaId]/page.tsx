@@ -5,7 +5,7 @@ import { formatarDataHora } from "@/lib/formato";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
-import { comentarTarefa, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
+import { comentarTarefa, marcarMinhaParte, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
@@ -66,6 +66,11 @@ export default async function DetalheTarefa({
   const responsaveis = tarefa.responsaveis.map((id) => mb.get(id)).filter((m) => !!m);
   // WhatsApp direto para a pessoa só quando é uma; com várias, escolhe o contato ou o grupo
   const responsavel = responsaveis.length === 1 ? responsaveis[0] : null;
+  const emConjunto = responsaveis.length > 1;
+  const encerrada = !!tarefa.concluida_em || !!tarefa.cancelada_em;
+  const souResponsavel = tarefa.responsaveis.includes(membro.id);
+  const minhaParteFeita = tarefa.partes_feitas.includes(membro.id);
+  const podeExcluir = pode("tarefas.excluir") || (tarefa.origem === "avulsa" && tarefa.criado_por === membro.id);
 
   const texto = mensagemTarefa(tarefa, {
     empresaId,
@@ -141,11 +146,44 @@ export default async function DetalheTarefa({
               <Botao variante="secundario">{tarefa.privado ? "Tornar pública" : "Tornar privada"}</Botao>
             </form>
           )}
-          {pode("tarefas.excluir") && <BotaoExcluir empresaId={empresaId} tarefaId={tarefa.id} />}
+          {podeExcluir && <BotaoExcluir empresaId={empresaId} tarefaId={tarefa.id} />}
         </div>
       </Cartao>
 
-      {pode("tarefas.criar") && !tarefa.concluida_em && (
+      {emConjunto && (
+        <Cartao className="space-y-3">
+          <div>
+            <h2 className="font-medium">
+              Partes feitas: {tarefa.partes_feitas.length} de {tarefa.responsaveis.length}
+            </h2>
+            <p className="text-xs text-slate-500">
+              Tarefa em conjunto: cada responsável marca a sua parte. Quando todos marcarem, ela vai sozinha para
+              Concluído.
+            </p>
+          </div>
+          <ul className="space-y-1 text-sm">
+            {responsaveis.map((m) => (
+              <li key={m.id} className="flex items-center gap-2">
+                {tarefa.partes_feitas.includes(m.id) ? (
+                  <span className="text-green-700">✓</span>
+                ) : (
+                  <span className="text-slate-400">○</span>
+                )}
+                {m.nome}
+              </li>
+            ))}
+          </ul>
+          {souResponsavel && !encerrada && (
+            <form action={marcarMinhaParte.bind(null, empresaId, tarefa.id, !minhaParteFeita)}>
+              <Botao variante={minhaParteFeita ? "secundario" : "primario"}>
+                {minhaParteFeita ? "Desfazer minha parte" : "Marcar minha parte como feita"}
+              </Botao>
+            </form>
+          )}
+        </Cartao>
+      )}
+
+      {pode("tarefas.criar") && !encerrada && (
         <Cartao>
           <form action={mudarResponsaveis.bind(null, empresaId, tarefa.id)} className="space-y-3">
             <SeletorResponsaveis

@@ -15,12 +15,15 @@ export default async function PaginaChamados({
   const filtros = await searchParams;
   const { supabase, empresa, pode } = await getContexto(empresaId);
   const seteDiasAtras = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  // canceladas somem depois de 48 h (continuam guardadas)
+  const doisDiasAtras = new Date(Date.now() - 2 * 86_400_000).toISOString();
 
   let consulta = supabase
     .from("chamados")
     .select("*, tarefas!inner(*)")
     .eq("empresa_id", empresaId)
     .or(`concluida_em.is.null,concluida_em.gte.${seteDiasAtras}`, { referencedTable: "tarefas" })
+    .or(`cancelada_em.is.null,cancelada_em.gte.${doisDiasAtras}`, { referencedTable: "tarefas" })
     .order("numero", { ascending: false })
     .limit(300);
   if (filtros.unidade) consulta = consulta.eq("tarefas.unidade_id", filtros.unidade);

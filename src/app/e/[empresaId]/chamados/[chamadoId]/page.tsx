@@ -8,6 +8,7 @@ import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Textarea, Titulo 
 import { comentarTarefa, moverPorFormulario, retornarTarefa } from "../../tarefas/actions";
 import { adicionarFotos, atualizarChamado } from "../actions";
 import { CampoFotos } from "./campo-fotos";
+import { BotaoExcluir } from "../../tarefas/[tarefaId]/botao-excluir";
 
 export default async function DetalheChamado({
   params,
@@ -18,7 +19,7 @@ export default async function DetalheChamado({
 }) {
   const { empresaId, chamadoId } = await params;
   const avisos = await searchParams;
-  const { supabase, empresa, pode } = await getContexto(empresaId);
+  const { supabase, empresa, membro, pode } = await getContexto(empresaId);
   const fuso = empresa.fuso_horario;
   const caminho = `/e/${empresaId}/chamados/${chamadoId}`;
 
@@ -172,6 +173,9 @@ export default async function DetalheChamado({
             <a href={linkWhatsApp(mensagem)} target="_blank" rel="noopener" className="rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white">
               Enviar no WhatsApp
             </a>
+          )}
+          {(pode("tarefas.excluir") || t.criado_por === membro.id) && (
+            <BotaoExcluir empresaId={empresaId} tarefaId={t.id} />
           )}
         </div>
       </Cartao>
