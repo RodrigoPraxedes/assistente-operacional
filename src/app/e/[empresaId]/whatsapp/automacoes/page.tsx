@@ -21,7 +21,7 @@ export default async function Automacoes({
   const [{ data: config }, { data: conexoes }, { data: contatos }, { data: membros }, { count: enviadas }] = await Promise.all([
     supabase
       .from("whatsapp_automacoes")
-      .select("aviso_tarefa, resumo_dia, resumo_hora, limite_diario")
+      .select("aviso_tarefa, resumo_dia, aviso_conclusao, checklist_auto, resumo_hora, limite_diario")
       .eq("empresa_id", empresaId)
       .maybeSingle(),
     supabase.from("whatsapp_conexoes").select("status, envio_pausado").eq("empresa_id", empresaId),
@@ -31,7 +31,9 @@ export default async function Automacoes({
       .from("whatsapp_mensagens")
       .select("id", { count: "exact", head: true })
       .eq("empresa_id", empresaId)
-      .in("origem", ["tarefa", "resumo"])
+      .not("chave", "is", null)
+      .is("confirmado_por", null)
+      .neq("situacao", "rascunho")
       .gte("created_at", desde),
   ]);
 
@@ -64,6 +66,28 @@ export default async function Automacoes({
               <span className="block text-slate-500">
                 Quem recebe uma tarefa ganha uma mensagem com o prazo e o link. Rotina de check-list e de ação recorrente vai só no
                 resumo do dia. Tarefas privadas não geram aviso.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="aviso_conclusao" defaultChecked={config?.aviso_conclusao ?? false} className="mt-1 h-4 w-4" />
+            <span className="text-sm">
+              <span className="font-medium text-slate-900">Tarefa concluída</span>
+              <span className="block text-slate-500">
+                Quem criou a tarefa recebe uma mensagem quando ela é concluída, com quem concluiu e o horário. Não avisa quem
+                concluiu a própria tarefa nem tarefas privadas.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="checklist_auto" defaultChecked={config?.checklist_auto ?? false} className="mt-1 h-4 w-4" />
+            <span className="text-sm">
+              <span className="font-medium text-slate-900">Check-list concluído</span>
+              <span className="block text-slate-500">
+                Os avisos de check-list cadastrados na aba Destinatários saem sozinhos, com quem enviou e os itens marcados “Não”.
+                Desligado, eles continuam virando rascunho para alguém confirmar.
               </span>
             </span>
           </label>
