@@ -14,6 +14,7 @@ interface ItemForm {
   tipo_resposta: TipoResposta;
   obrigatorio: boolean;
   permite_foto: boolean;
+  foto_obrigatoria?: boolean;
   foto_obrigatoria_se_nao: boolean;
   permite_na?: boolean;
   abre_chamado_se_nao?: boolean;
@@ -88,6 +89,7 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
       tipo_resposta: item.tipo_resposta,
       obrigatorio: item.obrigatorio,
       permite_foto: item.permite_foto,
+      foto_obrigatoria: item.permite_foto && !!item.foto_obrigatoria,
       foto_obrigatoria_se_nao: item.tipo_resposta === "sim_nao" && item.foto_obrigatoria_se_nao,
       permite_na: item.permite_na ?? true,
       abre_chamado_se_nao: item.tipo_resposta === "sim_nao" && !!item.abre_chamado_se_nao,

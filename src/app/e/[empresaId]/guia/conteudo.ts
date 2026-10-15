@@ -176,6 +176,7 @@ export const SECOES: SecaoGuia[] = [
           "Marque se ele fica disponível no QR Code e quem pode preencher por lá: qualquer pessoa digitando o nome, ou só colaboradores com PIN.",
           "Adicione os itens. Cada um pode ser Sim/Não/Em processo, número ou texto.",
           "Em cada item, escolha se é obrigatório, se aceita foto, se a foto é obrigatória quando a resposta for \"Não\" e se um \"Não\" abre chamado de manutenção sozinho.",
+          "Marque Foto obrigatória (câmera) quando o item sempre precisa de foto: sem ela o check-list não é enviado.",
           "Arraste pela alça ⋮⋮ para mudar a ordem e toque em Salvar check-list.",
         ],
       },
@@ -184,7 +185,8 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "No app: toque em Preencher no cartão do check-list, ou no botão azul de lista do cartão em Tarefas (também há Abrir check-list dentro da tarefa).",
           "Pelo QR Code: aponte a câmera do celular para o QR da unidade e escolha o check-list.",
-          "Responda os itens, anexe as fotos e toque em Salvar e enviar.",
+          "Responda os itens, tire as fotos e toque em Salvar e enviar.",
+          "As fotos são tiradas na hora: o botão de foto abre a câmera e uma foto antiga (de mais de 10 minutos, da galeria) é recusada.",
           "Depois de salvo, o botão Enviar resumo no WhatsApp manda o resultado para o grupo ou para quem você escolher.",
         ],
       },
