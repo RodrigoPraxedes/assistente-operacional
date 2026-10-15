@@ -461,12 +461,14 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Automações",
         passos: [
-          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo e o link.",
+          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo.",
           "Tarefa concluída: quem criou é avisado quando ela termina.",
           "Check-list concluído: o resultado sai sozinho para quem foi cadastrado (desligado, vira rascunho para confirmar).",
           "Lembrete de check-list: o responsável recebe um lembrete antes do horário.",
           "Boas-vindas: quem é autorizado recebe uma apresentação pedindo para salvar o número.",
           "Resumo do dia: no horário escolhido, cada pessoa recebe o turno de hoje, as tarefas que vencem hoje e as atrasadas.",
+          "Incluir link do app: abaixo de cada aviso, escolha se a mensagem leva o link para abrir no app. Já vem ligado na tarefa atribuída e no lembrete de check-list, e desligado nos demais.",
+          "Contato para dúvidas: o aviso termina com o nome e o celular de quem atribuiu, concluiu ou preencheu (no lembrete, de quem recebe o resultado). A pessoa toca no número e conversa direto.",
           "O limite diário evita excesso: passou dele, a mensagem vira rascunho em Avisos.",
         ],
       },
@@ -474,6 +476,7 @@ export const SECOES: SecaoGuia[] = [
     dicas: [
       "Tarefas privadas não geram aviso automático.",
       "Comece com um único número de teste antes de autorizar a equipe toda.",
+      "Link em toda mensagem aumenta o risco de o WhatsApp tratar o número como robô. Deixe o link só onde a pessoa precisa abrir o app.",
     ],
   },
   {
