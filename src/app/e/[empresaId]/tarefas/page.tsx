@@ -11,12 +11,21 @@ import { TrocarVisao, type Visao } from "./trocar-visao";
 // "pendentes" = tudo que não foi concluído nem cancelado
 const PENDENTES = ["aberto", "em_andamento", "adiado"];
 
+// recortes vindos dos números do Painel
+const RECORTES = {
+  atrasadas: "Atrasadas",
+  hoje: "Vencem hoje",
+  andamento: "Em andamento",
+  concluidas_hoje: "Concluídas hoje",
+} as const;
+type Recorte = keyof typeof RECORTES;
+
 export default async function PaginaTarefas({
   params,
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string }>;
+  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string }>;
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
@@ -46,6 +55,10 @@ export default async function PaginaTarefas({
   // check-list só aparece 1 hora antes do horário
   const daquiUmaHora = new Date(Date.now() + 3_600_000).toISOString();
 
+  const recorte = filtros.recorte && filtros.recorte in RECORTES ? (filtros.recorte as Recorte) : null;
+  const idsPendentes = todosStatus.filter((s) => PENDENTES.includes(s.tipo)).map((s) => s.id);
+  const agora = new Date().toISOString();
+
   let consulta = supabase
     .from("tarefas")
     .select("*")
@@ -60,6 +73,12 @@ export default async function PaginaTarefas({
   if (filtros.unidade) consulta = consulta.eq("unidade_id", filtros.unidade);
   if (filtros.minhas) consulta = consulta.contains("responsaveis", [membro.id]);
   if (statusEscolhidos) consulta = consulta.in("status_id", statusEscolhidos);
+  if (recorte === "atrasadas") consulta = consulta.in("status_id", idsPendentes).lt("prazo", agora);
+  if (recorte === "hoje") consulta = consulta.in("status_id", idsPendentes).gte("prazo", agora).lte("prazo", fimDeHoje);
+  if (recorte === "andamento")
+    consulta = consulta.in("status_id", todosStatus.filter((s) => s.tipo === "em_andamento").map((s) => s.id));
+  if (recorte === "concluidas_hoje")
+    consulta = consulta.gte("concluida_em", horaLocalParaUtc(hoje.y, hoje.m, hoje.d, 0, 0, empresa.fuso_horario).toISOString());
 
   const [{ data: tarefas }, { data: membros }, { data: unidades }] = await Promise.all([
     consulta,
@@ -143,8 +162,22 @@ export default async function PaginaTarefas({
           {filtros.minhas && <span className="sr-only"> (filtro ativo)</span>}
         </Link>
         {filtros.minhas && <input type="hidden" name="minhas" value="1" />}
+        {recorte && (
+          <>
+            <input type="hidden" name="recorte" value={recorte} />
+            <Link
+              href={`/e/${empresaId}/tarefas?${new URLSearchParams(
+                Object.entries({ ...filtros, recorte: undefined }).filter((e): e is [string, string] => !!e[1]),
+              )}`}
+              className="rounded-lg border border-blue-600 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+              title="Tirar este filtro"
+            >
+              {RECORTES[recorte]} ✕
+            </Link>
+          </>
+        )}
         <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
-        {(filtros.origem || filtros.unidade || filtros.minhas || filtros.status) && (
+        {(filtros.origem || filtros.unidade || filtros.minhas || filtros.status || recorte) && (
           <Link href={`/e/${empresaId}/tarefas`} className="px-2 py-2 text-sm text-slate-500">
             Limpar
           </Link>

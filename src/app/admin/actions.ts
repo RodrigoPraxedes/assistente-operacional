@@ -41,7 +41,7 @@ export async function entrarEmpresa(empresaId: string) {
   const supabase = await cliente();
   const { error } = await supabase.rpc("admin_entrar_empresa", { p_empresa: empresaId });
   if (error) voltar(error.message);
-  redirect(`/e/${empresaId}/tarefas`);
+  redirect(`/e/${empresaId}/painel`);
 }
 
 export async function sairEmpresa(empresaId: string) {
