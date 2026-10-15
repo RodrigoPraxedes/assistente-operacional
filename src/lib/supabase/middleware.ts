@@ -25,9 +25,10 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims renova a sessão quando preciso e confere o login sem ir ao
+  // serviço de login a cada clique (cai no getUser se a chave for antiga)
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const path = request.nextUrl.pathname;
   if (!user && ROTAS_PROTEGIDAS.some((r) => path.startsWith(r))) {
