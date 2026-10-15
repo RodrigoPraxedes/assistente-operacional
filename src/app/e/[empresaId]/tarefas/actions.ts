@@ -57,6 +57,7 @@ export async function criarTarefa(empresaId: string, _: { erro?: string } | unde
       status_id: statusInicial,
       criado_por: membro.id,
       privado: lerPrivado(form) ?? false,
+      exige_foto: form.get("exige_foto") === "on",
       origem: "avulsa",
     })
     .select("id")
@@ -133,4 +134,41 @@ export async function moverPorFormulario(empresaId: string, tarefaId: string, vo
   );
   if (r.erro) redirect(`${voltar}?erro=${encodeURIComponent(r.erro)}`);
   revalidatePath(voltar);
+}
+
+// Tarefa que pede foto: envia a foto tirada na hora e conclui (ou, em conjunto, marca a minha parte).
+export async function enviarFotoTarefa(empresaId: string, tarefaId: string, form: FormData) {
+  const { supabase, membro } = await getContexto(empresaId);
+  const voltar = `/e/${empresaId}/tarefas/${tarefaId}`;
+  const foto = form.get("foto");
+  if (!(foto instanceof File) || foto.size === 0) redirect(`${voltar}?erro=${encodeURIComponent("Tire a foto antes de enviar")}`);
+  const ext = (foto.type.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
+  const caminho = `${empresaId}/tarefas/${crypto.randomUUID()}.${ext}`;
+  const { error: erroUp } = await supabase.storage.from("anexos").upload(caminho, foto, { contentType: foto.type });
+  if (erroUp) redirect(`${voltar}?erro=${encodeURIComponent(`Não foi possível enviar a foto: ${erroUp.message}`)}`);
+  const { error: erroFoto } = await supabase
+    .from("tarefa_fotos")
+    .insert({ tarefa_id: tarefaId, empresa_id: empresaId, path: caminho, membro_id: membro.id });
+  if (erroFoto) redirect(`${voltar}?erro=${encodeURIComponent(erroFoto.message)}`);
+
+  const { data: t } = await supabase.from("tarefas").select("responsaveis").eq("id", tarefaId).single();
+  let erro: string | undefined;
+  if ((t?.responsaveis.length ?? 0) > 1) {
+    erro = (await supabase.rpc("marcar_minha_parte", { p_tarefa: tarefaId, p_feita: true })).error?.message;
+  } else {
+    const { data: concluido } = await supabase
+      .from("status")
+      .select("id")
+      .eq("empresa_id", empresaId)
+      .eq("tipo", "concluido")
+      .eq("ativo", true)
+      .is("modulo", null)
+      .order("ordem")
+      .limit(1)
+      .single();
+    if (concluido) erro = (await moverTarefa(empresaId, tarefaId, concluido.id)).erro;
+  }
+  revalidatePath(voltar);
+  revalidatePath(`/e/${empresaId}/tarefas`);
+  redirect(erro ? `${voltar}?erro=${encodeURIComponent(erro)}` : `${voltar}?foto=1`);
 }
