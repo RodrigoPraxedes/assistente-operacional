@@ -101,7 +101,7 @@ export default async function PainelAdmin({ searchParams }: { searchParams: Prom
               <div className="flex flex-wrap gap-2">
                 {x.sou_membro ? (
                   <>
-                    <LinkBotao variante="secundario" href={`/e/${x.id}/tarefas`}>
+                    <LinkBotao variante="secundario" href={`/e/${x.id}/painel`}>
                       Abrir
                     </LinkBotao>
                     <form action={sairEmpresa.bind(null, x.id)}>

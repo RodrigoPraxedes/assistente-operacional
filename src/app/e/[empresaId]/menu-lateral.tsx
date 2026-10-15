@@ -11,6 +11,7 @@ import {
   CalendarClock,
   CalendarDays,
   CalendarSync,
+  LayoutDashboard,
   ChartGantt,
   ListChecks,
   LogOut,
@@ -65,6 +66,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
   const gaveta = useRef<HTMLElement>(null);
 
   const itens: Item[] = [
+    { href: `${base}/painel`, rotulo: "Painel", icone: LayoutDashboard },
     { href: `${base}/tarefas`, rotulo: "Tarefas", icone: SquareKanban },
     { href: `${base}/checklists`, rotulo: "Check-lists", icone: ListChecks },
     { href: `${base}/acoes`, rotulo: "Ações", icone: Repeat },

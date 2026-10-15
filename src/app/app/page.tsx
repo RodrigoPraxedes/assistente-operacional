@@ -29,7 +29,7 @@ export default async function EscolherEmpresa({ searchParams }: { searchParams: 
   const [{ data }, admin] = await Promise.all([supabase.rpc("minhas_empresas"), ehAdminMaster()]);
   const empresas = (data ?? []) as MinhaEmpresa[];
   const liberadas = empresas.filter((e) => e.situacao === "ativa" || admin);
-  if (empresas.length === 1 && liberadas.length === 1 && !nova && !admin) redirect(`/e/${liberadas[0].id}/tarefas`);
+  if (empresas.length === 1 && liberadas.length === 1 && !nova && !admin) redirect(`/e/${liberadas[0].id}/painel`);
 
   return (
     <main className="mx-auto max-w-lg space-y-6 p-4 py-10">
@@ -78,7 +78,7 @@ export default async function EscolherEmpresa({ searchParams }: { searchParams: 
               <li key={e.id}>
                 {e.situacao === "ativa" || admin ? (
                   <Link
-                    href={`/e/${e.id}/tarefas`}
+                    href={`/e/${e.id}/painel`}
                     className="block rounded-xl border border-slate-200 bg-superficie p-4 shadow-sm hover:border-blue-400"
                   >
                     {conteudo}
