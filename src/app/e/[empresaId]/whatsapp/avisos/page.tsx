@@ -24,6 +24,7 @@ interface Mensagem {
   texto: string;
   origem: string;
   origem_id: string | null;
+  com_link: boolean;
   situacao: SituacaoMensagem;
   erro: string | null;
   tentativas: number;
@@ -73,7 +74,7 @@ export default async function Avisos({
     supabase
       .from("whatsapp_mensagens")
       .select(
-        "id, empresa_id, conexao_id, texto, origem, origem_id, situacao, erro, tentativas, solicitado_por, created_at, confirmado_em, aceito_em, entregue_em, lido_em, falhou_em, whatsapp_contatos(nome, telefone), solicitante:membros!whatsapp_mensagens_solicitado_por_fkey(nome), confirmador:membros!whatsapp_mensagens_confirmado_por_fkey(nome)",
+        "id, empresa_id, conexao_id, texto, origem, origem_id, com_link, situacao, erro, tentativas, solicitado_por, created_at, confirmado_em, aceito_em, entregue_em, lido_em, falhou_em, whatsapp_contatos(nome, telefone), solicitante:membros!whatsapp_mensagens_solicitado_por_fkey(nome), confirmador:membros!whatsapp_mensagens_confirmado_por_fkey(nome)",
       )
       .eq("empresa_id", empresaId)
       .order("created_at", { ascending: false })

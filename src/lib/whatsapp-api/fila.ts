@@ -27,8 +27,10 @@ interface Reservada {
   telefone: string;
 }
 
-// Texto que sai de verdade (a prévia na tela usa a mesma função)
-export function textoFinal(m: { empresa_id: string; texto: string; origem: string; origem_id: string | null }) {
+// Texto que sai de verdade (a prévia na tela usa a mesma função).
+// com_link é decidido quando a mensagem nasce (chaves "Incluir link" da aba Automações).
+export function textoFinal(m: { empresa_id: string; texto: string; origem: string; origem_id: string | null; com_link?: boolean }) {
+  if (m.com_link === false) return m.texto;
   if (m.origem === "checklist" && m.origem_id)
     return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/checklists/execucoes/${m.origem_id}`)}`;
   if ((m.origem === "tarefa" || m.origem === "conclusao" || m.origem === "lembrete") && m.origem_id) return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`)}`;
@@ -43,8 +45,13 @@ export async function processarMensagem(mensagemId: string) {
   if (!m) return; // já foi pega, está pausada ou não está na fila
 
   const provedor = provedorDe(m.provedor);
+  const { data: extra } = await admin.from("whatsapp_mensagens").select("com_link").eq("id", m.id).maybeSingle();
   try {
-    const { id } = await provedor.enviarMensagem({ instancia: m.instancia, numero: m.telefone, texto: textoFinal(m) });
+    const { id } = await provedor.enviarMensagem({
+      instancia: m.instancia,
+      numero: m.telefone,
+      texto: textoFinal({ ...m, com_link: extra?.com_link ?? true }),
+    });
     await admin
       .from("whatsapp_mensagens")
       .update({ situacao: "aceito", mensagem_externa_id: id, aceito_em: agora(), erro: null, updated_at: agora() })
