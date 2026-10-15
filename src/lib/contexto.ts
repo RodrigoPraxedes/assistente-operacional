@@ -32,7 +32,8 @@ export const getContexto = cache(async (empresaId: string) => {
     // empresa suspensa ou aguardando aprovação: volta para a lista, que explica
     const { data: minhas } = await supabase.rpc("minhas_empresas");
     if ((minhas as { id: string }[] | null)?.some((e) => e.id === empresaId)) redirect("/app");
-    notFound();
+    // link de WhatsApp aberto numa conta que não participa da empresa: explica em vez de 404
+    redirect("/app?sem_acesso=1");
   }
 
   const { perfis, ...membro } = membroComPerfil as Membro & {
