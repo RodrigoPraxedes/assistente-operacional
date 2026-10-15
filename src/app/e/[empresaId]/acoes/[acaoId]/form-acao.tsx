@@ -124,7 +124,7 @@ export function FormAcao({
               ))}
             </Select>
           </Campo>
-          <CampoVisibilidade privado={acao?.privado} podeMudar={podeMudarPrivado} />
+          <CampoVisibilidade privado={acao?.privado} podeMudar={podeMudarPrivado} perguntar={!acao} />
           {acao && (
             <Campo rotulo="Situação">
               <Select name="ativo" defaultValue={String(acao.ativo)}>

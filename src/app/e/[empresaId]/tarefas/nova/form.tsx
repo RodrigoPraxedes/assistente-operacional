@@ -71,7 +71,7 @@ export function FormTarefa({
             ))}
           </Select>
         </Campo>
-        <CampoVisibilidade podeMudar />
+        <CampoVisibilidade podeMudar perguntar />
       </div>
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <BotaoEnviar>Criar tarefa</BotaoEnviar>
