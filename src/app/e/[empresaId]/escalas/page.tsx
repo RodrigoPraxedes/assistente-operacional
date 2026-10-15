@@ -146,31 +146,6 @@ export default async function PaginaEscalas({
       {filtros.aviso === "copiada" && <Aviso tipo="sucesso">Semana anterior copiada para os dias em branco.</Aviso>}
       {filtros.aviso === "nada" && <Aviso tipo="info">Não havia nada a copiar da semana anterior para os dias em branco.</Aviso>}
 
-      {(meus?.length ?? 0) > 0 && (
-        <Cartao className="space-y-2">
-          <h2 className="font-medium">Seus próximos dias</h2>
-          <ul className="flex flex-wrap gap-2 text-sm">
-            {((meus ?? []) as Escala[]).map((e) => {
-              const t = e.turno_id ? turnoPorId.get(e.turno_id) : null;
-              const cor = t?.cor ?? (e.tipo !== "turno" ? AUSENCIAS[e.tipo].cor : "#2563eb");
-              return (
-                <li key={e.id} className="rounded-lg border border-slate-200 px-3 py-1.5">
-                  <span className="font-medium text-slate-800">{e.data === hoje ? "Hoje" : rotuloDia(e.data)}</span>{" "}
-                  <Etiqueta cor={cor}>{e.tipo === "turno" ? (t?.nome ?? "Turno") : AUSENCIAS[e.tipo].rotulo}</Etiqueta>
-                  {t && <span className="ml-1 text-xs text-slate-500">{horarioTurno(t)}</span>}
-                  {e.unidade_id !== unidade.id && (
-                    <span className="ml-1 text-xs text-slate-500">· {nomeUnidade.get(e.unidade_id)}</span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          <Link href={`/e/${empresaId}/escalas/trocas`} className="text-xs text-blue-600">
-            Precisa trocar algum dia? Peça a troca aqui
-          </Link>
-        </Cartao>
-      )}
-
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1">
           <Link
@@ -260,6 +235,31 @@ export default async function PaginaEscalas({
           valores={valores}
           podeEditar={podeEditar}
         />
+      )}
+
+      {(meus?.length ?? 0) > 0 && (
+        <Cartao className="space-y-2">
+          <h2 className="font-medium">Seus próximos dias</h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            {((meus ?? []) as Escala[]).map((e) => {
+              const t = e.turno_id ? turnoPorId.get(e.turno_id) : null;
+              const cor = t?.cor ?? (e.tipo !== "turno" ? AUSENCIAS[e.tipo].cor : "#2563eb");
+              return (
+                <li key={e.id} className="rounded-lg border border-slate-200 px-3 py-1.5">
+                  <span className="font-medium text-slate-800">{e.data === hoje ? "Hoje" : rotuloDia(e.data)}</span>{" "}
+                  <Etiqueta cor={cor}>{e.tipo === "turno" ? (t?.nome ?? "Turno") : AUSENCIAS[e.tipo].rotulo}</Etiqueta>
+                  {t && <span className="ml-1 text-xs text-slate-500">{horarioTurno(t)}</span>}
+                  {e.unidade_id !== unidade.id && (
+                    <span className="ml-1 text-xs text-slate-500">· {nomeUnidade.get(e.unidade_id)}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <Link href={`/e/${empresaId}/escalas/trocas`} className="text-xs text-blue-600">
+            Precisa trocar algum dia? Peça a troca aqui
+          </Link>
+        </Cartao>
       )}
     </div>
   );
