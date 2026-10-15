@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const ROTAS_PROTEGIDAS = ["/app", "/e/", "/admin"];
+const ROTAS_PROTEGIDAS = ["/app", "/e/", "/admin", "/oauth/"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

@@ -223,6 +223,12 @@ export async function salvarAutomacoes(empresaId: string, form: FormData) {
     checklist_auto: form.get("checklist_auto") === "on",
     boas_vindas: form.get("boas_vindas") === "on",
     lembrete_checklist: form.get("lembrete_checklist") === "on",
+    link_tarefa: form.get("link_tarefa") === "on",
+    link_conclusao: form.get("link_conclusao") === "on",
+    link_checklist: form.get("link_checklist") === "on",
+    link_lembrete: form.get("link_lembrete") === "on",
+    link_resumo: form.get("link_resumo") === "on",
+    contato_duvidas: form.get("contato_duvidas") === "on",
     resumo_hora: hora,
     limite_diario: limite,
     atualizado_por: membro.id,
@@ -316,7 +322,7 @@ export async function verificarNoProvedor(empresaId: string, mensagemId: string)
   const { supabase } = await getContexto(empresaId);
   const { data: m } = await supabase
     .from("whatsapp_mensagens")
-    .select("id, empresa_id, conexao_id, texto, origem, origem_id, enviado_em, situacao, whatsapp_contatos(telefone), whatsapp_conexoes(provedor, instancia)")
+    .select("id, empresa_id, conexao_id, texto, origem, origem_id, com_link, enviado_em, situacao, whatsapp_contatos(telefone), whatsapp_conexoes(provedor, instancia)")
     .eq("id", mensagemId)
     .maybeSingle<{
       id: string;
@@ -325,6 +331,7 @@ export async function verificarNoProvedor(empresaId: string, mensagemId: string)
       texto: string;
       origem: string;
       origem_id: string | null;
+      com_link: boolean;
       enviado_em: string | null;
       situacao: string;
       whatsapp_contatos: { telefone: string } | null;
