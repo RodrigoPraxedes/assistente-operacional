@@ -5,6 +5,9 @@
 --    quando todos marcam, a tarefa vai sozinha para Concluído. Enquanto falta
 --    alguém, um responsável não conclui direto (quem criou e quem não está na
 --    lista, com permissão de concluir, ainda podem).
+-- 4) Check-list: é feito ou não feito. Pela tela só vai para Concluído; se
+--    passar 30 minutos da tolerância sem ser feito, o sistema cancela com o
+--    motivo "Não realizado no tempo" no histórico.
 -- =============================================================================
 
 alter table public.tarefas add column cancelada_em timestamptz;
@@ -41,6 +44,12 @@ begin
   new.partes_feitas := coalesce((
     select array_agg(x) from unnest(new.partes_feitas) as x where x = any(new.responsaveis)
   ), '{}');
+
+  if tg_op = 'UPDATE' and new.status_id is distinct from old.status_id
+     and new.origem = 'checklist' and v_tipo <> 'concluido'
+     and current_setting('app.sistema', true) is distinct from 'on' then
+    raise exception 'Check-list só pode ir para Concluído (feito ou não feito)';
+  end if;
 
   if tg_op = 'UPDATE' and new.status_id is distinct from old.status_id then
     if v_tipo = 'concluido' then
@@ -133,3 +142,43 @@ create policy tarefas_delete on public.tarefas for delete to authenticated
       public.responsavel_eu(empresa_id, responsavel_id, responsaveis), criado_por)
     and public.ve_privado(empresa_id, privado, public.responsavel_eu(empresa_id, responsavel_id, responsaveis), criado_por)
   );
+
+-- -----------------------------------------------------------------------------
+-- Check-list não feito: 30 min depois do prazo (horário + tolerância) é
+-- cancelado pelo sistema. Chamado pelo relógio (/api/cron/whatsapp, a cada minuto).
+-- -----------------------------------------------------------------------------
+create or replace function public.cancelar_checklists_atrasados()
+returns int
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  r record;
+  v_total int := 0;
+begin
+  perform set_config('app.sistema', 'on', true);
+  perform set_config('app.comentario', 'Não realizado no tempo', true);
+  for r in
+    select t.id, c.id as cancelado
+    from public.tarefas t
+    join public.status s on s.id = t.status_id and s.tipo in ('aberto', 'em_andamento', 'adiado')
+    join lateral (
+      select c.id from public.status c
+      where c.empresa_id = t.empresa_id and c.tipo = 'cancelado' and c.ativo and c.modulo is null
+      order by c.ordem limit 1
+    ) c on true
+    where t.origem = 'checklist'
+      and t.prazo < now() - interval '30 minutes'
+  loop
+    update public.tarefas set status_id = r.cancelado where id = r.id;
+    v_total := v_total + 1;
+  end loop;
+  perform set_config('app.comentario', '', true);
+  perform set_config('app.sistema', '', true);
+  return v_total;
+end;
+$$;
+revoke execute on function public.cancelar_checklists_atrasados() from public, anon, authenticated;
+grant execute on function public.cancelar_checklists_atrasados() to service_role;
+

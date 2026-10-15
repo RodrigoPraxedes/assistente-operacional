@@ -69,8 +69,15 @@ export function Kanban({
     );
   }
 
+  // check-list é feito ou não feito: só vai para Concluído
+  const podeIrPara = (t: Tarefa, statusId: string) => t.origem !== "checklist" || tipoDe(statusId) === "concluido";
+
   function mover(tarefa: Tarefa, statusId: string) {
     if (tarefa.status_id === statusId) return;
+    if (!podeIrPara(tarefa, statusId)) {
+      setErro("Check-list só pode ir para Concluído (feito ou não feito)");
+      return;
+    }
     if (tipoDe(statusId) === "adiado") {
       setAdiando({ tarefa, statusId });
       return;
@@ -127,7 +134,7 @@ export function Kanban({
           >
             {/* status de outro módulo (ex.: "Aguardando peça" do chamado) não aparecem */}
             {status
-              .filter((o) => !o.modulo || o.modulo === t.origem || o.id === t.status_id)
+              .filter((o) => (!o.modulo || o.modulo === t.origem || o.id === t.status_id) && (o.id === t.status_id || podeIrPara(t, o.id)))
               .map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.nome}
