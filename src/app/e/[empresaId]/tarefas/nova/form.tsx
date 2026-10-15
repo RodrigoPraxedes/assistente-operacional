@@ -73,6 +73,15 @@ export function FormTarefa({
         </Campo>
         <CampoVisibilidade podeMudar perguntar />
       </div>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="exige_foto" className="mt-1" />
+        <span>
+          Exigir foto para concluir
+          <span className="block text-xs text-slate-500">
+            Só conclui com uma foto tirada na hora, pela câmera. Com várias pessoas, cada uma envia a sua.
+          </span>
+        </span>
+      </label>
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <BotaoEnviar>Criar tarefa</BotaoEnviar>
     </form>

@@ -6,7 +6,9 @@ import { linkPreencher } from "@/lib/checklist-link";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
-import { comentarTarefa, marcarMinhaParte, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
+import { CampoFotoCamera } from "@/components/campo-foto-camera";
+import { BotaoEnviar } from "@/components/botao-enviar";
+import { comentarTarefa, enviarFotoTarefa, marcarMinhaParte, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
@@ -22,10 +24,10 @@ export default async function DetalheTarefa({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; tarefaId: string }>;
-  searchParams: Promise<{ nova?: string; erro?: string; responsaveis?: string }>;
+  searchParams: Promise<{ nova?: string; erro?: string; responsaveis?: string; foto?: string }>;
 }) {
   const { empresaId, tarefaId } = await params;
-  const { nova, erro, responsaveis: responsaveisSalvos } = await searchParams;
+  const { nova, erro, responsaveis: responsaveisSalvos, foto: fotoEnviada } = await searchParams;
   const { supabase, empresa, membro, pode } = await getContexto(empresaId);
 
   const { data: tarefa } = await supabase.from("tarefas").select("*").eq("id", tarefaId).maybeSingle<Tarefa>();
@@ -40,6 +42,7 @@ export default async function DetalheTarefa({
     { data: execucao },
     { data: comentarios },
     { data: setores },
+    { data: fotos },
   ] = await Promise.all([
       supabase.from("status").select("id, nome, cor, tipo").eq("empresa_id", empresaId),
       supabase.from("membros").select("id, nome, telefone, setor_id, ativo").eq("empresa_id", empresaId).order("nome"),
@@ -50,7 +53,11 @@ export default async function DetalheTarefa({
       supabase.from("checklist_execucoes").select("id").eq("tarefa_id", tarefaId).maybeSingle(),
       supabase.from("tarefa_comentarios").select("*").eq("tarefa_id", tarefaId).order("created_at"),
       supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+      supabase.from("tarefa_fotos").select("id, path, membro_id, created_at").eq("tarefa_id", tarefaId).order("created_at"),
     ]);
+  const urls = fotos?.length
+    ? await supabase.storage.from("anexos").createSignedUrls(fotos.map((f) => f.path), 3600)
+    : { data: [] };
 
   // etapa de plano (PMLP): nome do plano e equipe da etapa
   const [{ data: plano }, { data: equipe }] =
@@ -91,6 +98,7 @@ export default async function DetalheTarefa({
     <div className="mx-auto max-w-2xl space-y-4">
       {nova && <Aviso tipo="sucesso">Tarefa criada.</Aviso>}
       {responsaveisSalvos && <Aviso tipo="sucesso">Responsáveis atualizados.</Aviso>}
+      {fotoEnviada && <Aviso tipo="sucesso">Foto enviada.</Aviso>}
       {erro && <Aviso>{erro}</Aviso>}
       <Titulo voltar={{ href: `/e/${empresaId}/tarefas`, rotulo: "Tarefas" }}>{tarefa.titulo}</Titulo>
 
@@ -100,6 +108,7 @@ export default async function DetalheTarefa({
           <Etiqueta cor="#7c3aed">{ORIGENS[tarefa.origem]}</Etiqueta>
           {unidade && <Etiqueta>{unidade.nome}</Etiqueta>}
           {tarefa.privado && <Etiqueta>Privada</Etiqueta>}
+          {tarefa.exige_foto && <Etiqueta>Pede foto</Etiqueta>}
         </div>
         {tarefa.descricao && <p className="whitespace-pre-wrap text-sm text-slate-700">{tarefa.descricao}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm">
@@ -195,6 +204,39 @@ export default async function DetalheTarefa({
                 {minhaParteFeita ? "Desfazer minha parte" : "Marcar minha parte como feita"}
               </Botao>
             </form>
+          )}
+        </Cartao>
+      )}
+
+      {tarefa.exige_foto && (
+        <Cartao className="space-y-3">
+          <h2 className="font-medium">Foto da conclusão</h2>
+          {(fotos ?? []).length > 0 && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {(fotos ?? []).map((f, n) => {
+                const url = urls.data?.[n]?.signedUrl;
+                return (
+                  <figure key={f.id} className="space-y-1 text-xs text-slate-500">
+                    {url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={url} alt="Foto da tarefa" className="aspect-square w-full rounded-lg object-cover" />
+                    )}
+                    <figcaption>
+                      {f.membro_id ? mb.get(f.membro_id)?.nome : ""} · {formatarDataHora(f.created_at, empresa.fuso_horario)}
+                    </figcaption>
+                  </figure>
+                );
+              })}
+            </div>
+          )}
+          {!encerrada && (souResponsavel || pode("tarefas.mudar_status")) && !minhaParteFeita && (
+            <form action={enviarFotoTarefa.bind(null, empresaId, tarefa.id)} className="space-y-3">
+              <CampoFotoCamera nome="foto" rotulo="Tire a foto agora pela câmera" />
+              <BotaoEnviar>{emConjunto ? "Enviar foto e marcar minha parte" : "Enviar foto e concluir"}</BotaoEnviar>
+            </form>
+          )}
+          {!encerrada && (fotos ?? []).length === 0 && (
+            <p className="text-xs text-slate-500">Esta tarefa só conclui com uma foto.</p>
           )}
         </Cartao>
       )}

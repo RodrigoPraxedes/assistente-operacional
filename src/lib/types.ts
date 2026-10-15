@@ -96,6 +96,8 @@ export interface Tarefa {
   responsaveis: string[];
   // tarefa em conjunto: quem já marcou "minha parte feita"
   partes_feitas: string[];
+  // só conclui com foto tirada na hora (tarefa_fotos)
+  exige_foto: boolean;
   criado_por: string | null;
   // privado: só quem criou e o responsável veem
   privado: boolean;
