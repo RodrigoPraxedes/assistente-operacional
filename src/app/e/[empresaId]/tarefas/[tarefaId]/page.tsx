@@ -1,3 +1,4 @@
+import { membrosAtribuiveis } from "@/lib/atribuicao";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
@@ -247,7 +248,12 @@ export default async function DetalheTarefa({
             <SeletorResponsaveis
               name="responsaveis"
               inicial={tarefa.responsaveis}
-              membros={(membros ?? []).filter((m) => m.ativo || tarefa.responsaveis.includes(m.id))}
+              membros={await membrosAtribuiveis(
+                supabase,
+                empresaId,
+                (membros ?? []).filter((m) => m.ativo || tarefa.responsaveis.includes(m.id)),
+                tarefa.responsaveis,
+              )}
               setores={setores ?? []}
               dica="Quem entrar recebe o aviso no WhatsApp (se a automação estiver ligada)."
             />

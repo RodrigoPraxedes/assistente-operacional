@@ -1,4 +1,5 @@
 import { exigirPermissao } from "@/lib/contexto";
+import { membrosAtribuiveis } from "@/lib/atribuicao";
 import { Cartao, Titulo } from "@/components/ui";
 import { FormTarefa } from "./form";
 
@@ -21,7 +22,7 @@ export default async function NovaTarefa({ params }: { params: Promise<{ empresa
           unidades={unidades ?? []}
           setores={setores ?? []}
           categorias={categorias ?? []}
-          membros={membros ?? []}
+          membros={await membrosAtribuiveis(supabase, empresaId, membros ?? [])}
         />
       </Cartao>
     </div>

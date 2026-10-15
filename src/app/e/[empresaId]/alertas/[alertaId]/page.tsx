@@ -1,3 +1,4 @@
+import { membrosAtribuiveis } from "@/lib/atribuicao";
 import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import { hojeNoFuso } from "@/lib/formato";
@@ -56,7 +57,12 @@ export default async function EditarAlerta({
         unidades={unidades ?? []}
         setores={setores ?? []}
         categorias={categorias ?? []}
-        membros={membros ?? []}
+        membros={await membrosAtribuiveis(
+          supabase,
+          empresaId,
+          membros ?? [],
+          (avisos ?? []).flatMap((a) => a.responsaveis ?? []),
+        )}
         podeMudarPrivado={novo || !alerta!.criado_por || alerta!.criado_por === membro.id}
       />
     </div>

@@ -120,6 +120,7 @@ export const SECOES: SecaoGuia[] = [
           "Toque em Nova tarefa.",
           "Escreva o que precisa ser feito e, se quiser, os detalhes.",
           "Escolha um ou mais responsáveis. Dá para puxar um setor inteiro ou todas as pessoas de uma vez.",
+          "Quem pode atribuir: o Gestor escolhe qualquer pessoa; o Líder de setor só vê colaboradores (e ele mesmo) na lista, e o mesmo vale para ações e alertas. Colaborador não cria tarefas, mas todos abrem chamado de manutenção.",
           "Defina o prazo, a unidade, o setor e a categoria.",
           "Marque Exigir foto para concluir se quiser uma prova do serviço feito.",
           "Escolha se ela é pública (toda a equipe com acesso vê) ou privada (só você e os responsáveis veem) e toque em Criar tarefa.",
