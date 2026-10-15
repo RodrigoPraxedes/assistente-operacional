@@ -13,10 +13,13 @@ export function CampoVisibilidade({
   privado = false,
   podeMudar,
   perguntar = false,
+  quemVe,
 }: {
   privado?: boolean;
   podeMudar: boolean;
   perguntar?: boolean;
+  // quem vê o item privado, quando não é "você e os responsáveis" (ex.: planos)
+  quemVe?: string;
 }) {
   const [valor, setValor] = useState(String(privado));
   const [janela, setJanela] = useState(false);
@@ -56,14 +59,14 @@ export function CampoVisibilidade({
 
   const opcoes = [
     { v: "false" as const, titulo: "Pública", texto: "Toda a equipe com acesso pode ver.", Icone: Globe },
-    { v: "true" as const, titulo: "Privada", texto: "Só você e os responsáveis veem.", Icone: Lock },
+    { v: "true" as const, titulo: "Privada", texto: `Só ${quemVe ?? "você e os responsáveis"} veem.`, Icone: Lock },
   ];
 
   return (
     <>
       <Campo
         rotulo="Visibilidade"
-        dica={podeMudar ? "Privado: só você e o responsável veem" : "Só quem criou pode mudar"}
+        dica={podeMudar ? `Privado: só ${quemVe ?? "você e o responsável"} veem` : "Só quem criou pode mudar"}
       >
         <Select ref={campo} name="privado" value={valor} onChange={(e) => setValor(e.target.value)} disabled={!podeMudar}>
           <option value="false">Público</option>

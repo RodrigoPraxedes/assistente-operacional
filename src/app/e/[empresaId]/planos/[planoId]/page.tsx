@@ -20,9 +20,8 @@ export default async function DetalhePlano({
 }) {
   const { empresaId, planoId } = await params;
   const avisos = await searchParams;
-  const { supabase, empresa, pode } = await getContexto(empresaId);
+  const { supabase, empresa, membro, pode } = await getContexto(empresaId);
   const fuso = empresa.fuso_horario;
-  const edita = pode("planos.editar");
 
   const { data: plano } = await supabase
     .from("planos")
@@ -31,6 +30,9 @@ export default async function DetalhePlano({
     .eq("empresa_id", empresaId)
     .maybeSingle<Plano>();
   if (!plano) notFound();
+  // plano privado: só quem criou e o coordenador editam
+  const edita =
+    pode("planos.editar") && (!plano.privado || [plano.criado_por, plano.responsavel_id].includes(membro.id));
 
   const [{ data: etapas }, { data: tarefas }, { data: deps }, { data: equipe }, { data: status }, { data: membros }, { data: unidade }] =
     await Promise.all([
@@ -104,6 +106,7 @@ export default async function DetalhePlano({
             {HORIZONTES[plano.horizonte].rotulo} ({HORIZONTES[plano.horizonte].dica})
           </Etiqueta>
           {atrasado && <Etiqueta cor="#dc2626">Atrasado</Etiqueta>}
+          {plano.privado && <Etiqueta>Privado</Etiqueta>}
         </div>
         {plano.objetivo && <p className="whitespace-pre-wrap text-sm text-slate-700">{plano.objetivo}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">

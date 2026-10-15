@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { localParaUtc } from "@/lib/formato";
+import { lerPrivado } from "@/lib/privado";
 
 const txt = (form: FormData, k: string) => String(form.get(k) ?? "").trim() || null;
 const comErro = (caminho: string, erro: string) => `${caminho}?erro=${encodeURIComponent(erro)}`;
@@ -27,13 +28,15 @@ export async function salvarPlano(empresaId: string, planoId: string | null, for
     setor_id: txt(form, "setor_id"),
     categoria_id: txt(form, "categoria_id"),
     ...(planoId ? { situacao: txt(form, "situacao") ?? "planejamento" } : {}),
+    ...(lerPrivado(form) !== undefined && { privado: lerPrivado(form) }),
   };
   if (!dados.nome) redirect(comErro(voltar, "Dê um nome para o plano"));
 
   let id = planoId;
   if (planoId) {
-    const { error } = await supabase.from("planos").update(dados).eq("id", planoId);
+    const { data, error } = await supabase.from("planos").update(dados).eq("id", planoId).select("id");
     if (error) redirect(comErro(voltar, error.message));
+    if (!data?.length) redirect(comErro(voltar, "Este plano é privado: só quem criou e o coordenador podem editar"));
   } else {
     const { data, error } = await supabase
       .from("planos")
@@ -50,8 +53,10 @@ export async function salvarPlano(empresaId: string, planoId: string | null, for
 
 export async function excluirPlano(empresaId: string, planoId: string) {
   const { supabase } = await getContexto(empresaId);
-  const { error } = await supabase.from("planos").delete().eq("id", planoId);
-  if (error) redirect(comErro(`/e/${empresaId}/planos/${planoId}/editar`, error.message));
+  const voltar = `/e/${empresaId}/planos/${planoId}/editar`;
+  const { data, error } = await supabase.from("planos").delete().eq("id", planoId).select("id");
+  if (error) redirect(comErro(voltar, error.message));
+  if (!data?.length) redirect(comErro(voltar, "Este plano é privado: só quem criou pode excluir"));
   revalidatePath(`/e/${empresaId}/planos`);
   revalidatePath(`/e/${empresaId}/tarefas`);
   redirect(`/e/${empresaId}/planos`);

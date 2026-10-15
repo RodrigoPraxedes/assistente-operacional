@@ -16,32 +16,36 @@ export default async function EditarPlano({
 }) {
   const { empresaId, planoId } = await params;
   const { erro } = await searchParams;
-  const { supabase } = await exigirPermissao(empresaId, "planos.editar");
+  const { supabase, membro } = await exigirPermissao(empresaId, "planos.editar");
 
   const [{ data: plano }, opcoes] = await Promise.all([
     supabase.from("planos").select("*").eq("id", planoId).eq("empresa_id", empresaId).maybeSingle<Plano>(),
     carregarOpcoes(supabase, empresaId),
   ]);
   if (!plano) notFound();
+  // plano privado: só quem criou troca a visibilidade e exclui
+  const souAutor = !plano.criado_por || plano.criado_por === membro.id;
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <Titulo voltar={{ href: `/e/${empresaId}/planos/${planoId}`, rotulo: plano.nome }}>Editar plano</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
-      <FormPlano empresaId={empresaId} plano={plano} {...opcoes} />
+      <FormPlano empresaId={empresaId} plano={plano} podeMudarPrivado={souAutor} {...opcoes} />
 
-      <Cartao className="space-y-2">
-        <h2 className="font-medium text-slate-900">Excluir plano</h2>
-        <p className="text-sm text-slate-500">Apaga o plano e todas as etapas dele, inclusive as tarefas no Kanban.</p>
-        <form action={excluirPlano.bind(null, empresaId, planoId)}>
-          <BotaoConfirmar
-            mensagem={`Excluir o plano "${plano.nome}" e todas as etapas?`}
-            className={estilos.botaoPerigo}
-          >
-            Excluir plano
-          </BotaoConfirmar>
-        </form>
-      </Cartao>
+      {(!plano.privado || souAutor) && (
+        <Cartao className="space-y-2">
+          <h2 className="font-medium text-slate-900">Excluir plano</h2>
+          <p className="text-sm text-slate-500">Apaga o plano e todas as etapas dele, inclusive as tarefas no Kanban.</p>
+          <form action={excluirPlano.bind(null, empresaId, planoId)}>
+            <BotaoConfirmar
+              mensagem={`Excluir o plano "${plano.nome}" e todas as etapas?`}
+              className={estilos.botaoPerigo}
+            >
+              Excluir plano
+            </BotaoConfirmar>
+          </form>
+        </Cartao>
+      )}
     </div>
   );
 }
