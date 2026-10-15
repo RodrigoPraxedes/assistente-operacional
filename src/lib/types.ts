@@ -145,6 +145,8 @@ export interface ChecklistItem {
   tipo_resposta: TipoResposta;
   obrigatorio: boolean;
   permite_foto: boolean;
+  // foto sempre obrigatória, tirada na hora pela câmera
+  foto_obrigatoria: boolean;
   foto_obrigatoria_se_nao: boolean;
   // mostra a opção N/A (não se aplica) nos itens Sim/Não
   permite_na: boolean;
