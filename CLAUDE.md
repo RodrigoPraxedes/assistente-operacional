@@ -10,3 +10,4 @@
 - Datas: guardar em UTC, exibir com `formatarDataHora(iso, empresa.fuso_horario)`.
 - Antes de commitar: `npx tsc --noEmit && npm run lint`.
 - Visual (Apple HIG): cores só pelas classes `slate`/`blue`/`red`/`green` e `bg-superficie` (nunca `bg-white`); os tokens em `src/app/globals.css` trocam no modo escuro. Menu em `src/app/e/[empresaId]/menu-lateral.tsx`.
+- Guia do usuário (`src/app/e/[empresaId]/guia/conteudo.ts`): toda mudança visível ou módulo novo atualiza a seção da tela no mesmo PR (seção nova para tela nova no menu). PR que não muda o guia diz por quê.
