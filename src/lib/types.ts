@@ -434,6 +434,8 @@ export interface Plano {
   fim_previsto: string | null;
   responsavel_id: string | null;
   situacao: SituacaoPlano;
+  // privado: só quem criou, o coordenador e quem está nas etapas veem
+  privado: boolean;
   criado_por: string | null;
   created_at: string;
 }

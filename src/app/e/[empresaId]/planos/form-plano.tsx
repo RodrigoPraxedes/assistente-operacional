@@ -1,6 +1,7 @@
 import { HORIZONTES, SITUACOES_PLANO, type Horizonte, type Plano, type SituacaoPlano } from "@/lib/types";
 import { Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { salvarPlano } from "./actions";
 
 type Opcao = { id: string; nome: string };
@@ -12,9 +13,11 @@ export function FormPlano({
   setores,
   categorias,
   membros,
+  podeMudarPrivado,
 }: {
   empresaId: string;
   plano: Plano | null;
+  podeMudarPrivado: boolean;
   unidades: Opcao[];
   setores: Opcao[];
   categorias: Opcao[];
@@ -84,6 +87,12 @@ export function FormPlano({
               {opcoes(categorias, "—")}
             </Select>
           </Campo>
+          <CampoVisibilidade
+            privado={plano?.privado}
+            podeMudar={podeMudarPrivado}
+            perguntar={!plano}
+            quemVe="você, o coordenador e quem está nas etapas"
+          />
           {plano && (
             <Campo rotulo="Situação">
               <Select name="situacao" defaultValue={plano.situacao}>
