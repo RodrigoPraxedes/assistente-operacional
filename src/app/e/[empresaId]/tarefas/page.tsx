@@ -130,9 +130,19 @@ export default async function PaginaTarefas({
             </option>
           ))}
         </Select>
-        <label className="flex items-center gap-2 px-2 text-sm">
-          <input type="checkbox" name="minhas" value="1" defaultChecked={!!filtros.minhas} /> Só as minhas
-        </label>
+        {/* liga/desliga na hora, mantendo os outros filtros */}
+        <Link
+          href={`/e/${empresaId}/tarefas?${new URLSearchParams(
+            Object.entries({ ...filtros, minhas: filtros.minhas ? undefined : "1" }).filter((e): e is [string, string] => !!e[1]),
+          )}`}
+          className={`rounded-lg border px-3 py-2 text-sm ${
+            filtros.minhas ? "border-blue-600 bg-blue-50 font-medium text-blue-700" : "border-slate-300 bg-superficie"
+          }`}
+        >
+          Minhas tarefas
+          {filtros.minhas && <span className="sr-only"> (filtro ativo)</span>}
+        </Link>
+        {filtros.minhas && <input type="hidden" name="minhas" value="1" />}
         <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
         {(filtros.origem || filtros.unidade || filtros.minhas || filtros.status) && (
           <Link href={`/e/${empresaId}/tarefas`} className="px-2 py-2 text-sm text-slate-500">
