@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ehAdminMaster } from "@/lib/contexto";
-import { Cartao, Etiqueta } from "@/components/ui";
+import { Aviso, Cartao, Etiqueta } from "@/components/ui";
 import type { SituacaoEmpresa } from "@/lib/types";
 import { FormEmpresa } from "./form-empresa";
 
@@ -15,8 +15,8 @@ interface MinhaEmpresa {
   motivo_suspensao: string | null;
 }
 
-export default async function EscolherEmpresa({ searchParams }: { searchParams: Promise<{ nova?: string }> }) {
-  const { nova } = await searchParams;
+export default async function EscolherEmpresa({ searchParams }: { searchParams: Promise<{ nova?: string; sem_acesso?: string }> }) {
+  const { nova, sem_acesso: semAcesso } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,7 +29,7 @@ export default async function EscolherEmpresa({ searchParams }: { searchParams: 
   const [{ data }, admin] = await Promise.all([supabase.rpc("minhas_empresas"), ehAdminMaster()]);
   const empresas = (data ?? []) as MinhaEmpresa[];
   const liberadas = empresas.filter((e) => e.situacao === "ativa" || admin);
-  if (empresas.length === 1 && liberadas.length === 1 && !nova && !admin) redirect(`/e/${liberadas[0].id}/painel`);
+  if (empresas.length === 1 && liberadas.length === 1 && !nova && !admin && !semAcesso) redirect(`/e/${liberadas[0].id}/painel`);
 
   return (
     <main className="mx-auto max-w-lg space-y-6 p-4 py-10">
@@ -39,6 +39,13 @@ export default async function EscolherEmpresa({ searchParams }: { searchParams: 
           <button className="text-sm text-slate-500 hover:text-slate-800">Sair</button>
         </form>
       </div>
+
+      {semAcesso && (
+        <Aviso>
+          O link que você abriu é de uma empresa da qual a conta <strong>{user.email}</strong> não participa. Se o convite foi para outro
+          e-mail, toque em Sair e entre com a conta certa.
+        </Aviso>
+      )}
 
       {admin && (
         <Link
