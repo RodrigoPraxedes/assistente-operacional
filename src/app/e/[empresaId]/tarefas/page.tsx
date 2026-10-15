@@ -201,6 +201,7 @@ export default async function PaginaTarefas({
         nomes={nomes}
         podeMover={pode("tarefas.mudar_status")}
         whatsapp={whatsapp}
+        podePreencher={pode("checklist.executar")}
       />
     </div>
   );

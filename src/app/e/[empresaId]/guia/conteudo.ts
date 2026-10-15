@@ -129,6 +129,7 @@ export const SECOES: SecaoGuia[] = [
           "Arraste o cartão para outra coluna ou use a caixa de status no próprio cartão.",
           "Ao mover para Adiado, o app pede a nova data. Depois, o botão Retornar devolve a tarefa ao status anterior.",
           "Tarefas com prazo vencido ganham a etiqueta vermelha Atrasada.",
+          "Em check-list pendente, o botão azul de lista no cartão abre o formulário para preencher na hora. Ao salvar, a tarefa vai sozinha para Concluído.",
           "Troque entre Quadro e Lista no alto da tela. A escolha fica salva.",
           "Filtre por módulo, unidade e status, ou toque em Minhas tarefas para ver só as suas.",
         ],
@@ -181,7 +182,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Preencher",
         passos: [
-          "No app: toque em Preencher no cartão do check-list.",
+          "No app: toque em Preencher no cartão do check-list, ou no botão azul de lista do cartão em Tarefas (também há Abrir check-list dentro da tarefa).",
           "Pelo QR Code: aponte a câmera do celular para o QR da unidade e escolha o check-list.",
           "Responda os itens, anexe as fotos e toque em Salvar e enviar.",
           "Depois de salvo, o botão Enviar resumo no WhatsApp manda o resultado para o grupo ou para quem você escolher.",
