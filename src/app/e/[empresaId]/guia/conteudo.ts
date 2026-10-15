@@ -277,7 +277,16 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Toque em Novo plano. Dê um nome e descreva o objetivo (o que se quer alcançar e por quê).",
           "Escolha o horizonte (médio prazo: 3 a 6 meses; longo prazo: 6 a 12 meses), o coordenador, o início e o término previsto.",
-          "Toque em Criar plano.",
+          "Toque em Criar plano e escolha se ele é público ou privado.",
+        ],
+      },
+      {
+        titulo: "Quem vê o plano",
+        passos: [
+          "Plano público: veem quem tem permissão de ver ou editar planos (o dono, o Gestor e o Líder de setor, se tiver essa permissão), o coordenador, quem criou e quem é responsável ou está na equipe de alguma etapa.",
+          "Plano privado: só quem criou, o coordenador e quem está nas etapas veem. Nem o dono da empresa vê. As etapas também ficam privadas no quadro de Tarefas.",
+          "Só quem criou troca entre público e privado (em Editar plano) e exclui um plano privado. O coordenador também pode editá-lo, se tiver permissão de editar planos.",
+          "Etapas de plano privado não geram aviso automático no WhatsApp, como as demais tarefas privadas.",
         ],
       },
       {

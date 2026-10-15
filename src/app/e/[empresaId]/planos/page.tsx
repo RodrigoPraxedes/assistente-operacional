@@ -67,6 +67,7 @@ export default async function PaginaPlanos({
                     <div className="flex flex-wrap gap-1">
                       <Etiqueta cor={situacao.cor}>{situacao.rotulo}</Etiqueta>
                       {atrasado && <Etiqueta cor="#dc2626">Atrasado</Etiqueta>}
+                      {p.privado && <Etiqueta>Privado</Etiqueta>}
                     </div>
                   </div>
                   <BarraProgresso conta={conta} />
