@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Marca } from "@/components/marca";
+import icone from "@/app/icon.png";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
@@ -10,11 +12,12 @@ import {
   CalendarDays,
   CalendarSync,
   ChartGantt,
-  ClipboardCheck,
   ListChecks,
   LogOut,
   Menu,
   MessageCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
   Monitor,
   Moon,
   Repeat,
@@ -36,6 +39,7 @@ interface Props {
   veAdmin: boolean;
   veWhatsApp: boolean;
   tema: Tema;
+  recolhido: boolean;
 }
 
 interface Item {
@@ -46,9 +50,17 @@ interface Item {
 }
 
 // Menu à esquerda em todas as telas. Abaixo de 900 px vira gaveta aberta pelo botão Menu.
-export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsApp, tema: temaInicial }: Props) {
+// No computador pode ser recolhido para só os ícones (fica salvo no cookie `menu`).
+export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsApp, tema: temaInicial, recolhido: recolhidoInicial }: Props) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
+  const [recolhido, setRecolhido] = useState(recolhidoInicial);
+
+  function alternarRecolhido() {
+    const novo = !recolhido;
+    setRecolhido(novo);
+    document.cookie = `menu=${novo ? "recolhido" : "aberto"}; path=/; max-age=31536000; samesite=lax`;
+  }
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const gaveta = useRef<HTMLElement>(null);
 
@@ -86,23 +98,36 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
     };
   }, [aberto]);
 
-  const conteudo = (
+  // `curto` = menu recolhido (só ícones); a gaveta do celular usa sempre a versão completa
+  const conteudo = (curto: boolean, podeRecolher: boolean) => (
     <>
-      <div className="flex items-center gap-3 px-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-blue-50 text-blue-600">
-          <ClipboardCheck className="h-5 w-5" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-900">{empresa}</p>
-          <p className="truncate text-xs text-slate-500"><Marca /></p>
-        </div>
+      <div className={`flex items-center gap-3 ${curto ? "flex-col px-2" : "px-3"}`}>
+        <Image src={icone} alt="Atalaia" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full" priority />
+        {!curto && (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg leading-tight text-slate-900"><Marca /></p>
+            <p className="truncate text-xs text-slate-500">{empresa}</p>
+          </div>
+        )}
+        {podeRecolher && (
+          <button
+            type="button"
+            onClick={alternarRecolhido}
+            title={curto ? "Expandir menu" : "Recolher menu"}
+            aria-label={curto ? "Expandir menu" : "Recolher menu"}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+          >
+            {curto ? <PanelLeftOpen className="h-4 w-4" aria-hidden /> : <PanelLeftClose className="h-4 w-4" aria-hidden />}
+          </button>
+        )}
       </div>
       <Link
         href="/app?nova=1"
-        className="mx-3 mt-3 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+        title={curto ? "Trocar de empresa" : undefined}
+        className={`mt-3 flex items-center gap-2 rounded-lg py-1.5 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 ${curto ? "mx-auto px-2" : "mx-3 px-2"}`}
       >
         <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden />
-        Trocar de empresa
+        {curto ? <span className="sr-only">Trocar de empresa</span> : "Trocar de empresa"}
       </Link>
 
       <nav aria-label="Principal" className="mt-5 flex-1 space-y-0.5 overflow-y-auto px-2">
@@ -114,27 +139,33 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
               key={i.href}
               href={i.href}
               aria-current={ativo ? "page" : undefined}
-              className={`flex min-h-11 items-center gap-3 rounded-[10px] px-3 text-sm transition-colors duration-150 min-[900px]:min-h-9 ${
+              title={curto ? i.rotulo : undefined}
+              className={`flex min-h-11 items-center gap-3 rounded-[10px] text-sm transition-colors duration-150 min-[900px]:min-h-9 ${curto ? "justify-center px-0" : "px-3"} ${
                 ativo ? "bg-blue-50 font-medium text-blue-700" : "text-slate-700 hover:bg-slate-100"
               }`}
             >
               <Icone className={`h-[18px] w-[18px] ${ativo ? "text-blue-600" : "text-slate-500"}`} aria-hidden />
-              {i.rotulo}
+              {curto ? <span className="sr-only">{i.rotulo}</span> : i.rotulo}
             </Link>
           );
         })}
       </nav>
 
-      <div className="space-y-3 border-t border-slate-200 px-3 pt-3">
-        <SeletorTema inicial={temaInicial} />
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+      <div className={`space-y-3 border-t border-slate-200 pt-3 ${curto ? "px-2" : "px-3"}`}>
+        {!curto && <SeletorTema inicial={temaInicial} />}
+        <div className={`flex items-center gap-2 ${curto ? "flex-col" : ""}`}>
+          <span
+            title={curto ? membro.nome : undefined}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600"
+          >
             {iniciais(membro.nome)}
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-slate-800">{membro.nome}</p>
-            {membro.cargo && <p className="truncate text-xs text-slate-500">{membro.cargo}</p>}
-          </div>
+          {!curto && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-slate-800">{membro.nome}</p>
+              {membro.cargo && <p className="truncate text-xs text-slate-500">{membro.cargo}</p>}
+            </div>
+          )}
           <form action="/sair" method="post">
             <button
               className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
@@ -151,9 +182,13 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
 
   return (
     <>
-      {/* computador: coluna fixa de 226 px */}
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-slate-200 bg-sidebar py-6 backdrop-blur-[18px] print:hidden min-[900px]:flex">
-        {conteudo}
+      {/* computador: coluna fixa de 226 px, ou 68 px recolhida */}
+      <aside
+        className={`sticky top-0 hidden h-dvh flex-col border-r border-slate-200 bg-sidebar py-6 backdrop-blur-[18px] transition-[width] duration-200 print:hidden min-[900px]:flex ${
+          recolhido ? "w-[68px]" : "w-[226px]"
+        }`}
+      >
+        {conteudo(recolhido, true)}
       </aside>
 
       {/* celular e tablet: barra compacta + gaveta à esquerda */}
@@ -188,7 +223,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
             >
               <X className="h-5 w-5" aria-hidden />
             </button>
-            {conteudo}
+            {conteudo(false, false)}
           </aside>
         </div>
       )}
