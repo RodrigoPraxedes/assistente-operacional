@@ -136,6 +136,12 @@ Aba **Automações** (só quem gerencia). Tudo começa desligado.
   `whatsapp_tarefa_concluida` (migration 25).
 - **Check-list concluído:** as regras "Avisos automáticos de check-list" (aba Destinatários) passam a
   enviar sozinhas, com quem enviou e os itens "Não". Desligado, viram rascunho como antes.
+- **Lembrete de check-list:** `lembrete_minutos` antes do horário (cadastro do check-list, padrão 30,
+  0 = sem), o responsável recebe um aviso para puxar a equipe. Feito pelo relógio; não manda depois
+  que o horário passou. Todo check-list exige responsável; "Recebe o resultado" (também no cadastro)
+  recebe o aviso de conclusão junto com as regras da aba Destinatários (migration 29).
+- **Boas-vindas:** ao autorizar um destinatário, ele recebe uma apresentação pedindo para salvar o
+  número. Uma vez só por destinatário (reativar não repete).
 - **Quem recebe:** só destinatários autorizados **ligados a um colaborador**. O botão "Autorizar a
   equipe" cria os destinatários a partir do telefone do cadastro de cada colaborador.
 - **Proteções:** limite diário de envios automáticos por conexão (passou, vira rascunho na aba

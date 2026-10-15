@@ -45,6 +45,8 @@ const ORIGEM: Record<string, string> = {
   tarefa: "Automático: tarefa atribuída",
   resumo: "Automático: resumo do dia",
   conclusao: "Automático: tarefa concluída",
+  boasvindas: "Automático: boas-vindas",
+  lembrete: "Automático: lembrete de check-list",
 };
 
 export default async function Avisos({

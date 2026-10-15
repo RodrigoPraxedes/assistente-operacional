@@ -125,6 +125,10 @@ export interface ChecklistModelo {
   // aberto: nome digitado sem PIN; usuarios: escolhe o nome + PIN
   modo_executor: ModoExecutor;
   whatsapp_destino: string | null;
+  // minutos antes do horário em que o responsável recebe o lembrete (0 = sem lembrete)
+  lembrete_minutos: number;
+  // quem recebe o resultado quando o check-list é concluído
+  resultado_membro_id: string | null;
   versao: number;
   ativo: boolean;
   created_at: string;

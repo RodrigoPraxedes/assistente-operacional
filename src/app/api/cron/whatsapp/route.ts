@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { gerarResumosDoDia } from "@/lib/whatsapp-api/automacoes";
+import { gerarLembretesChecklist, gerarResumosDoDia } from "@/lib/whatsapp-api/automacoes";
 import { processarFila } from "@/lib/whatsapp-api/fila";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
   const { data: checklistsCancelados } = await admin.rpc("cancelar_checklists_atrasados");
   const { data: escalasRepetidas } = await admin.rpc("estender_escalas_repetidas");
   const resumos = await gerarResumosDoDia().catch(() => null);
+  const lembretes = await gerarLembretesChecklist().catch(() => null);
   const fila = await processarFila(12, 40_000).catch(() => null);
-  return NextResponse.json({ checklistsCancelados, escalasRepetidas, resumos, fila });
+  return NextResponse.json({ checklistsCancelados, escalasRepetidas, resumos, lembretes, fila });
 }

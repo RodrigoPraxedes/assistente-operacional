@@ -112,6 +112,9 @@ export function FormModelo({
           <Campo rotulo="Tolerância (min)" dica="Depois disso fica atrasado">
             <Input type="number" min={0} name="tolerancia_minutos" defaultValue={modelo?.tolerancia_minutos ?? 30} />
           </Campo>
+          <Campo rotulo="Lembrete antes (min)" dica="O responsável recebe no WhatsApp. 0 = sem lembrete.">
+            <Input type="number" min={0} max={720} name="lembrete_minutos" defaultValue={modelo?.lembrete_minutos ?? 30} />
+          </Campo>
           <Campo rotulo="Repetir">
             {personalizada ? (
               <Input name="recorrencia" defaultValue={regra} placeholder="RRULE, ex.: FREQ=WEEKLY;BYDAY=MO,TH" />
@@ -152,9 +155,9 @@ export function FormModelo({
               ))}
             </Select>
           </Campo>
-          <Campo rotulo="Responsável" dica="Recebe a tarefa no Kanban">
-            <Select name="responsavel_id" defaultValue={modelo?.responsavel_id ?? ""}>
-              <option value="">—</option>
+          <Campo rotulo="Responsável" dica="Recebe a tarefa e o lembrete; puxa a equipe mesmo com o check-list aberto a todos">
+            <Select name="responsavel_id" defaultValue={modelo?.responsavel_id ?? ""} required>
+              <option value="">Escolha…</option>
               {membros.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.nome}
@@ -172,8 +175,15 @@ export function FormModelo({
               ))}
             </Select>
           </Campo>
-          <Campo rotulo="WhatsApp que recebe o resumo" dica="Com DDD. Vazio = a pessoa escolhe o contato.">
-            <Input name="whatsapp_destino" defaultValue={modelo?.whatsapp_destino ?? ""} inputMode="tel" />
+          <Campo rotulo="Recebe o resultado" dica="Recebe o resumo no WhatsApp quando o check-list é concluído">
+            <Select name="resultado_membro_id" defaultValue={modelo?.resultado_membro_id ?? ""}>
+              <option value="">—</option>
+              {membros.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nome}
+                </option>
+              ))}
+            </Select>
           </Campo>
           <Campo rotulo="Situação">
             <Select name="ativo" defaultValue={String(modelo?.ativo ?? true)}>

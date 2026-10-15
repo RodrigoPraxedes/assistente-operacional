@@ -174,3 +174,77 @@ function hora(iso: string, fuso: string) {
 function diaMes(iso: string, fuso: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: fuso }).format(new Date(iso));
 }
+
+// Lembrete de check-list: "lembrete_minutos" antes do horário, o responsável
+// recebe um aviso para puxar a equipe. Só envia antes do horário (relógio
+// atrasado não manda lembrete de algo que já começou).
+const LEMBRETE_MAX_MIN = 720;
+
+export async function gerarLembretesChecklist(agora = new Date()) {
+  const admin = createAdminClient();
+  const { data: configs } = await admin
+    .from("whatsapp_automacoes")
+    .select("empresa_id, empresas(fuso_horario)")
+    .eq("lembrete_checklist", true)
+    .returns<{ empresa_id: string; empresas: { fuso_horario: string } | null }[]>();
+
+  let total = 0;
+  for (const c of configs ?? []) {
+    const fuso = c.empresas?.fuso_horario ?? "America/Sao_Paulo";
+    const [{ data: tarefas }, { data: abertos }] = await Promise.all([
+      admin
+        .from("tarefas")
+        .select("id, origem_id, unidade_id, responsavel_id, status_id, ocorrencia_em, unidades(nome)")
+        .eq("empresa_id", c.empresa_id)
+        .eq("origem", "checklist")
+        .not("responsavel_id", "is", null)
+        .is("concluida_em", null)
+        .gt("ocorrencia_em", agora.toISOString())
+        .lte("ocorrencia_em", new Date(agora.getTime() + LEMBRETE_MAX_MIN * 60_000).toISOString())
+        .returns<
+          {
+            id: string;
+            origem_id: string;
+            unidade_id: string | null;
+            responsavel_id: string;
+            status_id: string;
+            ocorrencia_em: string;
+            unidades: { nome: string } | null;
+          }[]
+        >(),
+      admin.from("status").select("id").eq("empresa_id", c.empresa_id).in("tipo", ["aberto", "em_andamento", "adiado"]),
+    ]);
+    const statusAberto = new Set((abertos ?? []).map((s) => s.id));
+    const pendentes = (tarefas ?? []).filter((t) => statusAberto.has(t.status_id));
+    if (!pendentes.length) continue;
+
+    const { data: modelos } = await admin
+      .from("checklist_modelos")
+      .select("id, nome, lembrete_minutos")
+      .in("id", [...new Set(pendentes.map((t) => t.origem_id))]);
+    const modeloDe = new Map((modelos ?? []).map((m) => [m.id, m]));
+
+    for (const t of pendentes) {
+      const m = modeloDe.get(t.origem_id);
+      if (!m || m.lembrete_minutos <= 0) continue;
+      const quando = new Date(t.ocorrencia_em);
+      if (quando.getTime() - m.lembrete_minutos * 60_000 > agora.getTime()) continue;
+
+      const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
+        p_empresa: c.empresa_id,
+        p_unidade: t.unidade_id,
+        p_membro: t.responsavel_id,
+        p_texto: [
+          `*Lembrete: check-list às ${hora(t.ocorrencia_em, fuso)}*`,
+          `${m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+          "Você é o responsável: lembre a equipe de fazer.",
+        ].join("\n"),
+        p_origem: "lembrete",
+        p_origem_id: t.id,
+        p_chave: `lembrete:${t.id}`,
+      });
+      if (id) total++;
+    }
+  }
+  return total;
+}

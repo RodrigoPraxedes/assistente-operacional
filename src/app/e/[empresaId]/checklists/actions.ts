@@ -31,19 +31,33 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
   const itens: ItemForm[] = JSON.parse(String(form.get("itens") ?? "[]")).filter((i: ItemForm) => i.texto?.trim());
   if (!itens.length) return { erro: "Adicione pelo menos um item ao check-list" };
 
+  const responsavel = txt("responsavel_id");
+  if (!responsavel) return { erro: "Escolha o responsável pelo check-list" };
+  const resultado = txt("resultado_membro_id");
+  // o link de WhatsApp ao final do preenchimento vai para quem recebe o resultado
+  const { data: destino } = resultado
+    ? await supabase.from("membros").select("telefone").eq("id", resultado).eq("empresa_id", empresaId).maybeSingle()
+    : { data: null };
+  let telefone = soDigitos(destino?.telefone);
+  if (telefone.length === 10 || telefone.length === 11) telefone = `55${telefone}`;
+  const lembrete = Number(form.get("lembrete_minutos") ?? 30);
+
   const dados = {
     nome: txt("nome")!,
     descricao: txt("descricao"),
     unidade_id: txt("unidade_id"),
     setor_id: txt("setor_id"),
     categoria_id: txt("categoria_id"),
-    responsavel_id: txt("responsavel_id"),
+    responsavel_id: responsavel,
+    resultado_membro_id: resultado,
+    lembrete_minutos: Number.isInteger(lembrete) && lembrete >= 0 && lembrete <= 720 ? lembrete : 30,
     horario_preferencial: txt("horario_preferencial") ?? "08:00",
     tolerancia_minutos: Number(form.get("tolerancia_minutos") ?? 30) || 0,
     recorrencia,
     publico_qr: form.get("publico_qr") === "on",
     modo_executor: form.get("modo_executor") === "usuarios" ? "usuarios" : "aberto",
-    whatsapp_destino: soDigitos(txt("whatsapp_destino")) || null,
+    // sem "recebe o resultado", mantém o número que já estava cadastrado
+    ...(telefone ? { whatsapp_destino: telefone } : {}),
     ativo: form.get("ativo") !== "false",
   };
 
