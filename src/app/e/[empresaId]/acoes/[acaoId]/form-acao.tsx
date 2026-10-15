@@ -7,6 +7,7 @@ import type { Acao } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
 type Opcao = { id: string; nome: string };
 
@@ -27,7 +28,7 @@ export function FormAcao({
   unidades: Opcao[];
   setores: Opcao[];
   categorias: Opcao[];
-  membros: Opcao[];
+  membros: (Opcao & { setor_id: string | null })[];
 }) {
   const [estado, acaoForm] = useActionState(salvarAcao.bind(null, empresaId), undefined);
   const inicial = acao?.recorrencia ?? "";
@@ -84,16 +85,15 @@ export function FormAcao({
           <Campo rotulo="Prazo (horas depois do horário)" dica="Depois disso a tarefa aparece como atrasada">
             <Input type="number" min={0} name="prazo_horas" defaultValue={acao?.prazo_horas ?? 8} />
           </Campo>
-          <Campo rotulo="Responsável">
-            <Select name="responsavel_id" defaultValue={acao?.responsavel_id ?? ""}>
-              <option value="">—</option>
-              {membros.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nome}
-                </option>
-              ))}
-            </Select>
-          </Campo>
+          <div className="sm:col-span-2">
+            <SeletorResponsaveis
+              name="responsaveis"
+              inicial={acao?.responsaveis ?? []}
+              membros={membros}
+              setores={setores}
+              dica="Com várias pessoas, cada ocorrência vira uma tarefa só para todas"
+            />
+          </div>
           <Campo rotulo="Unidade" dica="Todas = uma tarefa para cada unidade">
             <Select name="unidade_id" defaultValue={acao?.unidade_id ?? (unidades.length === 1 ? unidades[0].id : "")}>
               <option value="">Todas as unidades</option>

@@ -5,14 +5,15 @@ import { formatarDataHora } from "@/lib/formato";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
-import { comentarTarefa, mudarPrivacidadeTarefa } from "../actions";
+import { comentarTarefa, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
 const ACOES: Record<string, string> = {
   criada: "criou a tarefa",
   status: "mudou o status",
   prazo: "mudou o prazo",
-  responsavel: "mudou o responsável",
+  responsavel: "mudou os responsáveis",
 };
 
 export default async function DetalheTarefa({
@@ -20,26 +21,34 @@ export default async function DetalheTarefa({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; tarefaId: string }>;
-  searchParams: Promise<{ nova?: string; erro?: string }>;
+  searchParams: Promise<{ nova?: string; erro?: string; responsaveis?: string }>;
 }) {
   const { empresaId, tarefaId } = await params;
-  const { nova, erro } = await searchParams;
+  const { nova, erro, responsaveis: responsaveisSalvos } = await searchParams;
   const { supabase, empresa, membro, pode } = await getContexto(empresaId);
 
   const { data: tarefa } = await supabase.from("tarefas").select("*").eq("id", tarefaId).maybeSingle<Tarefa>();
   if (!tarefa) notFound();
   if (tarefa.origem === "chamado") redirect(`/e/${empresaId}/chamados/${tarefa.id}`);
 
-  const [{ data: status }, { data: membros }, { data: historico }, { data: unidade }, { data: execucao }, { data: comentarios }] =
-    await Promise.all([
+  const [
+    { data: status },
+    { data: membros },
+    { data: historico },
+    { data: unidade },
+    { data: execucao },
+    { data: comentarios },
+    { data: setores },
+  ] = await Promise.all([
       supabase.from("status").select("id, nome, cor").eq("empresa_id", empresaId),
-      supabase.from("membros").select("id, nome, telefone").eq("empresa_id", empresaId),
+      supabase.from("membros").select("id, nome, telefone, setor_id, ativo").eq("empresa_id", empresaId).order("nome"),
       supabase.from("tarefa_historico").select("*").eq("tarefa_id", tarefaId).order("created_at"),
       tarefa.unidade_id
         ? supabase.from("unidades").select("nome").eq("id", tarefa.unidade_id).maybeSingle()
         : Promise.resolve({ data: null }),
       supabase.from("checklist_execucoes").select("id").eq("tarefa_id", tarefaId).maybeSingle(),
       supabase.from("tarefa_comentarios").select("*").eq("tarefa_id", tarefaId).order("created_at"),
+      supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     ]);
 
   // etapa de plano (PMLP): nome do plano e equipe da etapa
@@ -54,7 +63,9 @@ export default async function DetalheTarefa({
   const st = new Map((status ?? []).map((s) => [s.id, s]));
   const mb = new Map((membros ?? []).map((m) => [m.id, m]));
   const atual = st.get(tarefa.status_id);
-  const responsavel = tarefa.responsavel_id ? mb.get(tarefa.responsavel_id) : null;
+  const responsaveis = tarefa.responsaveis.map((id) => mb.get(id)).filter((m) => !!m);
+  // WhatsApp direto para a pessoa só quando é uma; com várias, escolhe o contato ou o grupo
+  const responsavel = responsaveis.length === 1 ? responsaveis[0] : null;
 
   const texto = mensagemTarefa(tarefa, {
     empresaId,
@@ -66,6 +77,7 @@ export default async function DetalheTarefa({
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {nova && <Aviso tipo="sucesso">Tarefa criada.</Aviso>}
+      {responsaveisSalvos && <Aviso tipo="sucesso">Responsáveis atualizados.</Aviso>}
       {erro && <Aviso>{erro}</Aviso>}
       <Titulo voltar={{ href: `/e/${empresaId}/tarefas`, rotulo: "Tarefas" }}>{tarefa.titulo}</Titulo>
 
@@ -78,8 +90,8 @@ export default async function DetalheTarefa({
         </div>
         {tarefa.descricao && <p className="whitespace-pre-wrap text-sm text-slate-700">{tarefa.descricao}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm">
-          <dt className="text-slate-500">Responsável</dt>
-          <dd>{responsavel?.nome ?? "—"}</dd>
+          <dt className="text-slate-500">{responsaveis.length > 1 ? "Responsáveis" : "Responsável"}</dt>
+          <dd>{responsaveis.map((m) => m.nome).join(", ") || "—"}</dd>
           {plano && (
             <>
               <dt className="text-slate-500">Plano</dt>
@@ -132,6 +144,21 @@ export default async function DetalheTarefa({
           {pode("tarefas.excluir") && <BotaoExcluir empresaId={empresaId} tarefaId={tarefa.id} />}
         </div>
       </Cartao>
+
+      {pode("tarefas.criar") && !tarefa.concluida_em && (
+        <Cartao>
+          <form action={mudarResponsaveis.bind(null, empresaId, tarefa.id)} className="space-y-3">
+            <SeletorResponsaveis
+              name="responsaveis"
+              inicial={tarefa.responsaveis}
+              membros={(membros ?? []).filter((m) => m.ativo || tarefa.responsaveis.includes(m.id))}
+              setores={setores ?? []}
+              dica="Quem entrar recebe o aviso no WhatsApp (se a automação estiver ligada)."
+            />
+            <Botao variante="secundario">Salvar responsáveis</Botao>
+          </form>
+        </Cartao>
+      )}
 
       <Cartao className="space-y-3">
         <h2 className="font-medium">Comentários</h2>

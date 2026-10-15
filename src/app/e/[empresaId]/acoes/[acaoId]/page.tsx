@@ -24,7 +24,7 @@ export default async function EditarAcao({
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
-    supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+    supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
   if (!novo && !acao) notFound();
 
@@ -36,7 +36,7 @@ export default async function EditarAcao({
       <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações recorrentes" }}>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       {!novo && (
-        <p className="text-xs text-slate-500">Mudanças valem para as próximas ocorrências. As tarefas já criadas não mudam.</p>
+        <p className="text-xs text-slate-500">Mudanças valem para as próximas ocorrências. Nas tarefas já criadas, só os responsáveis acompanham (enquanto estiverem abertas).</p>
       )}
       <FormAcao
         empresaId={empresaId}

@@ -52,7 +52,7 @@ export default async function PaginaTarefas({
     .limit(500);
   if (filtros.origem) consulta = consulta.eq("origem", filtros.origem);
   if (filtros.unidade) consulta = consulta.eq("unidade_id", filtros.unidade);
-  if (filtros.minhas) consulta = consulta.eq("responsavel_id", membro.id);
+  if (filtros.minhas) consulta = consulta.contains("responsaveis", [membro.id]);
   if (statusEscolhidos) consulta = consulta.in("status_id", statusEscolhidos);
 
   const [{ data: tarefas }, { data: membros }, { data: unidades }] = await Promise.all([
@@ -67,11 +67,12 @@ export default async function PaginaTarefas({
   };
 
   // botão do WhatsApp em cada tarefa: mensagem pronta para o responsável
+  // (com vários, sem número: a pessoa escolhe o contato ou o grupo)
   const membroPorId = new Map((membros ?? []).map((m) => [m.id, m]));
   const nomeStatus = new Map(todosStatus.map((s) => [s.id, s.nome]));
   const whatsapp = Object.fromEntries(
     ((tarefas ?? []) as Tarefa[]).map((t) => {
-      const resp = t.responsavel_id ? membroPorId.get(t.responsavel_id) : null;
+      const resp = t.responsaveis.length === 1 ? membroPorId.get(t.responsaveis[0]) : null;
       const texto = mensagemTarefa(t, {
         empresaId,
         fuso: empresa.fuso_horario,

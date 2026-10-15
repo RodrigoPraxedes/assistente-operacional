@@ -36,6 +36,7 @@ export async function retornarTarefa(empresaId: string, tarefaId: string) {
 }
 
 const vazioParaNull = (v: FormDataEntryValue | null) => (v ? String(v) : null);
+const lerResponsaveis = (form: FormData) => form.getAll("responsaveis").map(String).filter(Boolean);
 
 export async function criarTarefa(empresaId: string, _: { erro?: string } | undefined, form: FormData) {
   const { supabase, empresa, membro } = await getContexto(empresaId);
@@ -51,7 +52,7 @@ export async function criarTarefa(empresaId: string, _: { erro?: string } | unde
       unidade_id: vazioParaNull(form.get("unidade_id")),
       setor_id: vazioParaNull(form.get("setor_id")),
       categoria_id: vazioParaNull(form.get("categoria_id")),
-      responsavel_id: vazioParaNull(form.get("responsavel_id")),
+      responsaveis: lerResponsaveis(form),
       prazo: prazo ? localParaUtc(prazo, empresa.fuso_horario) : null,
       status_id: statusInicial,
       criado_por: membro.id,
@@ -79,6 +80,22 @@ export async function mudarPrivacidadeTarefa(empresaId: string, tarefaId: string
   if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
   revalidatePath(voltar);
   revalidatePath(`/e/${empresaId}/tarefas`);
+}
+
+// Troca quem é responsável (uma ou mais pessoas). Quem entrar recebe o aviso no WhatsApp.
+export async function mudarResponsaveis(empresaId: string, tarefaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const voltar = `/e/${empresaId}/tarefas/${tarefaId}`;
+  const { data, error } = await supabase
+    .from("tarefas")
+    .update({ responsaveis: lerResponsaveis(form) })
+    .eq("id", tarefaId)
+    .select("id");
+  if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
+  if (!data?.length) redirect(`${voltar}?erro=${encodeURIComponent("Sem permissão para mudar esta tarefa")}`);
+  revalidatePath(voltar);
+  revalidatePath(`/e/${empresaId}/tarefas`);
+  redirect(`${voltar}?responsaveis=1`);
 }
 
 export async function comentarTarefa(empresaId: string, tarefaId: string, voltar: string, form: FormData) {

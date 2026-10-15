@@ -9,7 +9,7 @@ export default async function NovaTarefa({ params }: { params: Promise<{ empresa
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
-    supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+    supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
 
   return (

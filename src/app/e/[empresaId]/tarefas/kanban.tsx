@@ -198,7 +198,7 @@ export function Kanban({
                       <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
                     </div>
                     <div className="space-y-0.5 text-xs text-slate-500 sm:w-48">
-                      {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}
+                      {t.responsaveis.length > 0 && <p>{rotuloResponsaveis(t, nomes.membros)}</p>}
                       {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                     </div>
                     <div className="sm:w-56">{controles(t)}</div>
@@ -245,7 +245,7 @@ export function Kanban({
                         </Link>
                         <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
                         <div className="mt-2 space-y-0.5 text-xs text-slate-500">
-                          {t.responsavel_id && <p>Responsável: {nomes.membros[t.responsavel_id]}</p>}
+                          {t.responsaveis.length > 0 && <p>{rotuloResponsaveis(t, nomes.membros)}</p>}
                           {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                         </div>
                         {(podeMover || whatsapp?.[t.id]) && <div className="mt-2">{controles(t)}</div>}
@@ -326,4 +326,9 @@ function DialogoAdiar({
       </form>
     </div>
   );
+}
+
+function rotuloResponsaveis(t: Tarefa, membros: Record<string, string>) {
+  const lista = t.responsaveis.map((id) => membros[id]).filter(Boolean);
+  return `${lista.length > 1 ? "Responsáveis" : "Responsável"}: ${lista.join(", ")}`;
 }

@@ -8,9 +8,10 @@ import { regraValida } from "@/lib/recorrencia";
 import { lerPrivado } from "@/lib/privado";
 
 interface AvisoForm {
+  id?: string;
   dias_antes: number;
   titulo: string;
-  responsavel_id: string | null;
+  responsaveis: string[];
 }
 
 export async function salvarAlerta(empresaId: string, _: { erro?: string } | undefined, form: FormData) {
@@ -27,9 +28,10 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
   try {
     avisos = (JSON.parse(String(form.get("avisos") ?? "[]")) as AvisoForm[])
       .map((a) => ({
+        id: a.id ? String(a.id) : undefined,
         dias_antes: Math.round(Number(a.dias_antes)),
         titulo: String(a.titulo ?? "").trim(),
-        responsavel_id: a.responsavel_id || null,
+        responsaveis: (Array.isArray(a.responsaveis) ? a.responsaveis : []).map(String).filter(Boolean),
       }))
       .filter((a) => a.titulo);
   } catch {
@@ -61,9 +63,28 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
     const { data, error } = await supabase.from("alertas").update(dados).eq("id", id).select("id");
     if (error) return { erro: error.message };
     if (!data?.length) return { erro: "Este alerta é privado: só quem criou pode editar" };
-    // avisos são substituídos; as tarefas já criadas continuam no Kanban
-    const { error: e } = await supabase.from("alerta_avisos").delete().eq("alerta_id", id);
+
+    // avisos mantidos são atualizados no lugar (mesmo id: as tarefas já criadas
+    // não se repetem e os responsáveis novos entram nelas)
+    const manter = avisos.flatMap((a) => (a.id ? [a.id] : []));
+    let remover = supabase.from("alerta_avisos").delete().eq("alerta_id", id);
+    if (manter.length) remover = remover.not("id", "in", `(${manter.join(",")})`);
+    const { data: removidos, error: e } = await remover.select("id");
     if (e) return { erro: e.message };
+    for (const { id: avisoId, ...campos } of avisos.filter((a) => a.id)) {
+      const { error: e2 } = await supabase.from("alerta_avisos").update(campos).eq("id", avisoId!).eq("alerta_id", id);
+      if (e2) return { erro: e2.message };
+    }
+    // aviso removido: some a tarefa dele que ainda nem começou (a que já anda fica)
+    if (removidos?.length) {
+      const { data: abertos } = await supabase.from("status").select("id").eq("empresa_id", empresaId).eq("tipo", "aberto");
+      await supabase
+        .from("tarefas")
+        .delete()
+        .eq("origem", "alerta")
+        .in("origem_id", removidos.map((r) => r.id))
+        .in("status_id", (abertos ?? []).map((st) => st.id));
+    }
   } else {
     const { data, error } = await supabase
       .from("alertas")
@@ -74,10 +95,13 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
     alertaId = data.id;
   }
 
-  const { error: e } = await supabase
-    .from("alerta_avisos")
-    .insert(avisos.map((a) => ({ ...a, empresa_id: empresaId, alerta_id: alertaId })));
-  if (e) return { erro: e.message };
+  const novos = avisos
+    .filter((a) => !a.id)
+    .map((a) => ({ dias_antes: a.dias_antes, titulo: a.titulo, responsaveis: a.responsaveis, empresa_id: empresaId, alerta_id: alertaId }));
+  if (novos.length) {
+    const { error: e } = await supabase.from("alerta_avisos").insert(novos);
+    if (e) return { erro: e.message };
+  }
 
   // se algum aviso já venceu ou é para hoje, a tarefa aparece na hora
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) {

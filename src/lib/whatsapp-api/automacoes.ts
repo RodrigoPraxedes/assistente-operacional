@@ -23,7 +23,7 @@ interface Tarefa {
   titulo: string;
   prazo: string;
   privado: boolean;
-  responsavel_id: string;
+  responsaveis: string[];
 }
 
 interface EscalaHoje {
@@ -84,9 +84,9 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
     admin.from("status").select("id").eq("empresa_id", empresaId).in("tipo", ["aberto", "em_andamento", "adiado"]),
     admin
       .from("tarefas")
-      .select("titulo, prazo, privado, responsavel_id, status_id")
+      .select("titulo, prazo, privado, responsaveis, status_id")
       .eq("empresa_id", empresaId)
-      .in("responsavel_id", ids)
+      .overlaps("responsaveis", ids)
       .not("prazo", "is", null)
       .lte("prazo", fimDoDia)
       .is("concluida_em", null)
@@ -106,7 +106,8 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
   const porPessoa = new Map<string, Tarefa[]>();
   for (const t of tarefas ?? []) {
     if (!statusAberto.has(t.status_id)) continue;
-    porPessoa.set(t.responsavel_id, [...(porPessoa.get(t.responsavel_id) ?? []), t]);
+    // tarefa com vários responsáveis entra no resumo de cada um
+    for (const id of t.responsaveis) porPessoa.set(id, [...(porPessoa.get(id) ?? []), t]);
   }
   const escalaDe = new Map((escalas ?? []).map((e) => [e.membro_id, e]));
 
