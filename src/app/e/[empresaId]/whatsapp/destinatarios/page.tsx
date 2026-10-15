@@ -119,8 +119,8 @@ export default async function Destinatarios({
         <div>
           <h2 className="font-semibold text-slate-900">Avisos automáticos de check-list</h2>
           <p className="text-sm text-slate-500">
-            Quando o check-list escolhido for enviado (ex.: Fechamento), o app prepara um rascunho “pronto para revisão” para o
-            destinatário. Nada sai sozinho: alguém confirma o envio na aba Avisos.
+            Quando o check-list escolhido for concluído (ex.: Fechamento), o destinatário recebe um aviso. Com “Check-list
+            concluído” ligado na aba Automações, o aviso sai sozinho; desligado, vira rascunho para alguém confirmar na aba Avisos.
           </p>
         </div>
         {conexoes?.length && ativos.length && modelos?.length ? (
@@ -164,7 +164,7 @@ export default async function Destinatarios({
             {gatilhos!.map((g) => (
               <li key={g.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
                 <p className="min-w-0 flex-1 text-slate-700">
-                  <strong>{g.checklist_modelos?.nome}</strong> enviado → rascunho para <strong>{g.whatsapp_contatos?.nome}</strong>
+                  <strong>{g.checklist_modelos?.nome}</strong> concluído → avisar <strong>{g.whatsapp_contatos?.nome}</strong>
                   <span className="text-slate-500"> · {g.whatsapp_conexoes?.unidades?.nome ?? "Empresa toda"}</span>
                 </p>
                 <form action={removerGatilho.bind(null, empresaId, g.id)}>

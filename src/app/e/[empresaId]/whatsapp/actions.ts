@@ -219,6 +219,8 @@ export async function salvarAutomacoes(empresaId: string, form: FormData) {
     empresa_id: empresaId,
     aviso_tarefa: form.get("aviso_tarefa") === "on",
     resumo_dia: form.get("resumo_dia") === "on",
+    aviso_conclusao: form.get("aviso_conclusao") === "on",
+    checklist_auto: form.get("checklist_auto") === "on",
     resumo_hora: hora,
     limite_diario: limite,
     atualizado_por: membro.id,

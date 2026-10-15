@@ -131,6 +131,11 @@ Aba **Automações** (só quem gerencia). Tudo começa desligado.
 - **Resumo do dia:** no horário escolhido (fuso da empresa), uma mensagem por pessoa com o turno de
   hoje, as tarefas que vencem hoje e as atrasadas. Quem não tem nada no dia não recebe. Se o relógio
   atrasar mais de 3 h, o resumo do dia é pulado. Código: `src/lib/whatsapp-api/automacoes.ts`.
+- **Tarefa concluída:** quem criou a tarefa recebe uma mensagem com quem concluiu e quando. Fica de
+  fora tarefa privada, quem concluiu a própria tarefa e check-list (tem aviso próprio). Gatilho
+  `whatsapp_tarefa_concluida` (migration 25).
+- **Check-list concluído:** as regras "Avisos automáticos de check-list" (aba Destinatários) passam a
+  enviar sozinhas, com quem enviou e os itens "Não". Desligado, viram rascunho como antes.
 - **Quem recebe:** só destinatários autorizados **ligados a um colaborador**. O botão "Autorizar a
   equipe" cria os destinatários a partir do telefone do cadastro de cada colaborador.
 - **Proteções:** limite diário de envios automáticos por conexão (passou, vira rascunho na aba

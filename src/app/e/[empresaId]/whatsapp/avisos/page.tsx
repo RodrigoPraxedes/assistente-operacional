@@ -44,6 +44,7 @@ const ORIGEM: Record<string, string> = {
   teste: "Teste",
   tarefa: "Automático: tarefa atribuída",
   resumo: "Automático: resumo do dia",
+  conclusao: "Automático: tarefa concluída",
 };
 
 export default async function Avisos({
