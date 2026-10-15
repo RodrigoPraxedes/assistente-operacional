@@ -199,6 +199,11 @@ export function Kanban({
                     </div>
                     <div className="space-y-0.5 text-xs text-slate-500 sm:w-48">
                       {t.responsaveis.length > 0 && <p>{rotuloResponsaveis(t, nomes.membros)}</p>}
+                          {t.responsaveis.length > 1 && (
+                            <p>
+                              Partes feitas: {t.partes_feitas.length} de {t.responsaveis.length}
+                            </p>
+                          )}
                       {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                     </div>
                     <div className="sm:w-56">{controles(t)}</div>
@@ -246,6 +251,11 @@ export function Kanban({
                         <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
                         <div className="mt-2 space-y-0.5 text-xs text-slate-500">
                           {t.responsaveis.length > 0 && <p>{rotuloResponsaveis(t, nomes.membros)}</p>}
+                          {t.responsaveis.length > 1 && (
+                            <p>
+                              Partes feitas: {t.partes_feitas.length} de {t.responsaveis.length}
+                            </p>
+                          )}
                           {t.prazo && <p>Prazo: {formatarDataHora(t.prazo, fuso)}</p>}
                         </div>
                         {(podeMover || whatsapp?.[t.id]) && <div className="mt-2">{controles(t)}</div>}

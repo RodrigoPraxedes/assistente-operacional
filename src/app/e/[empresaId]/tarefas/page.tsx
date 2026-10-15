@@ -41,6 +41,8 @@ export default async function PaginaTarefas({
   const hoje = hojeNoFuso(empresa.fuso_horario);
   const fimDeHoje = horaLocalParaUtc(hoje.y, hoje.m, hoje.d, 23, 59, empresa.fuso_horario).toISOString();
   const seteDiasAtras = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  // canceladas somem depois de 48 h (continuam guardadas)
+  const doisDiasAtras = new Date(Date.now() - 2 * 86_400_000).toISOString();
 
   let consulta = supabase
     .from("tarefas")
@@ -48,6 +50,7 @@ export default async function PaginaTarefas({
     .eq("empresa_id", empresaId)
     .or(`ocorrencia_em.is.null,ocorrencia_em.lte.${fimDeHoje}`)
     .or(`concluida_em.is.null,concluida_em.gte.${seteDiasAtras}`)
+    .or(`cancelada_em.is.null,cancelada_em.gte.${doisDiasAtras}`)
     .order("prazo", { ascending: true, nullsFirst: false })
     .limit(500);
   if (filtros.origem) consulta = consulta.eq("origem", filtros.origem);
