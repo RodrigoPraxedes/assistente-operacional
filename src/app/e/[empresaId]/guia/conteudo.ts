@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Bot,
   CalendarClock,
   CalendarDays,
   CalendarSync,
@@ -510,6 +511,44 @@ export const SECOES: SecaoGuia[] = [
           "Em várias permissões você escolhe o alcance: só as minhas, do meu setor, da minha unidade ou da empresa toda.",
           "Já vêm prontos Gestor, Líder de setor e Colaborador. Crie outros em Novo perfil.",
           "O dono da empresa sempre tem acesso total.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "claude",
+    titulo: "Perguntar ao Claude",
+    icone: Bot,
+    resumo: "Consultar a operação conversando com o Claude.",
+    paraQue:
+      "Ligando o Atalaia como conector no Claude, você pergunta em linguagem normal, como \"o que está atrasado hoje?\" ou \"quem trabalha sábado na cozinha?\", e o Claude busca a resposta aqui. Por enquanto é só consulta: o Claude não cria, muda nem apaga nada no Atalaia.",
+    topicos: [
+      {
+        titulo: "Ligar o conector",
+        passos: [
+          "No Claude (site ou aplicativo), abra Configurações › Conectores e toque em Adicionar conector personalizado.",
+          "Dê o nome Atalaia e cole o endereço do app seguido de /api/mcp, por exemplo https://assistente-operacional-eta.vercel.app/api/mcp.",
+          "Toque em Conectar. Abre a tela de login do Atalaia: entre com seu e-mail e senha e toque em Permitir.",
+          "Pronto: numa conversa nova, peça ao Claude o que quiser saber da operação.",
+        ],
+      },
+      {
+        titulo: "O que dá para perguntar",
+        passos: [
+          "Resumo do dia: atrasadas, vencem hoje, check-lists, manutenções abertas e quem está escalado.",
+          "Tarefas com filtros de pessoa, setor, unidade, módulo, situação e prazo.",
+          "Check-lists de um dia, com os itens respondidos \"Não\".",
+          "Manutenções abertas ou concluídas, com prestador, equipamento e há quantos dias estão abertas.",
+          "Escala de um dia ou de um período, próximos alertas de datas, planos e suas etapas.",
+          "Equipe, prestadores e patrimônio (inclusive garantias que vão vencer).",
+        ],
+      },
+      {
+        titulo: "Segurança",
+        passos: [
+          "Cada pessoa conecta com o próprio login. O Claude vê exatamente o que ela vê no app, com as mesmas permissões e itens privados.",
+          "Quem participa de mais de uma empresa diz ao Claude de qual empresa está falando.",
+          "Para desligar, remova o conector Atalaia nas configurações do Claude.",
         ],
       },
     ],
