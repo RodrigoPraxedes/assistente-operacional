@@ -1,11 +1,11 @@
 "use client";
 
-import { Fragment, useActionState, useMemo, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { Fragment, useActionState, useMemo, useState, useTransition } from "react";
+import { MessageCircle, Repeat } from "lucide-react";
 import { AUSENCIAS } from "@/lib/types";
 import { Aviso, Botao } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { salvarGrade } from "./actions";
+import { repetirEscala, salvarGrade } from "./actions";
 
 export interface LinhaGrade {
   id: string;
@@ -13,6 +13,8 @@ export interface LinhaGrade {
   cargo: string | null;
   setor: string;
   whatsapp: string | null;
+  // repetição automática ligada: segunda-feira da semana modelo ("13/10")
+  repeteDesde: string | null;
 }
 
 interface TurnoGrade {
@@ -29,6 +31,7 @@ const AUSENCIA_KEYS = Object.keys(AUSENCIAS) as (keyof typeof AUSENCIAS)[];
 export function GradeEscala({
   empresaId,
   unidadeId,
+  segunda,
   dias,
   hoje,
   linhas,
@@ -39,6 +42,7 @@ export function GradeEscala({
 }: {
   empresaId: string;
   unidadeId: string;
+  segunda: string;
   dias: { data: string; rotulo: string }[];
   hoje: string;
   linhas: LinhaGrade[];
@@ -48,6 +52,14 @@ export function GradeEscala({
   podeEditar: boolean;
 }) {
   const [valores, setValores] = useState(iniciais);
+  // a página recarregou (salvou, repetiu): volta para o que está gravado
+  const [gravados, setGravados] = useState(iniciais);
+  if (gravados !== iniciais) {
+    setGravados(iniciais);
+    setValores(iniciais);
+  }
+  const [repetindo, iniciarRepeticao] = useTransition();
+  const [erroRepeticao, setErroRepeticao] = useState<string>();
   const [estado, acao] = useActionState(salvarGrade.bind(null, empresaId, unidadeId), undefined);
 
   const turnoPorId = useMemo(() => new Map([...turnos, ...outrosTurnos].map((t) => [t.id, t])), [turnos, outrosTurnos]);
@@ -83,6 +95,7 @@ export function GradeEscala({
     <form action={acao} className="space-y-3">
       <input type="hidden" name="celulas" value={JSON.stringify(alteradas)} />
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
+      {erroRepeticao && <Aviso>{erroRepeticao}</Aviso>}
       {estado?.ok && alteradas.length === 0 && <Aviso tipo="sucesso">Escala salva.</Aviso>}
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-superficie">
@@ -123,6 +136,40 @@ export function GradeEscala({
                           <p className="truncate font-medium text-slate-800">{l.nome}</p>
                           {l.cargo && <p className="truncate text-xs text-slate-500">{l.cargo}</p>}
                         </div>
+                        {podeEditar && (
+                          <button
+                            type="button"
+                            disabled={repetindo || alteradas.length > 0}
+                            onClick={() => {
+                              const ativo = !l.repeteDesde;
+                              if (
+                                !ativo &&
+                                !confirm(
+                                  `Parar de repetir a escala de ${l.nome}? Os dias futuros preenchidos automaticamente (e não alterados) serão apagados.`,
+                                )
+                              )
+                                return;
+                              iniciarRepeticao(async () => {
+                                const r = await repetirEscala(empresaId, unidadeId, l.id, segunda, ativo);
+                                setErroRepeticao(r.erro);
+                              });
+                            }}
+                            title={
+                              alteradas.length > 0
+                                ? "Salve a escala antes de repetir"
+                                : l.repeteDesde
+                                  ? `Repete toda semana (modelo: semana de ${l.repeteDesde}). Clique para parar.`
+                                  : "Repetir esta semana automaticamente nas próximas"
+                            }
+                            aria-label={l.repeteDesde ? `Parar de repetir a escala de ${l.nome}` : `Repetir a escala de ${l.nome}`}
+                            aria-pressed={!!l.repeteDesde}
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg disabled:opacity-40 ${
+                              l.repeteDesde ? "bg-blue-50 text-blue-600" : "text-slate-400 hover:bg-slate-100"
+                            }`}
+                          >
+                            <Repeat className="h-4 w-4" aria-hidden />
+                          </button>
+                        )}
                         {l.whatsapp && (
                           <a
                             href={l.whatsapp}

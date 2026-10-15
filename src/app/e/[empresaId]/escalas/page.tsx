@@ -45,8 +45,15 @@ export default async function PaginaEscalas({
     unidades.find((u) => u.id === filtros.unidade) ?? unidades.find((u) => minhas.has(u.id)) ?? unidades[0];
   const setorFiltro = setores?.find((s) => s.id === filtros.setor)?.id ?? null;
 
-  const [{ data: membros }, { data: daUnidade }, { data: turnos }, { data: escalas }, { data: meus }, { count: pendentes }] =
-    await Promise.all([
+  const [
+    { data: membros },
+    { data: daUnidade },
+    { data: turnos },
+    { data: escalas },
+    { data: meus },
+    { count: pendentes },
+    { data: repeticoes },
+  ] = await Promise.all([
       supabase
         .from("membros")
         .select("id, nome, cargo, telefone, setor_id, todas_unidades")
@@ -73,7 +80,9 @@ export default async function PaginaEscalas({
         .select("id", { count: "exact", head: true })
         .eq("empresa_id", empresaId)
         .eq("status", "pendente"),
+      supabase.from("escala_repeticoes").select("membro_id, semana_base").eq("empresa_id", empresaId),
     ]);
+  const repeteDesde = new Map((repeticoes ?? []).map((r) => [r.membro_id, r.semana_base as string]));
 
   const todosTurnos = ordenarTurnos((turnos ?? []) as Turno[]);
   const turnoPorId = new Map(todosTurnos.map((t) => [t.id, t]));
@@ -115,6 +124,7 @@ export default async function PaginaEscalas({
         cargo: m.cargo,
         setor: m.setor_id ? (nomeSetor.get(m.setor_id) ?? "Sem setor") : "Sem setor",
         whatsapp: semana.length ? linkWhatsApp(texto, m.telefone) : null,
+        repeteDesde: repeteDesde.has(m.id) ? rotuloDia(repeteDesde.get(m.id)!).slice(4) : null,
       };
     })
     .sort((a, b) => (a.setor === "Sem setor" ? 1 : 0) - (b.setor === "Sem setor" ? 1 : 0) || a.setor.localeCompare(b.setor));
@@ -145,31 +155,6 @@ export default async function PaginaEscalas({
       {filtros.erro && <Aviso>{filtros.erro}</Aviso>}
       {filtros.aviso === "copiada" && <Aviso tipo="sucesso">Semana anterior copiada para os dias em branco.</Aviso>}
       {filtros.aviso === "nada" && <Aviso tipo="info">Não havia nada a copiar da semana anterior para os dias em branco.</Aviso>}
-
-      {(meus?.length ?? 0) > 0 && (
-        <Cartao className="space-y-2">
-          <h2 className="font-medium">Seus próximos dias</h2>
-          <ul className="flex flex-wrap gap-2 text-sm">
-            {((meus ?? []) as Escala[]).map((e) => {
-              const t = e.turno_id ? turnoPorId.get(e.turno_id) : null;
-              const cor = t?.cor ?? (e.tipo !== "turno" ? AUSENCIAS[e.tipo].cor : "#2563eb");
-              return (
-                <li key={e.id} className="rounded-lg border border-slate-200 px-3 py-1.5">
-                  <span className="font-medium text-slate-800">{e.data === hoje ? "Hoje" : rotuloDia(e.data)}</span>{" "}
-                  <Etiqueta cor={cor}>{e.tipo === "turno" ? (t?.nome ?? "Turno") : AUSENCIAS[e.tipo].rotulo}</Etiqueta>
-                  {t && <span className="ml-1 text-xs text-slate-500">{horarioTurno(t)}</span>}
-                  {e.unidade_id !== unidade.id && (
-                    <span className="ml-1 text-xs text-slate-500">· {nomeUnidade.get(e.unidade_id)}</span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          <Link href={`/e/${empresaId}/escalas/trocas`} className="text-xs text-blue-600">
-            Precisa trocar algum dia? Peça a troca aqui
-          </Link>
-        </Cartao>
-      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1">
@@ -249,6 +234,7 @@ export default async function PaginaEscalas({
           key={`${unidade.id}|${segunda}|${setorFiltro}`}
           empresaId={empresaId}
           unidadeId={unidade.id}
+          segunda={segunda}
           dias={dias.map((d) => ({ data: d, rotulo: rotuloDia(d) }))}
           hoje={hoje}
           linhas={linhas}
@@ -260,6 +246,31 @@ export default async function PaginaEscalas({
           valores={valores}
           podeEditar={podeEditar}
         />
+      )}
+
+      {(meus?.length ?? 0) > 0 && (
+        <Cartao className="space-y-2">
+          <h2 className="font-medium">Seus próximos dias</h2>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            {((meus ?? []) as Escala[]).map((e) => {
+              const t = e.turno_id ? turnoPorId.get(e.turno_id) : null;
+              const cor = t?.cor ?? (e.tipo !== "turno" ? AUSENCIAS[e.tipo].cor : "#2563eb");
+              return (
+                <li key={e.id} className="rounded-lg border border-slate-200 px-3 py-1.5">
+                  <span className="font-medium text-slate-800">{e.data === hoje ? "Hoje" : rotuloDia(e.data)}</span>{" "}
+                  <Etiqueta cor={cor}>{e.tipo === "turno" ? (t?.nome ?? "Turno") : AUSENCIAS[e.tipo].rotulo}</Etiqueta>
+                  {t && <span className="ml-1 text-xs text-slate-500">{horarioTurno(t)}</span>}
+                  {e.unidade_id !== unidade.id && (
+                    <span className="ml-1 text-xs text-slate-500">· {nomeUnidade.get(e.unidade_id)}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <Link href={`/e/${empresaId}/escalas/trocas`} className="text-xs text-blue-600">
+            Precisa trocar algum dia? Peça a troca aqui
+          </Link>
+        </Cartao>
       )}
     </div>
   );
