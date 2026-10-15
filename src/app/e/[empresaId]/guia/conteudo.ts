@@ -121,7 +121,16 @@ export const SECOES: SecaoGuia[] = [
           "Escreva o que precisa ser feito e, se quiser, os detalhes.",
           "Escolha um ou mais responsáveis. Dá para puxar um setor inteiro ou todas as pessoas de uma vez.",
           "Defina o prazo, a unidade, o setor e a categoria.",
+          "Marque Exigir foto para concluir se quiser uma prova do serviço feito.",
           "Escolha se ela é pública (toda a equipe com acesso vê) ou privada (só você e os responsáveis veem) e toque em Criar tarefa.",
+        ],
+      },
+      {
+        titulo: "Tarefa que pede foto",
+        passos: [
+          "O cartão ganha a etiqueta Pede foto e a tarefa só vai para Concluído com uma foto.",
+          "Abra a tarefa e toque em Enviar foto e concluir: o celular abre a câmera. A foto precisa ser tirada na hora; foto da galeria é recusada.",
+          "Com várias pessoas, cada uma envia a sua foto ao marcar a própria parte. A foto fica na tarefa, com nome e horário.",
         ],
       },
       {

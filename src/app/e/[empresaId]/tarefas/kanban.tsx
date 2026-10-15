@@ -204,6 +204,7 @@ export function Kanban({
       {t.unidade_id && <Etiqueta>{nomes.unidades[t.unidade_id]}</Etiqueta>}
       {atrasada(t) && <Etiqueta cor="#dc2626">Atrasada</Etiqueta>}
       {t.privado && <Etiqueta>Privada</Etiqueta>}
+      {t.exige_foto && !t.concluida_em && <Etiqueta>Pede foto</Etiqueta>}
     </>
   );
 
