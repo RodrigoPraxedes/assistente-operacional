@@ -98,34 +98,41 @@ export default async function Destinatarios({
       ) : (
         <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-superficie">
           {contatos.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-2 px-4 py-3 text-sm">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-slate-900">
-                  {c.nome} <span className="font-normal text-slate-500">{mascararNumero(c.telefone)}</span>
-                </p>
-                <p className="text-xs text-slate-500">
-                  Autorizado {c.autorizador ? `por ${c.autorizador.nome} ` : ""}em {formatarDataHora(c.autorizado_em, empresa.fuso_horario)}
-                </p>
-              </div>
-              {c.ativo && (
-                <form action={vincularContato.bind(null, empresaId, c.id)} className="flex w-full flex-wrap items-center gap-2">
-                  {!c.membro_id && <Etiqueta>Sem colaborador: não recebe o resumo</Etiqueta>}
-                  <span className="text-xs text-slate-500">Colaborador:</span>
-                  <Select name="membro_id" defaultValue={c.membro_id ?? ""} required className="w-auto">
-                    <option value="">Escolher…</option>
-                    {(membros ?? []).map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.nome}
-                      </option>
-                    ))}
-                  </Select>
-                  <Botao variante="secundario">{c.membro_id ? "Trocar" : "Vincular"}</Botao>
-                </form>
-              )}
-              {!c.ativo && <Etiqueta>Desativado</Etiqueta>}
-              <form action={alternarContato.bind(null, empresaId, c.id, !c.ativo)}>
-                <Botao variante="secundario">{c.ativo ? "Desativar" : "Reativar"}</Botao>
-              </form>
+            <li key={c.id} className="text-sm">
+              <details className="group">
+                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900">
+                      {c.nome} <span className="font-normal text-slate-500">{mascararNumero(c.telefone)}</span>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Autorizado {c.autorizador ? `por ${c.autorizador.nome} ` : ""}em {formatarDataHora(c.autorizado_em, empresa.fuso_horario)}
+                    </p>
+                  </div>
+                  {c.ativo && !c.membro_id && <Etiqueta>Sem colaborador</Etiqueta>}
+                  {!c.ativo && <Etiqueta>Desativado</Etiqueta>}
+                </summary>
+                <div className="space-y-3 px-4 pb-3">
+                  {c.ativo && (
+                    <form action={vincularContato.bind(null, empresaId, c.id)} className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-slate-500">Colaborador:</span>
+                      <Select name="membro_id" defaultValue={c.membro_id ?? ""} required className="w-auto">
+                        <option value="">Escolher…</option>
+                        {(membros ?? []).map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.nome}
+                          </option>
+                        ))}
+                      </Select>
+                      <Botao variante="secundario">{c.membro_id ? "Trocar" : "Vincular"}</Botao>
+                    </form>
+                  )}
+                  {c.ativo && !c.membro_id && <p className="text-xs text-slate-500">Sem colaborador, o número não recebe o resumo do dia.</p>}
+                  <form action={alternarContato.bind(null, empresaId, c.id, !c.ativo)}>
+                    <Botao variante="secundario">{c.ativo ? "Desativar" : "Reativar"}</Botao>
+                  </form>
+                </div>
+              </details>
             </li>
           ))}
         </ul>
