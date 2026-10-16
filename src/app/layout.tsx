@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import "./globals.css";
+import { InstalarApp } from "@/components/instalar-app";
 
 export const metadata: Metadata = {
   title: "Atalaia",
   description: "Atalaia · Veja antes, aja a tempo",
+  appleWebApp: { capable: true, title: "Atalaia", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -23,7 +25,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const tema = sistema ? undefined : (await cookies()).get("tema")?.value;
   return (
     <html lang="pt-BR" data-tema={tema === "claro" || tema === "escuro" ? tema : undefined}>
-      <body className="min-h-screen font-sans">{children}</body>
+      <body className="min-h-screen font-sans">{children}
+        <InstalarApp />
+      </body>
     </html>
   );
 }
