@@ -228,7 +228,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Criar uma ação",
         passos: [
           "Toque em Nova ação e dê um nome.",
-          "Escolha a repetição (uma vez só, todos os dias, a cada 2, 3, 4, 10 ou 15 dias, um dia fixo da semana como às segundas ou aos sábados, toda semana, todo mês, a cada 3 ou 6 meses, todo ano...), o horário e a data inicial. \"A cada N dias\" conta a partir da data inicial; os dias da semana valem independente dela.",
+          "Escolha a repetição (uma vez só, todos os dias, a cada 2, 3, 4, 10 ou 15 dias, um dia fixo da semana como às segundas ou aos sábados, toda semana, todo mês, a cada 3, 4 ou 6 meses, todo ano...), o horário e a data inicial. \"A cada N dias\" conta a partir da data inicial; os dias da semana valem independente dela.",
           "Se quiser, defina uma data final. Vazio = repete sem fim.",
           "Em Prazo, diga quantas horas depois do horário a tarefa passa a contar como atrasada.",
           "Escolha os responsáveis, a unidade, o setor, a categoria e a visibilidade. Com Todas as unidades, cada unidade recebe a sua tarefa.",

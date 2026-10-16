@@ -22,6 +22,7 @@ export const RECORRENCIAS_PRONTAS = [
   { regra: "FREQ=WEEKLY;INTERVAL=2", rotulo: "A cada 2 semanas" },
   { regra: "FREQ=MONTHLY", rotulo: "Todo mês (mesmo dia do início)" },
   { regra: "FREQ=MONTHLY;INTERVAL=3", rotulo: "A cada 3 meses" },
+  { regra: "FREQ=MONTHLY;INTERVAL=4", rotulo: "A cada 4 meses" },
   { regra: "FREQ=MONTHLY;INTERVAL=6", rotulo: "A cada 6 meses" },
   { regra: "FREQ=YEARLY", rotulo: "Todo ano" },
 ] as const;
