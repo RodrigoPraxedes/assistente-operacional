@@ -8,6 +8,7 @@ import { soDigitos } from "@/lib/formato";
 import { urlDoSite } from "@/lib/whatsapp";
 import { comoErroProvedor, provedorDe } from "@/lib/whatsapp-api";
 import { processarFila, processarMensagem, textoFinal } from "@/lib/whatsapp-api/fila";
+import { reenviarResumosDeHoje } from "@/lib/whatsapp-api/automacoes";
 import { sanitizarErro } from "@/lib/whatsapp-api/sanitizar";
 
 type Aba = "/conexao" | "/avisos" | "/eventos" | "/destinatarios" | "/automacoes";
@@ -261,6 +262,19 @@ export async function salvarAutomacoes(empresaId: string, form: FormData) {
   if (error) voltar(empresaId, "/automacoes", { erro: error.message });
   atualizar(empresaId);
   voltar(empresaId, "/automacoes", { ok: "Automações salvas." });
+}
+
+export async function reenviarResumo(empresaId: string) {
+  const { pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/automacoes", { erro: "Sem permissão." });
+  const total = await reenviarResumosDeHoje(empresaId);
+  after(() => processarFila(12, 40_000));
+  atualizar(empresaId);
+  voltar(empresaId, "/automacoes", {
+    ok: total
+      ? `${total} ${total === 1 ? "resumo entrou" : "resumos entraram"} na fila de envio.`
+      : "Nada a reenviar: quem tem tarefa ou turno hoje já recebeu, está na fila ou não está ligado a um colaborador.",
+  });
 }
 
 // Cria destinatários para os colaboradores ativos que têm celular no cadastro
