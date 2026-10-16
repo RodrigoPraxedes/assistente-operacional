@@ -6,6 +6,7 @@ import { Aviso, Botao, Cartao, Etiqueta, Input, Select } from "@/components/ui";
 import {
   alternarSetor,
   alternarStatus,
+  editarCategoria,
   excluirCategoria,
   excluirSetor,
   moverStatus,
@@ -208,11 +209,24 @@ export default async function ConfigGeral({
 
       <Cartao className="space-y-3">
         <h2 className="font-medium">Categorias</h2>
-        <p className="text-xs text-slate-500">Funcionam como etiquetas para filtrar (ex.: Delivery, Manutenção, Financeiro).</p>
+        <p className="text-xs text-slate-500">Funcionam como etiquetas para filtrar (ex.: Delivery, Manutenção, Financeiro). Toque numa categoria para mudar o nome ou a cor sem perder o que já está ligado a ela.</p>
         <div className="flex flex-wrap gap-2">
           {(categorias as Categoria[] | null)?.map((c) => (
-            <span key={c.id} className="flex items-center gap-1">
-              <Etiqueta cor={c.cor}>{c.nome}</Etiqueta>
+            <span key={c.id} className="flex items-start gap-1">
+              {pode("config.setores") ? (
+                <details className="group">
+                  <summary className="cursor-pointer list-none" title="Editar">
+                    <Etiqueta cor={c.cor}>{c.nome}</Etiqueta>
+                  </summary>
+                  <form action={editarCategoria.bind(null, e, c.id)} className="mt-2 flex gap-2">
+                    <input type="color" name="cor" defaultValue={c.cor} className="h-9 w-9 rounded" />
+                    <Input name="nome" defaultValue={c.nome} required />
+                    <Botao variante="secundario">Salvar</Botao>
+                  </form>
+                </details>
+              ) : (
+                <Etiqueta cor={c.cor}>{c.nome}</Etiqueta>
+              )}
               {pode("config.setores") && (
                 <form action={excluirCategoria.bind(null, e, c.id)}>
                   <button className="text-xs text-slate-400 hover:text-red-600" title="Excluir">×</button>
