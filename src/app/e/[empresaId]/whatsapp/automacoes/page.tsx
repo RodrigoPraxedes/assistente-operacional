@@ -3,7 +3,7 @@ import { getContexto } from "@/lib/contexto";
 import { soDigitos } from "@/lib/formato";
 import { Aviso, Campo, Cartao, Input } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { autorizarEquipe, salvarAutomacoes } from "../actions";
+import { autorizarEquipe, reenviarResumo, salvarAutomacoes } from "../actions";
 
 export default async function Automacoes({
   params,
@@ -168,6 +168,19 @@ export default async function Automacoes({
         </div>
         <form action={autorizarEquipe.bind(null, empresaId)}>
           <BotaoEnviar>Autorizar a equipe pelo celular do cadastro</BotaoEnviar>
+        </form>
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-slate-900">Reenviar o resumo de hoje</h2>
+          <p className="text-sm text-slate-500">
+            Se o resumo não chegou (por exemplo, o WhatsApp estava desconectado), gera de novo para quem ainda não recebeu. Quem já
+            recebeu, ou está na fila, não recebe duas vezes.
+          </p>
+        </div>
+        <form action={reenviarResumo.bind(null, empresaId)}>
+          <BotaoEnviar>Reenviar resumo de hoje</BotaoEnviar>
         </form>
       </Cartao>
     </div>

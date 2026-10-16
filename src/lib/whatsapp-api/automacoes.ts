@@ -89,6 +89,29 @@ export async function ligarContatosAosColaboradores(empresaId: string) {
   }
 }
 
+// Botão "Reenviar resumo de hoje": refaz o resumo de quem não recebeu (nunca gerado, falhou ou foi cancelado).
+// Quem já tem o resumo enviado, na fila ou aguardando confirmação não recebe de novo.
+export async function reenviarResumosDeHoje(empresaId: string, agora = new Date()) {
+  const admin = createAdminClient();
+  const { data: empresa } = await admin.from("empresas").select("fuso_horario").eq("id", empresaId).maybeSingle();
+  const fuso = empresa?.fuso_horario ?? "America/Sao_Paulo";
+  const { y, m, d } = hojeNoFuso(fuso, agora);
+  const hoje = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+  // libera a chave das mensagens de hoje que não saíram, para o resumo poder ser gerado de novo
+  const { data: perdidas } = await admin
+    .from("whatsapp_mensagens")
+    .select("id, chave")
+    .eq("empresa_id", empresaId)
+    .eq("origem", "resumo")
+    .like("chave", `resumo:%:${hoje}`)
+    .in("situacao", ["falhou", "cancelado"]);
+  for (const p of perdidas ?? []) {
+    await admin.from("whatsapp_mensagens").update({ chave: `${p.chave}:antes-${agora.getTime()}` }).eq("id", p.id);
+  }
+  return resumosDaEmpresa(empresaId, fuso, hoje, { y, m, d });
+}
+
 async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, dia: { y: number; m: number; d: number }) {
   const admin = createAdminClient();
   await ligarContatosAosColaboradores(empresaId);
