@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { soDigitos } from "@/lib/formato";
-import { Aviso, Campo, Cartao, Input } from "@/components/ui";
+import { Aviso, Campo, Cartao, Input, estilos } from "@/components/ui";
+import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { autorizarEquipe, reenviarResumo, salvarAutomacoes } from "../actions";
 
@@ -175,12 +176,17 @@ export default async function Automacoes({
         <div>
           <h2 className="font-semibold text-slate-900">Reenviar o resumo de hoje</h2>
           <p className="text-sm text-slate-500">
-            Se o resumo não chegou (por exemplo, o WhatsApp estava desconectado), gera de novo para quem ainda não recebeu. Quem já
-            recebeu, ou está na fila, não recebe duas vezes.
+            Se o resumo não chegou (por exemplo, o WhatsApp estava desconectado), manda de novo para todos que têm tarefa ou turno
+            hoje, inclusive quem já recebeu. A mensagem leva a marca “Reenvio do resumo do dia” no início.
           </p>
         </div>
         <form action={reenviarResumo.bind(null, empresaId)}>
-          <BotaoEnviar>Reenviar resumo de hoje</BotaoEnviar>
+          <BotaoConfirmar
+            mensagem="Reenviar o resumo de hoje para todos? Quem já recebeu vai receber de novo, com a marca de reenvio."
+            className={estilos.botaoSecundario}
+          >
+            Reenviar resumo de hoje
+          </BotaoConfirmar>
         </form>
       </Cartao>
     </div>

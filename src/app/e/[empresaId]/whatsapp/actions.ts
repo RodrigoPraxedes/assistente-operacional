@@ -273,7 +273,7 @@ export async function reenviarResumo(empresaId: string) {
   voltar(empresaId, "/automacoes", {
     ok: total
       ? `${total} ${total === 1 ? "resumo entrou" : "resumos entraram"} na fila de envio.`
-      : "Nada a reenviar: quem tem tarefa ou turno hoje já recebeu, está na fila ou não está ligado a um colaborador.",
+      : "Nada a reenviar: ninguém tem tarefa ou turno hoje, o resumo já está na fila ou o número não está ligado a um colaborador (veja Destinatários).",
   });
 }
 

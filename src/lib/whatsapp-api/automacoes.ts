@@ -89,8 +89,8 @@ export async function ligarContatosAosColaboradores(empresaId: string) {
   }
 }
 
-// Botão "Reenviar resumo de hoje": refaz o resumo de quem não recebeu (nunca gerado, falhou ou foi cancelado).
-// Quem já tem o resumo enviado, na fila ou aguardando confirmação não recebe de novo.
+// Botão "Reenviar resumo de hoje": manda o resumo de novo a todos, inclusive a quem já recebeu, com a marca
+// "Reenvio" no início. Só pula quem ainda tem um resumo de hoje na fila ou sendo enviado.
 export async function reenviarResumosDeHoje(empresaId: string, agora = new Date()) {
   const admin = createAdminClient();
   const { data: empresa } = await admin.from("empresas").select("fuso_horario").eq("id", empresaId).maybeSingle();
@@ -98,21 +98,21 @@ export async function reenviarResumosDeHoje(empresaId: string, agora = new Date(
   const { y, m, d } = hojeNoFuso(fuso, agora);
   const hoje = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-  // libera a chave das mensagens de hoje que não saíram, para o resumo poder ser gerado de novo
+  // libera a chave dos resumos de hoje já concluídos (enviados ou não), para poder gerar de novo
   const { data: perdidas } = await admin
     .from("whatsapp_mensagens")
     .select("id, chave")
     .eq("empresa_id", empresaId)
     .eq("origem", "resumo")
     .like("chave", `resumo:%:${hoje}`)
-    .in("situacao", ["falhou", "cancelado"]);
+    .not("situacao", "in", "(na_fila,enviando)");
   for (const p of perdidas ?? []) {
     await admin.from("whatsapp_mensagens").update({ chave: `${p.chave}:antes-${agora.getTime()}` }).eq("id", p.id);
   }
-  return resumosDaEmpresa(empresaId, fuso, hoje, { y, m, d });
+  return resumosDaEmpresa(empresaId, fuso, hoje, { y, m, d }, true);
 }
 
-async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, dia: { y: number; m: number; d: number }) {
+async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, dia: { y: number; m: number; d: number }, reenvio = false) {
   const admin = createAdminClient();
   await ligarContatosAosColaboradores(empresaId);
   const { data: contatos } = await admin
@@ -169,7 +169,8 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
 
     const hojeItens = lista.filter((t) => new Date(t.prazo).getTime() >= inicioDoDia);
     const atrasadas = lista.filter((t) => new Date(t.prazo).getTime() < inicioDoDia);
-    const linhas = [`*Bom dia, ${nome.trim().split(/\s+/)[0]}!* Seu dia ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}:`];
+    const linhas = reenvio ? ["🔁 *Reenvio do resumo do dia*"] : [] as string[];
+    linhas.push(`*Bom dia, ${nome.trim().split(/\s+/)[0]}!* Seu dia ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}:`);
     if (escala) linhas.push(linhaEscala(escala));
     if (hojeItens.length) {
       linhas.push("", `*Para hoje (${hojeItens.length})*`, ...itens(hojeItens, (t) => `até ${hora(t.prazo, fuso)}`));
