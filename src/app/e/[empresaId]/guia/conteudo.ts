@@ -236,6 +236,13 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Procurar uma ação",
+        passos: [
+          "Na parte de cima da lista, digite parte do nome (ou da descrição) no campo de pesquisa.",
+          "Se quiser, escolha um setor e/ou uma categoria e toque em Filtrar. Limpar volta à lista completa.",
+        ],
+      },
+      {
         titulo: "Mudar ou parar",
         passos: [
           "Toque na ação para editar. As mudanças valem para as próximas ocorrências.",
