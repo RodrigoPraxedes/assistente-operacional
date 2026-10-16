@@ -238,8 +238,9 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Procurar uma ação",
         passos: [
-          "Na parte de cima da lista, digite parte do nome (ou da descrição) no campo de pesquisa.",
-          "Se quiser, escolha um setor e/ou uma categoria e toque em Filtrar. Limpar volta à lista completa.",
+          "A lista vem separada por categoria, cada uma com seu título; as ações sem categoria ficam no fim, em Sem categoria.",
+          "Na parte de cima, digite parte do nome (ou da descrição) no campo de pesquisa: a lista filtra enquanto você digita.",
+          "Escolha um setor e/ou uma categoria: a lista muda na hora, sem botão. Limpar volta à lista completa.",
         ],
       },
       {
