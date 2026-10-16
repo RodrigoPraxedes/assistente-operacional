@@ -517,7 +517,7 @@ export const SECOES: SecaoGuia[] = [
           "Unidades: cada loja ou endereço. Em QR Code e detalhes você imprime o QR da unidade. Se ele vazou, Gerar novo QR faz o antigo parar de funcionar.",
           "Status do Kanban: nome, cor e tipo de cada coluna. Dá para criar status de um módulo só, como \"Aguardando peça\" nas manutenções.",
           "Prazos dos chamados: quantas horas cada prioridade tem para ser atendida.",
-          "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar).",
+          "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado).",
         ],
       },
       {
