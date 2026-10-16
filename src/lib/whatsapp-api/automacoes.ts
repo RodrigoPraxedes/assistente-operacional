@@ -59,7 +59,7 @@ export async function gerarResumosDoDia(agora = new Date()) {
     const { data: reservado } = await reserva.select("empresa_id");
     if (!reservado?.length) continue;
 
-    total += await resumosDaEmpresa(c.empresa_id, fuso, hoje, { y, m, d });
+    total += (await resumosDaEmpresa(c.empresa_id, fuso, hoje, { y, m, d })).enfileiradas;
   }
   return total;
 }
@@ -124,7 +124,7 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
     .returns<{ membro_id: string; membros: { nome: string; ativo: boolean } | null }[]>();
   const pessoas = new Map<string, string>();
   for (const c of contatos ?? []) if (c.membros?.ativo) pessoas.set(c.membro_id, c.membros.nome);
-  if (!pessoas.size) return 0;
+  if (!pessoas.size) return { enfileiradas: 0, diag: ["nenhum destinatário ativo está ligado a um colaborador"] };
   const ids = [...pessoas.keys()];
 
   const fimDoDia = horaLocalParaUtc(dia.y, dia.m, dia.d, 23, 59, fuso).toISOString();
@@ -161,11 +161,15 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
   const escalaDe = new Map((escalas ?? []).map((e) => [e.membro_id, e]));
 
   let enfileiradas = 0;
+  const diag: string[] = [];
   for (const [membroId, nome] of pessoas) {
     const lista = porPessoa.get(membroId) ?? [];
     const escala = escalaDe.get(membroId);
     // nada para hoje: não manda mensagem (menos volume para o número)
-    if (!lista.length && escala?.tipo !== "turno") continue;
+    if (!lista.length && escala?.tipo !== "turno") {
+      diag.push(`${nome}: nenhuma tarefa aberta com prazo até hoje`);
+      continue;
+    }
 
     const hojeItens = lista.filter((t) => new Date(t.prazo).getTime() >= inicioDoDia);
     const atrasadas = lista.filter((t) => new Date(t.prazo).getTime() < inicioDoDia);
@@ -190,9 +194,23 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
       p_origem_id: null,
       p_chave: `resumo:${membroId}:${hoje}`,
     });
-    if (id) enfileiradas++;
+    if (id) {
+      enfileiradas++;
+    } else {
+      // não entrou: já existe resumo de hoje na fila ou sendo enviado, ou falta destinatário/conexão
+      const { data: existente } = await admin
+        .from("whatsapp_mensagens")
+        .select("situacao")
+        .eq("chave", `resumo:${membroId}:${hoje}`)
+        .maybeSingle();
+      diag.push(
+        existente
+          ? `${nome}: já há um resumo de hoje (${existente.situacao})`
+          : `${nome}: sem destinatário ativo ou sem conexão de WhatsApp`,
+      );
+    }
   }
-  return enfileiradas;
+  return { enfileiradas, diag };
 }
 
 function linhaEscala(e: EscalaHoje) {

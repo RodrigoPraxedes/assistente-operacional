@@ -267,13 +267,13 @@ export async function salvarAutomacoes(empresaId: string, form: FormData) {
 export async function reenviarResumo(empresaId: string) {
   const { pode } = await getContexto(empresaId);
   if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/automacoes", { erro: "Sem permissão." });
-  const total = await reenviarResumosDeHoje(empresaId);
+  const { enfileiradas, diag } = await reenviarResumosDeHoje(empresaId);
   after(() => processarFila(12, 40_000));
   atualizar(empresaId);
+  const motivos = diag.length ? ` Não entraram: ${diag.join("; ")}.` : "";
+  if (!enfileiradas) voltar(empresaId, "/automacoes", { erro: `Nenhum resumo entrou na fila.${motivos}` });
   voltar(empresaId, "/automacoes", {
-    ok: total
-      ? `${total} ${total === 1 ? "resumo entrou" : "resumos entraram"} na fila de envio.`
-      : "Nada a reenviar: ninguém tem tarefa ou turno hoje, o resumo já está na fila ou o número não está ligado a um colaborador (veja Destinatários).",
+    ok: `${enfileiradas} ${enfileiradas === 1 ? "resumo entrou" : "resumos entraram"} na fila de envio.${motivos}`,
   });
 }
 
