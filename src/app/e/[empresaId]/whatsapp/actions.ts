@@ -235,8 +235,12 @@ export async function salvarAutomacoes(empresaId: string, form: FormData) {
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) voltar(empresaId, "/automacoes", { erro: "Horário inválido." });
   if (!Number.isInteger(limite) || limite < 1 || limite > 1000)
     voltar(empresaId, "/automacoes", { erro: "O limite diário deve ficar entre 1 e 1.000." });
+  // mudar o horário do resumo libera um novo envio no mesmo dia (quem já recebeu hoje não recebe de novo: a chave é por pessoa e dia)
+  const { data: atual } = await supabase.from("whatsapp_automacoes").select("resumo_hora").eq("empresa_id", empresaId).maybeSingle();
+  const horaMudou = !!atual && atual.resumo_hora.slice(0, 5) !== hora;
   const { error } = await supabase.from("whatsapp_automacoes").upsert({
     empresa_id: empresaId,
+    ...(horaMudou ? { resumo_gerado_em: null } : {}),
     aviso_tarefa: form.get("aviso_tarefa") === "on",
     resumo_dia: form.get("resumo_dia") === "on",
     aviso_conclusao: form.get("aviso_conclusao") === "on",
