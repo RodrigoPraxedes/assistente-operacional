@@ -473,7 +473,8 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Automações",
         passos: [
-          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo.",
+          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo. Cada ocorrência de uma ação recorrente também avisa os responsáveis quando é criada (com o dia e a hora em que acontece); tarefas privadas e rotinas de check-list ficam de fora.",
+          "Lembrete de ação recorrente: os responsáveis recebem outro aviso alguns minutos antes do horário da ocorrência (padrão 30; dá para mudar na própria tela).",
           "Tarefa concluída: quem criou é avisado quando ela termina.",
           "Check-list concluído: o resultado sai sozinho para quem foi cadastrado (desligado, vira rascunho para confirmar).",
           "Lembrete de check-list: o responsável recebe um lembrete antes do horário.",

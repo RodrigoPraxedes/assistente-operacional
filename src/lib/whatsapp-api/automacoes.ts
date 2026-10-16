@@ -321,3 +321,63 @@ export async function gerarLembretesChecklist(agora = new Date()) {
   }
   return total;
 }
+
+// Lembrete de ação recorrente: "lembrete_acao_minutos" antes do horário da
+// ocorrência, cada responsável recebe um aviso. A mensagem de "Nova tarefa" sai
+// na criação da ocorrência (gatilho no banco); este é o segundo aviso.
+export async function gerarLembretesAcoes(agora = new Date()) {
+  const admin = createAdminClient();
+  const { data: configs } = await admin
+    .from("whatsapp_automacoes")
+    .select("empresa_id, lembrete_acao_minutos, empresas(fuso_horario)")
+    .eq("lembrete_acao", true)
+    .returns<{ empresa_id: string; lembrete_acao_minutos: number; empresas: { fuso_horario: string } | null }[]>();
+
+  let total = 0;
+  for (const c of configs ?? []) {
+    const fuso = c.empresas?.fuso_horario ?? "America/Sao_Paulo";
+    const [{ data: tarefas }, { data: abertos }] = await Promise.all([
+      admin
+        .from("tarefas")
+        .select("id, unidade_id, responsaveis, status_id, titulo, ocorrencia_em, unidades(nome)")
+        .eq("empresa_id", c.empresa_id)
+        .eq("origem", "acao")
+        .eq("privado", false)
+        .is("concluida_em", null)
+        .gt("ocorrencia_em", agora.toISOString())
+        .lte("ocorrencia_em", new Date(agora.getTime() + c.lembrete_acao_minutos * 60_000).toISOString())
+        .returns<
+          {
+            id: string;
+            unidade_id: string | null;
+            responsaveis: string[];
+            status_id: string;
+            titulo: string;
+            ocorrencia_em: string;
+            unidades: { nome: string } | null;
+          }[]
+        >(),
+      admin.from("status").select("id").eq("empresa_id", c.empresa_id).in("tipo", ["aberto", "em_andamento", "adiado"]),
+    ]);
+    const statusAberto = new Set((abertos ?? []).map((s) => s.id));
+
+    for (const t of (tarefas ?? []).filter((x) => statusAberto.has(x.status_id))) {
+      for (const membroId of t.responsaveis) {
+        const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
+          p_empresa: c.empresa_id,
+          p_unidade: t.unidade_id,
+          p_membro: membroId,
+          p_texto: [
+            `*Lembrete: ação às ${hora(t.ocorrencia_em, fuso)}*`,
+            `${t.titulo}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+          ].join("\n"),
+          p_origem: "lembrete",
+          p_origem_id: t.id,
+          p_chave: `lembrete:${t.id}:${membroId}`,
+        });
+        if (id) total++;
+      }
+    }
+  }
+  return total;
+}
