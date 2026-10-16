@@ -115,16 +115,21 @@ export async function reenviarResumosDeHoje(empresaId: string, agora = new Date(
 async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, dia: { y: number; m: number; d: number }, reenvio = false) {
   const admin = createAdminClient();
   await ligarContatosAosColaboradores(empresaId);
-  const { data: contatos } = await admin
+  const { data: contatos, error: erroContatos } = await admin
     .from("whatsapp_contatos")
-    .select("membro_id, membros(nome, ativo)")
+    // whatsapp_contatos tem duas ligações com membros (membro_id e autorizado_por): sem nomear, a consulta falha por ambiguidade
+    .select("membro_id, membros!whatsapp_contatos_membro_id_fkey(nome, ativo)")
     .eq("empresa_id", empresaId)
     .eq("ativo", true)
     .not("membro_id", "is", null)
     .returns<{ membro_id: string; membros: { nome: string; ativo: boolean } | null }[]>();
   const pessoas = new Map<string, string>();
   for (const c of contatos ?? []) if (c.membros?.ativo) pessoas.set(c.membro_id, c.membros.nome);
-  if (!pessoas.size) return { enfileiradas: 0, diag: ["nenhum destinatário ativo está ligado a um colaborador"] };
+  if (!pessoas.size)
+    return {
+      enfileiradas: 0,
+      diag: [erroContatos ? `erro ao ler os destinatários (${erroContatos.message})` : "nenhum destinatário ativo está ligado a um colaborador"],
+    };
   const ids = [...pessoas.keys()];
 
   const fimDoDia = horaLocalParaUtc(dia.y, dia.m, dia.d, 23, 59, fuso).toISOString();
