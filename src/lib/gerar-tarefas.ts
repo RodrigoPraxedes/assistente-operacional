@@ -28,6 +28,8 @@ interface Fonte {
   criado_por?: string | null;
   titulo: string;
   descricao?: string | null | ((m: { quando: Date; prazo: Date }) => string);
+  // check-list: ao regerar, tarefas ainda abertas do mesmo dia mudam de horário em vez de duplicar
+  fuso?: string;
   // quando cada tarefa aparece e qual o prazo dela, de hoje até "dias" à frente
   momentos: (dias: number) => { quando: Date; prazo: Date }[];
 }
@@ -85,6 +87,7 @@ async function fontesChecklist(admin: Admin, { id: modeloId, empresaId }: Filtro
     categoria_id: m.categoria_id,
     responsaveis: m.responsavel_id ? [m.responsavel_id] : [],
     titulo: `Check-list: ${m.nome}`,
+    fuso: m.empresas?.fuso_horario ?? "America/Sao_Paulo",
     momentos: porRegra(
       {
         regra: m.recorrencia,
@@ -294,6 +297,59 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           prazo: m.prazo.toISOString(),
           status_id: statusId,
         });
+      }
+    }
+  }
+
+  // Editar o horário do check-list muda o instante da ocorrência (parte da chave
+  // única) e geraria uma segunda tarefa no mesmo dia. Então, para cada dia, as
+  // tarefas ainda no status inicial e fora do novo horário são reaproveitadas
+  // (ou removidas, se sobrarem); as já em andamento/concluídas ficam como estão.
+  if (filtro?.modeloId) {
+    const dia = (d: Date, fuso: string) => d.toLocaleDateString("en-CA", { timeZone: fuso });
+    for (const f of fontes.filter((x) => x.origem === "checklist")) {
+      const statusId = statusInicial.get(f.empresa_id);
+      if (!statusId || !f.fuso) continue;
+      let momentos: { quando: Date; prazo: Date }[];
+      try {
+        momentos = f.momentos(DIAS_A_FRENTE);
+      } catch {
+        continue;
+      }
+      const { data: pendentes } = await admin
+        .from("tarefas")
+        .select("id, unidade_id, ocorrencia_em")
+        .eq("origem", "checklist")
+        .eq("origem_id", f.id)
+        .eq("status_id", statusId)
+        .gte("ocorrencia_em", new Date(Date.now() - 36 * 60 * MINUTO).toISOString());
+      const unidadesDoModelo = f.unidade_id
+        ? [f.unidade_id]
+        : (unidades ?? []).filter((u) => u.empresa_id === f.empresa_id).map((u) => u.id);
+      for (const unidadeId of unidadesDoModelo) {
+        const doDia = new Map<string, { quando: Date; prazo: Date }[]>();
+        for (const m of momentos) {
+          const k = dia(m.quando, f.fuso);
+          doDia.set(k, [...(doDia.get(k) ?? []), m]);
+        }
+        for (const [k, novos] of doDia) {
+          const antigas = (pendentes ?? []).filter(
+            (t) => t.unidade_id === unidadeId && dia(new Date(t.ocorrencia_em), f.fuso!) === k,
+          );
+          const jaCertas = new Set(novos.map((m) => m.quando.getTime()));
+          const sobrando = antigas.filter((t) => !jaCertas.has(new Date(t.ocorrencia_em).getTime()));
+          const faltando = novos.filter((m) => !antigas.some((t) => new Date(t.ocorrencia_em).getTime() === m.quando.getTime()));
+          for (const [i, t] of sobrando.entries()) {
+            const m = faltando[i];
+            const { error: e } = m
+              ? await admin
+                  .from("tarefas")
+                  .update({ ocorrencia_em: m.quando.toISOString(), prazo: m.prazo.toISOString() })
+                  .eq("id", t.id)
+              : await admin.from("tarefas").delete().eq("id", t.id);
+            if (e) console.error("Erro ao ajustar tarefa do check-list", e.message);
+          }
+        }
       }
     }
   }

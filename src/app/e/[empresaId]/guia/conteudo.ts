@@ -180,7 +180,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Montar um check-list",
         passos: [
           "Toque em Novo check-list e dê um nome.",
-          "Defina o horário preferencial, a tolerância (depois disso fica atrasado) e a repetição (todos os dias, dias úteis, toda semana...).",
+          "Defina o horário preferencial, a tolerância (depois disso fica atrasado) e a repetição (todos os dias, dias úteis, toda semana...). Se mudar o horário depois, a tarefa de hoje que ainda não foi iniciada vai para o novo horário, sem ficar duplicada.",
           "Escolha o responsável: ele recebe a tarefa e o lembrete, e puxa a equipe para preencher.",
           "Em Lembrete antes, diga quantos minutos antes o responsável recebe o aviso no WhatsApp (0 = sem lembrete).",
           "Em Recebe o resultado, escolha quem recebe o resumo no WhatsApp quando o check-list é concluído.",
