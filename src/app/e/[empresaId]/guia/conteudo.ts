@@ -180,7 +180,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Montar um check-list",
         passos: [
           "Toque em Novo check-list e dê um nome.",
-          "Defina o horário preferencial, a tolerância (depois disso fica atrasado) e a repetição (todos os dias, dias úteis, toda semana...). Se mudar o horário depois, a tarefa de hoje que ainda não foi iniciada vai para o novo horário, sem ficar duplicada.",
+          "Defina o horário preferencial, a tolerância (depois disso fica atrasado) e a repetição (todos os dias, a cada 2 ou 3 dias, dias úteis, às segundas, toda semana...). Se mudar o horário depois, a tarefa de hoje que ainda não foi iniciada vai para o novo horário, sem ficar duplicada.",
           "Escolha o responsável: ele recebe a tarefa e o lembrete, e puxa a equipe para preencher.",
           "Em Lembrete antes, diga quantos minutos antes o responsável recebe o aviso no WhatsApp (0 = sem lembrete).",
           "Em Recebe o resultado, escolha quem recebe o resumo no WhatsApp quando o check-list é concluído.",
@@ -228,7 +228,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Criar uma ação",
         passos: [
           "Toque em Nova ação e dê um nome.",
-          "Escolha a repetição (uma vez só, todos os dias, toda semana, todo mês, a cada 3 ou 6 meses, todo ano...), o horário e a data inicial.",
+          "Escolha a repetição (uma vez só, todos os dias, a cada 2, 3, 4, 10 ou 15 dias, um dia fixo da semana como às segundas ou aos sábados, toda semana, todo mês, a cada 3 ou 6 meses, todo ano...), o horário e a data inicial. \"A cada N dias\" conta a partir da data inicial; os dias da semana valem independente dela.",
           "Se quiser, defina uma data final. Vazio = repete sem fim.",
           "Em Prazo, diga quantas horas depois do horário a tarefa passa a contar como atrasada.",
           "Escolha os responsáveis, a unidade, o setor, a categoria e a visibilidade. Com Todas as unidades, cada unidade recebe a sua tarefa.",
