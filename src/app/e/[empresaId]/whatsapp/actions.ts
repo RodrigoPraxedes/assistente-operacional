@@ -155,11 +155,21 @@ export async function salvarContato(empresaId: string, form: FormData) {
   if (telefone.length === 10 || telefone.length === 11) telefone = `55${telefone}`;
   if (!nome) voltar(empresaId, "/destinatarios", { erro: "Informe o nome." });
   if (!/^\d{12,13}$/.test(telefone)) voltar(empresaId, "/destinatarios", { erro: "Telefone inválido. Use DDD + número, ex.: (21) 99999-8888." });
+  let membroId = String(form.get("membro_id") ?? "") || null;
+  if (!membroId) {
+    // sem escolher o colaborador, liga pelo celular do cadastro (senão não recebe resumo)
+    const { data: equipe } = await supabase.from("membros").select("id, telefone").eq("empresa_id", empresaId).eq("ativo", true);
+    membroId =
+      (equipe ?? []).find((m) => {
+        const t = soDigitos(m.telefone);
+        return (t.length === 10 || t.length === 11 ? `55${t}` : t) === telefone;
+      })?.id ?? null;
+  }
   const { error } = await supabase.from("whatsapp_contatos").insert({
     empresa_id: empresaId,
     nome,
     telefone,
-    membro_id: String(form.get("membro_id") ?? "") || null,
+    membro_id: membroId,
     autorizado_por: membro.id,
   });
   if (error)

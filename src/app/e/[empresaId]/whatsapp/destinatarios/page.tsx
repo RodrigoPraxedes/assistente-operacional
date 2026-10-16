@@ -12,6 +12,7 @@ interface Contato {
   nome: string;
   telefone: string;
   ativo: boolean;
+  membro_id: string | null;
   autorizado_em: string;
   autorizador: { nome: string } | null;
 }
@@ -38,7 +39,7 @@ export default async function Destinatarios({
   const [{ data: contatos }, { data: membros }, { data: gatilhos }, { data: conexoes }, { data: modelos }] = await Promise.all([
     supabase
       .from("whatsapp_contatos")
-      .select("id, nome, telefone, ativo, autorizado_em, autorizador:membros!whatsapp_contatos_autorizado_por_fkey(nome)")
+      .select("id, nome, telefone, ativo, membro_id, autorizado_em, autorizador:membros!whatsapp_contatos_autorizado_por_fkey(nome)")
       .eq("empresa_id", empresaId)
       .order("ativo", { ascending: false })
       .order("nome")
@@ -106,6 +107,7 @@ export default async function Destinatarios({
                   Autorizado {c.autorizador ? `por ${c.autorizador.nome} ` : ""}em {formatarDataHora(c.autorizado_em, empresa.fuso_horario)}
                 </p>
               </div>
+              {c.ativo && !c.membro_id && <Etiqueta>Sem colaborador: não recebe o resumo</Etiqueta>}
               {!c.ativo && <Etiqueta>Desativado</Etiqueta>}
               <form action={alternarContato.bind(null, empresaId, c.id, !c.ativo)}>
                 <Botao variante="secundario">{c.ativo ? "Desativar" : "Reativar"}</Botao>
