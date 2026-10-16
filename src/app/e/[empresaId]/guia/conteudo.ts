@@ -479,7 +479,7 @@ export const SECOES: SecaoGuia[] = [
           "Lembrete de check-list: o responsável recebe um lembrete antes do horário.",
           "Boas-vindas: quem é autorizado recebe uma apresentação pedindo para salvar o número.",
           "Resumo do dia: no horário escolhido, cada pessoa recebe o turno de hoje, as tarefas que vencem hoje e as atrasadas. Mudar o horário no mesmo dia libera um novo envio do resumo (quem já recebeu hoje não recebe de novo). Só recebe quem está ligado a um colaborador: ao autorizar, escolha o colaborador ou use o mesmo celular do cadastro (o app liga sozinho). Na lista de Destinatários, toque no nome para abrir o colaborador ligado (dá para trocar) e o botão de desativar (o resumo e os avisos vão para as tarefas desse colaborador).",
-          "Reenviar o resumo de hoje: botão no fim da tela, para quando o resumo não chegou (ex.: WhatsApp desconectado). Gera de novo só para quem ainda não recebeu.",
+          "Reenviar o resumo de hoje: botão no fim da tela, para quando o resumo não chegou (ex.: WhatsApp desconectado). Manda de novo a todos, inclusive a quem já recebeu, com a marca \"Reenvio do resumo do dia\" no início; pede confirmação antes.",
           "Incluir link do app: abaixo de cada aviso, escolha se a mensagem leva o link para abrir no app. Já vem ligado na tarefa atribuída e no lembrete de check-list, e desligado nos demais.",
           "Contato para dúvidas: o aviso termina com o nome e o celular de quem atribuiu, concluiu ou preencheu (no lembrete, de quem recebe o resultado). A pessoa toca no número e conversa direto.",
           "O limite diário evita excesso: passou dele, a mensagem vira rascunho em Avisos.",
