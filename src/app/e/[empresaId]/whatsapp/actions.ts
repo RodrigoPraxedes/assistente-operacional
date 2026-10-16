@@ -248,6 +248,8 @@ export async function salvarAutomacoes(empresaId: string, form: FormData) {
     checklist_auto: form.get("checklist_auto") === "on",
     boas_vindas: form.get("boas_vindas") === "on",
     lembrete_checklist: form.get("lembrete_checklist") === "on",
+    lembrete_acao: form.get("lembrete_acao") === "on",
+    lembrete_acao_minutos: Math.min(720, Math.max(1, Number(form.get("lembrete_acao_minutos")) || 30)),
     link_tarefa: form.get("link_tarefa") === "on",
     link_conclusao: form.get("link_conclusao") === "on",
     link_checklist: form.get("link_checklist") === "on",

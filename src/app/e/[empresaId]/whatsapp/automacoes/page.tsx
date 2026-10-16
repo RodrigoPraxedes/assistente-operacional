@@ -22,7 +22,7 @@ export default async function Automacoes({
   const [{ data: config }, { data: conexoes }, { data: contatos }, { data: membros }, { count: enviadas }] = await Promise.all([
     supabase
       .from("whatsapp_automacoes")
-      .select("aviso_tarefa, resumo_dia, aviso_conclusao, checklist_auto, boas_vindas, lembrete_checklist, resumo_hora, limite_diario, link_tarefa, link_conclusao, link_checklist, link_lembrete, link_resumo, contato_duvidas")
+      .select("aviso_tarefa, resumo_dia, aviso_conclusao, checklist_auto, boas_vindas, lembrete_checklist, lembrete_acao, lembrete_acao_minutos, resumo_hora, limite_diario, link_tarefa, link_conclusao, link_checklist, link_lembrete, link_resumo, contato_duvidas")
       .eq("empresa_id", empresaId)
       .maybeSingle(),
     supabase.from("whatsapp_conexoes").select("status, envio_pausado").eq("empresa_id", empresaId),
@@ -68,8 +68,8 @@ export default async function Automacoes({
             <span className="text-sm">
               <span className="font-medium text-slate-900">Tarefa atribuída</span>
               <span className="block text-slate-500">
-                Quem recebe uma tarefa ganha uma mensagem com o prazo. Rotina de check-list e de ação recorrente vai só no
-                resumo do dia. Tarefas privadas não geram aviso.
+                Quem recebe uma tarefa ganha uma mensagem com o prazo. Ação recorrente avisa quando cada ocorrência é criada; rotina de check-list vai só no resumo
+                do dia. Tarefas privadas não geram aviso.
               </span>
             </span>
           </label>
@@ -109,6 +109,28 @@ export default async function Automacoes({
             </span>
           </label>
           <IncluirLink nome="link_lembrete" ligado={config?.link_lembrete ?? true} />
+
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="lembrete_acao" defaultChecked={config?.lembrete_acao ?? true} className="mt-1 h-4 w-4" />
+            <span className="text-sm">
+              <span className="font-medium text-slate-900">Lembrete de ação recorrente</span>
+              <span className="block text-slate-500">
+                Antes do horário de cada ocorrência de uma ação recorrente, os responsáveis recebem um lembrete (usa a opção de link do lembrete).
+              </span>
+              <span className="mt-1 flex items-center gap-2 text-slate-500">
+                Avisar
+                <input
+                  type="number"
+                  name="lembrete_acao_minutos"
+                  min={1}
+                  max={720}
+                  defaultValue={config?.lembrete_acao_minutos ?? 30}
+                  className="w-20 rounded-lg border border-slate-300 bg-superficie px-2 py-1 text-slate-900"
+                />
+                minutos antes
+              </span>
+            </span>
+          </label>
 
           <label className="flex items-start gap-3">
             <input type="checkbox" name="boas_vindas" defaultChecked={config?.boas_vindas ?? false} className="mt-1 h-4 w-4" />
