@@ -66,6 +66,15 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Instalar como aplicativo",
+        passos: [
+          "Ao abrir o Atalaia no navegador, aparece o aviso \"Deseja instalar o app?\". Toque em Instalar.",
+          "O Atalaia ganha um ícone com o logo na tela inicial (ou na área de trabalho) e abre sem a barra do navegador.",
+          "No iPhone (Safari) o aviso mostra o caminho: Compartilhar › Adicionar à Tela de Início.",
+          "Tocou em Agora não? O aviso volta só depois de 7 dias. Quem já instalou não vê o aviso.",
+        ],
+      },
+      {
         titulo: "Menu, tema e empresas",
         passos: [
           "No computador, o botão ao lado do logo recolhe o menu para mostrar só os ícones.",
