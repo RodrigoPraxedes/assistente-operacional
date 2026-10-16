@@ -103,6 +103,13 @@ export const SECOES: SecaoGuia[] = [
           "Quem só tem acesso às próprias tarefas vê sempre o Meu painel.",
         ],
       },
+      {
+        titulo: "Status do WhatsApp",
+        passos: [
+          "Quem gerencia o WhatsApp vê, no alto do Painel, uma etiqueta verde quando o número está conectado e vermelha quando caiu.",
+          "Toque na etiqueta para ir a WhatsApp › Conexão e reconectar pelo QR Code. O status é conferido toda vez que o Painel abre.",
+        ],
+      },
     ],
   },
   {
