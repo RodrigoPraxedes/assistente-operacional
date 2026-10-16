@@ -5,13 +5,14 @@ import { mascararNumero } from "@/lib/whatsapp-api/sanitizar";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Vazio, estilos } from "@/components/ui";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { alternarContato, removerGatilho, salvarContato, salvarGatilho } from "../actions";
+import { alternarContato, removerGatilho, salvarContato, salvarGatilho, vincularContato } from "../actions";
 
 interface Contato {
   id: string;
   nome: string;
   telefone: string;
   ativo: boolean;
+  membro_id: string | null;
   autorizado_em: string;
   autorizador: { nome: string } | null;
 }
@@ -38,7 +39,7 @@ export default async function Destinatarios({
   const [{ data: contatos }, { data: membros }, { data: gatilhos }, { data: conexoes }, { data: modelos }] = await Promise.all([
     supabase
       .from("whatsapp_contatos")
-      .select("id, nome, telefone, ativo, autorizado_em, autorizador:membros!whatsapp_contatos_autorizado_por_fkey(nome)")
+      .select("id, nome, telefone, ativo, membro_id, autorizado_em, autorizador:membros!whatsapp_contatos_autorizado_por_fkey(nome)")
       .eq("empresa_id", empresaId)
       .order("ativo", { ascending: false })
       .order("nome")
@@ -106,6 +107,20 @@ export default async function Destinatarios({
                   Autorizado {c.autorizador ? `por ${c.autorizador.nome} ` : ""}em {formatarDataHora(c.autorizado_em, empresa.fuso_horario)}
                 </p>
               </div>
+              {c.ativo && !c.membro_id && (
+                <form action={vincularContato.bind(null, empresaId, c.id)} className="flex w-full flex-wrap items-center gap-2">
+                  <Etiqueta>Sem colaborador: não recebe o resumo</Etiqueta>
+                  <Select name="membro_id" defaultValue="" required className="w-auto">
+                    <option value="">Escolher colaborador…</option>
+                    {(membros ?? []).map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nome}
+                      </option>
+                    ))}
+                  </Select>
+                  <Botao variante="secundario">Vincular</Botao>
+                </form>
+              )}
               {!c.ativo && <Etiqueta>Desativado</Etiqueta>}
               <form action={alternarContato.bind(null, empresaId, c.id, !c.ativo)}>
                 <Botao variante="secundario">{c.ativo ? "Desativar" : "Reativar"}</Botao>

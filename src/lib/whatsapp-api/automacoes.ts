@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
+import { hojeNoFuso, horaLocalParaUtc, soDigitos } from "@/lib/formato";
 import { PERIODOS, type Periodo, type TipoEscala } from "@/lib/types";
 
 // Resumo do dia: uma mensagem por colaborador (com WhatsApp autorizado) no
@@ -64,8 +64,34 @@ export async function gerarResumosDoDia(agora = new Date()) {
   return total;
 }
 
+// Destinatário autorizado só com o número (sem escolher o colaborador) nunca
+// recebia resumo nem aviso: liga ao colaborador de mesmo celular no cadastro
+export async function ligarContatosAosColaboradores(empresaId: string) {
+  const admin = createAdminClient();
+  const [{ data: soltos }, { data: membros }, { data: ligados }] = await Promise.all([
+    admin.from("whatsapp_contatos").select("id, telefone").eq("empresa_id", empresaId).eq("ativo", true).is("membro_id", null),
+    admin.from("membros").select("id, telefone").eq("empresa_id", empresaId).eq("ativo", true),
+    admin.from("whatsapp_contatos").select("membro_id").eq("empresa_id", empresaId).eq("ativo", true).not("membro_id", "is", null),
+  ]);
+  if (!soltos?.length) return;
+  const jaLigados = new Set((ligados ?? []).map((c) => c.membro_id));
+  const porNumero = new Map<string, string>();
+  for (const m of membros ?? []) {
+    let tel = soDigitos(m.telefone);
+    if (tel.length === 10 || tel.length === 11) tel = `55${tel}`;
+    if (tel && !jaLigados.has(m.id)) porNumero.set(tel, m.id);
+  }
+  for (const c of soltos) {
+    const membroId = porNumero.get(c.telefone);
+    if (!membroId) continue;
+    porNumero.delete(c.telefone);
+    await admin.from("whatsapp_contatos").update({ membro_id: membroId }).eq("id", c.id);
+  }
+}
+
 async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, dia: { y: number; m: number; d: number }) {
   const admin = createAdminClient();
+  await ligarContatosAosColaboradores(empresaId);
   const { data: contatos } = await admin
     .from("whatsapp_contatos")
     .select("membro_id, membros(nome, ativo)")
