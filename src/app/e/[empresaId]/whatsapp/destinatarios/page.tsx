@@ -5,7 +5,7 @@ import { mascararNumero } from "@/lib/whatsapp-api/sanitizar";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Vazio, estilos } from "@/components/ui";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { alternarContato, removerGatilho, salvarContato, salvarGatilho } from "../actions";
+import { alternarContato, removerGatilho, salvarContato, salvarGatilho, vincularContato } from "../actions";
 
 interface Contato {
   id: string;
@@ -107,7 +107,20 @@ export default async function Destinatarios({
                   Autorizado {c.autorizador ? `por ${c.autorizador.nome} ` : ""}em {formatarDataHora(c.autorizado_em, empresa.fuso_horario)}
                 </p>
               </div>
-              {c.ativo && !c.membro_id && <Etiqueta>Sem colaborador: não recebe o resumo</Etiqueta>}
+              {c.ativo && !c.membro_id && (
+                <form action={vincularContato.bind(null, empresaId, c.id)} className="flex w-full flex-wrap items-center gap-2">
+                  <Etiqueta>Sem colaborador: não recebe o resumo</Etiqueta>
+                  <Select name="membro_id" defaultValue="" required className="w-auto">
+                    <option value="">Escolher colaborador…</option>
+                    {(membros ?? []).map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nome}
+                      </option>
+                    ))}
+                  </Select>
+                  <Botao variante="secundario">Vincular</Botao>
+                </form>
+              )}
               {!c.ativo && <Etiqueta>Desativado</Etiqueta>}
               <form action={alternarContato.bind(null, empresaId, c.id, !c.ativo)}>
                 <Botao variante="secundario">{c.ativo ? "Desativar" : "Reativar"}</Botao>

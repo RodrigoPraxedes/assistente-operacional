@@ -190,6 +190,16 @@ export async function alternarContato(empresaId: string, contatoId: string, ativ
   atualizar(empresaId);
 }
 
+export async function vincularContato(empresaId: string, contatoId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const membroId = String(form.get("membro_id") ?? "");
+  if (!membroId) voltar(empresaId, "/destinatarios", { erro: "Escolha o colaborador." });
+  const { error } = await supabase.from("whatsapp_contatos").update({ membro_id: membroId }).eq("id", contatoId).eq("empresa_id", empresaId);
+  if (error) voltar(empresaId, "/destinatarios", { erro: error.message });
+  atualizar(empresaId);
+  voltar(empresaId, "/destinatarios", { ok: "Colaborador vinculado." });
+}
+
 export async function salvarGatilho(empresaId: string, form: FormData) {
   const { supabase, membro } = await getContexto(empresaId);
   const { error } = await supabase.from("whatsapp_gatilhos").insert({
