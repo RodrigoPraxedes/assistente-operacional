@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { urlDoSite } from "@/lib/whatsapp";
+import { enviarPushParaMembro } from "@/lib/push";
 import { comoErroProvedor, provedorDe } from "./index";
 import { sanitizarErro } from "./sanitizar";
 import type { SituacaoMensagem, StatusConexao } from "./tipos";
@@ -44,6 +45,8 @@ export async function processarMensagem(mensagemId: string) {
   const m = (data as Reservada[] | null)?.[0];
   if (!m) return; // já foi pega, está pausada ou não está na fila
 
+  if (m.tentativas === 1) await avisarNoNavegador(m);
+
   const provedor = provedorDe(m.provedor);
   const { data: extra } = await admin.from("whatsapp_mensagens").select("com_link").eq("id", m.id).maybeSingle();
   try {
@@ -73,6 +76,30 @@ export async function processarMensagem(mensagemId: string) {
       mudanca = { ...base, situacao: "falhou", falhou_em: agora() };
     }
     await admin.from("whatsapp_mensagens").update(mudanca).eq("id", m.id).eq("situacao", "enviando");
+  }
+}
+
+// Mesmo aviso, em push no navegador, para o colaborador dono do número (se ele ativou).
+// Só na primeira tentativa, para as repetições do WhatsApp não duplicarem.
+async function avisarNoNavegador(m: Reservada) {
+  try {
+    const admin = createAdminClient();
+    const { data: contato } = await admin
+      .from("whatsapp_contatos")
+      .select("membro_id")
+      .eq("empresa_id", m.empresa_id)
+      .eq("telefone", m.telefone)
+      .maybeSingle();
+    if (!contato?.membro_id) return;
+    const caminho =
+      m.origem === "checklist" && m.origem_id
+        ? `/e/${m.empresa_id}/checklists/execucoes/${m.origem_id}`
+        : (m.origem === "tarefa" || m.origem === "conclusao" || m.origem === "lembrete") && m.origem_id
+          ? `/e/${m.empresa_id}/tarefas/${m.origem_id}`
+          : `/e/${m.empresa_id}/painel`;
+    await enviarPushParaMembro(contato.membro_id, { titulo: "Atalaia", corpo: m.texto.slice(0, 180), url: caminho });
+  } catch {
+    // o push nunca atrapalha o envio do WhatsApp
   }
 }
 

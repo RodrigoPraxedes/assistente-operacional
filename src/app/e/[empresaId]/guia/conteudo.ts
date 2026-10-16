@@ -75,6 +75,16 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Notificações no navegador e no app",
+        passos: [
+          "No rodapé do menu, toque em Ativar notificações e permita quando o navegador perguntar. Faça isso em cada aparelho que quiser avisar.",
+          "Você recebe o mesmo aviso do WhatsApp (tarefa atribuída, lembrete de check-list, resumo do dia...) como notificação, mesmo com o Atalaia fechado. Tocar nela abre a tela certa.",
+          "Só chega aviso para quem tem o WhatsApp autorizado em Destinatários ligado ao seu cadastro de colaborador.",
+          "No iPhone, instale primeiro o Atalaia na Tela de Início; as notificações só funcionam no app instalado.",
+          "Para desligar, toque em Notificações ligadas no mesmo lugar.",
+        ],
+      },
+      {
         titulo: "Menu, tema e empresas",
         passos: [
           "No computador, o botão ao lado do logo recolhe o menu para mostrar só os ícones.",

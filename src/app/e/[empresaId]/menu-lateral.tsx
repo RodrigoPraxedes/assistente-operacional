@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Marca } from "@/components/marca";
+import { AtivarNotificacoes } from "@/components/ativar-notificacoes";
 import icone from "@/app/icon.png";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
@@ -157,6 +158,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
 
       <div className={`space-y-3 border-t border-slate-200 pt-3 ${curto ? "px-2" : "px-3"}`}>
         {!curto && <SeletorTema inicial={temaInicial} />}
+        {!curto && <AtivarNotificacoes />}
         <div className={`flex items-center gap-2 ${curto ? "flex-col" : ""}`}>
           <span
             title={curto ? membro.nome : undefined}
