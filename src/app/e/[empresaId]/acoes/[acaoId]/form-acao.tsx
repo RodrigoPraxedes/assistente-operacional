@@ -14,6 +14,7 @@ type Opcao = { id: string; nome: string };
 export function FormAcao({
   empresaId,
   acao,
+  modelo,
   hoje,
   unidades,
   setores,
@@ -23,6 +24,8 @@ export function FormAcao({
 }: {
   empresaId: string;
   acao: Acao | null;
+  // ação de origem de "criar nova a partir desta" (formulário novo pré-preenchido)
+  modelo?: Acao | null;
   podeMudarPrivado: boolean;
   hoje: string;
   unidades: Opcao[];
@@ -31,7 +34,8 @@ export function FormAcao({
   membros: (Opcao & { setor_id: string | null })[];
 }) {
   const [estado, acaoForm] = useActionState(salvarAcao.bind(null, empresaId), undefined);
-  const inicial = acao?.recorrencia ?? "";
+  const base = acao ?? modelo;
+  const inicial = base?.recorrencia ?? "";
   const [regra, setRegra] = useState(inicial);
 
   return (
@@ -39,10 +43,10 @@ export function FormAcao({
       {acao && <input type="hidden" name="id" value={acao.id} />}
       <Cartao className="space-y-4">
         <Campo rotulo="Nome da ação">
-          <Input name="nome" defaultValue={acao?.nome} placeholder="Ex.: Limpeza da caixa d'água" required />
+          <Input name="nome" defaultValue={modelo ? `Cópia de ${modelo.nome}` : base?.nome} autoFocus={!!modelo} onFocus={(e) => modelo && e.currentTarget.select()} placeholder="Ex.: Limpeza da caixa d'água" required />
         </Campo>
         <Campo rotulo="Detalhes">
-          <Textarea name="descricao" rows={2} defaultValue={acao?.descricao ?? ""} />
+          <Textarea name="descricao" rows={2} defaultValue={base?.descricao ?? ""} />
         </Campo>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -50,30 +54,30 @@ export function FormAcao({
             <SeletorRecorrencia inicial={inicial} permitirNenhuma onChange={setRegra} />
           </Campo>
           <Campo rotulo="Horário">
-            <Input type="time" name="horario" defaultValue={acao?.horario?.slice(0, 5) ?? "09:00"} required />
+            <Input type="time" name="horario" defaultValue={base?.horario?.slice(0, 5) ?? "09:00"} required />
           </Campo>
           <Campo rotulo={regra ? "Data inicial" : "Data"}>
-            <Input type="date" name="data_inicial" defaultValue={acao?.data_inicial ?? hoje} required />
+            <Input type="date" name="data_inicial" defaultValue={base?.data_inicial ?? hoje} required />
           </Campo>
           {regra && (
             <Campo rotulo="Data final" dica="Vazio = repete sem fim">
-              <Input type="date" name="data_final" defaultValue={acao?.data_final ?? ""} />
+              <Input type="date" name="data_final" defaultValue={base?.data_final ?? ""} />
             </Campo>
           )}
           <Campo rotulo="Prazo (horas depois do horário)" dica="Depois disso a tarefa aparece como atrasada">
-            <Input type="number" min={0} name="prazo_horas" defaultValue={acao?.prazo_horas ?? 8} />
+            <Input type="number" min={0} name="prazo_horas" defaultValue={base?.prazo_horas ?? 8} />
           </Campo>
           <div className="sm:col-span-2">
             <SeletorResponsaveis
               name="responsaveis"
-              inicial={acao?.responsaveis ?? []}
+              inicial={base?.responsaveis ?? []}
               membros={membros}
               setores={setores}
               dica="Com várias pessoas, cada ocorrência vira uma tarefa só para todas"
             />
           </div>
           <Campo rotulo="Unidade" dica="Todas = uma tarefa para cada unidade">
-            <Select name="unidade_id" defaultValue={acao?.unidade_id ?? (unidades.length === 1 ? unidades[0].id : "")}>
+            <Select name="unidade_id" defaultValue={base?.unidade_id ?? (unidades.length === 1 ? unidades[0].id : "")}>
               <option value="">Todas as unidades</option>
               {unidades.map((u) => (
                 <option key={u.id} value={u.id}>
@@ -83,7 +87,7 @@ export function FormAcao({
             </Select>
           </Campo>
           <Campo rotulo="Setor">
-            <Select name="setor_id" defaultValue={acao?.setor_id ?? ""}>
+            <Select name="setor_id" defaultValue={base?.setor_id ?? ""}>
               <option value="">—</option>
               {setores.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -93,7 +97,7 @@ export function FormAcao({
             </Select>
           </Campo>
           <Campo rotulo="Categoria">
-            <Select name="categoria_id" defaultValue={acao?.categoria_id ?? ""}>
+            <Select name="categoria_id" defaultValue={base?.categoria_id ?? ""}>
               <option value="">—</option>
               {categorias.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -102,10 +106,10 @@ export function FormAcao({
               ))}
             </Select>
           </Campo>
-          <CampoVisibilidade privado={acao?.privado} podeMudar={podeMudarPrivado} perguntar={!acao} />
-          {acao && (
+          <CampoVisibilidade privado={base?.privado} podeMudar={podeMudarPrivado} perguntar={!base} />
+          {base && (
             <Campo rotulo="Situação">
-              <Select name="ativo" defaultValue={String(acao.ativo)}>
+              <Select name="ativo" defaultValue={String(base.ativo)}>
                 <option value="true">Ativa</option>
                 <option value="false">Inativa (para de gerar tarefas)</option>
               </Select>
@@ -116,7 +120,12 @@ export function FormAcao({
 
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <div className="flex justify-between">
-        <BotaoEnviar>Salvar ação</BotaoEnviar>
+        <div className="flex flex-wrap gap-2">
+          <BotaoEnviar>Salvar ação</BotaoEnviar>
+          <BotaoEnviar variante="secundario" name="continuar" value="1">
+            Salvar e criar nova a partir desta
+          </BotaoEnviar>
+        </div>
         {acao && (
           <Botao
             type="button"
