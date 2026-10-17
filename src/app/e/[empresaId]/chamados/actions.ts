@@ -50,7 +50,7 @@ export async function abrirChamado(empresaId: string, _: { erro?: string } | und
   redirect(`/e/${empresaId}/chamados/${data}?novo=1`);
 }
 
-// Dados de gestão: prioridade, equipamento, fornecedor, custo e responsável
+// Dados de gestão: título, descrição, prioridade, equipamento, fornecedor, custo e responsável
 export async function atualizarChamado(empresaId: string, tarefaId: string, form: FormData) {
   const { supabase, empresa } = await getContexto(empresaId);
   const caminho = `/e/${empresaId}/chamados/${tarefaId}`;
@@ -68,11 +68,15 @@ export async function atualizarChamado(empresaId: string, tarefaId: string, form
     .eq("tarefa_id", tarefaId);
   if (error) redirect(`${caminho}?erro=${encodeURIComponent(error.message)}`);
 
-  // responsável e prazo ficam na tarefa
+  // título, descrição, responsável e prazo ficam na tarefa
+  const titulo = txt(form, "titulo");
+  if (!titulo) redirect(`${caminho}?erro=${encodeURIComponent("Informe o título do chamado.")}`);
   const prazo = txt(form, "prazo");
   const { error: e2 } = await supabase
     .from("tarefas")
     .update({
+      titulo,
+      descricao: txt(form, "descricao"),
       responsavel_id: txt(form, "responsavel_id"),
       ...(prazo ? { prazo: localParaUtc(prazo, empresa.fuso_horario) } : {}),
     })

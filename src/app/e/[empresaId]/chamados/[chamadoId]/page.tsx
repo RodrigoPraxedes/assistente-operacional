@@ -212,6 +212,16 @@ export default async function DetalheChamado({
         <Cartao>
           <h2 className="mb-2 font-medium">Gestão</h2>
           <form action={atualizarChamado.bind(null, empresaId, t.id)} className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Campo rotulo="Título">
+                <Input name="titulo" required defaultValue={t.titulo} />
+              </Campo>
+            </div>
+            <div className="sm:col-span-2">
+              <Campo rotulo="Descrição">
+                <Textarea name="descricao" rows={3} defaultValue={t.descricao ?? ""} />
+              </Campo>
+            </div>
             <Campo rotulo="Prioridade">
               <Select name="prioridade" defaultValue={chamado.prioridade}>
                 {Object.entries(PRIORIDADES).map(([k, v]) => (
