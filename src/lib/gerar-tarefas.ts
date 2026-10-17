@@ -36,6 +36,9 @@ interface Fonte {
 
 const MINUTO = 60_000;
 
+const chaveAlerta = (empresaId: string, unidadeId: string | null, titulo: string, prazoIso: string) =>
+  [empresaId, unidadeId ?? "", titulo.trim().toLowerCase(), prazoIso].join("|");
+
 // ocorrências da regra com prazo fixo depois de cada uma
 const porRegra = (regra: RegraRecorrencia, prazoMinutos: number) => (dias: number) =>
   ocorrencias(regra, dias).map((quando) => ({
@@ -264,6 +267,7 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
   for (const s of status ?? []) if (!statusInicial.has(s.empresa_id)) statusInicial.set(s.empresa_id, s.id);
 
   const novas = [];
+  const vistosAlerta = new Set<string>();
   for (const f of fontes) {
     const statusId = statusInicial.get(f.empresa_id);
     if (!statusId) continue;
@@ -281,7 +285,13 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
     }
 
     for (const unidadeId of alvo) {
-      for (const m of momentos) {
+      for (const m of [...momentos].sort((a, b) => a.quando.getTime() - b.quando.getTime())) {
+        // avisos do alerta com o mesmo texto e o mesmo prazo viram uma tarefa só
+        if (f.origem === "alerta") {
+          const k = chaveAlerta(f.empresa_id, unidadeId, f.titulo, m.prazo.toISOString());
+          if (vistosAlerta.has(k)) continue;
+          vistosAlerta.add(k);
+        }
         novas.push({
           empresa_id: f.empresa_id,
           unidade_id: unidadeId,
@@ -351,6 +361,25 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
             if (e) console.error("Erro ao ajustar tarefa do check-list", e.message);
           }
         }
+      }
+    }
+  }
+
+  // tarefas de alerta que já existem com o mesmo texto e prazo (de outro aviso) não se repetem
+  const prazosAlerta = [...new Set(novas.filter((t) => t.origem === "alerta").map((t) => t.prazo))];
+  if (prazosAlerta.length) {
+    const { data: jaExistem } = await admin
+      .from("tarefas")
+      .select("empresa_id, unidade_id, titulo, prazo")
+      .eq("origem", "alerta")
+      .in("prazo", prazosAlerta);
+    const existentes = new Set(
+      (jaExistem ?? []).map((t) => chaveAlerta(t.empresa_id, t.unidade_id, t.titulo, new Date(t.prazo).toISOString())),
+    );
+    for (let i = novas.length - 1; i >= 0; i--) {
+      const t = novas[i];
+      if (t.origem === "alerta" && existentes.has(chaveAlerta(t.empresa_id, t.unidade_id, t.titulo, t.prazo))) {
+        novas.splice(i, 1);
       }
     }
   }

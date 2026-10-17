@@ -34,6 +34,15 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
         responsaveis: (Array.isArray(a.responsaveis) ? a.responsaveis : []).map(String).filter(Boolean),
       }))
       .filter((a) => a.titulo);
+    // avisos idênticos (mesma antecedência e mesmo texto) viram um só, somando os responsáveis
+    const unicos = new Map<string, AvisoForm>();
+    for (const a of avisos) {
+      const k = `${a.dias_antes}|${a.titulo.toLowerCase()}`;
+      const ja = unicos.get(k);
+      if (!ja) unicos.set(k, a);
+      else ja.responsaveis = [...new Set([...ja.responsaveis, ...a.responsaveis])];
+    }
+    avisos = [...unicos.values()];
   } catch {
     return { erro: "Avisos inválidos" };
   }
