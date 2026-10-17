@@ -277,7 +277,7 @@ export function FormModelo({
                 )}
                 {item.tipo_resposta === "sim_nao" && (
                   <label className="flex items-center gap-1">
-                    Conta como problema
+                    Problema:
                     <select
                       value={item.problema_quando}
                       onChange={(e) => alterar(item.chave, { problema_quando: e.target.value as ProblemaQuando })}

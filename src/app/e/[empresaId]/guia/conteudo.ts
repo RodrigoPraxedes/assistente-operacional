@@ -203,7 +203,7 @@ export const SECOES: SecaoGuia[] = [
           "Marque se ele fica disponível no QR Code e quem pode preencher por lá: qualquer pessoa digitando o nome, ou só colaboradores com PIN.",
           "Adicione os itens. Cada um pode ser Sim/Não/Em processo, número ou texto.",
           "Em cada item, escolha se é obrigatório, se aceita foto, se a foto é obrigatória quando a resposta for \"Não\" e se um \"Não\" abre chamado de manutenção sozinho.",
-          "Em Conta como problema, diga qual resposta do item é ruim: \"Não\" (o padrão), \"Sim\" (por exemplo, \"Houve ocorrência no turno?\") ou Nunca (só registrar). Só a resposta marcada aparece em vermelho, entra na contagem de problemas do Painel e do resumo do WhatsApp. A foto obrigatória e o chamado automático por \"Não\" só aparecem quando o problema é o \"Não\".",
+          "Em Problema, escolha o que é ruim naquele item: \"Sim = normal · Não = problema\" (o padrão, como em \"O chão está limpo?\"), \"Sim = problema · Não = normal\" (como em \"Algum funcionário faltou?\") ou nenhuma resposta (só registrar). Só a resposta que é problema aparece em vermelho e entra na contagem de problemas do Painel e do resumo do WhatsApp. A foto obrigatória e o chamado automático por \"Não\" só aparecem quando o problema é o \"Não\".",
           "Marque Foto obrigatória (câmera) quando o item sempre precisa de foto: sem ela o check-list não é enviado.",
           "Arraste pela alça ⋮⋮ para mudar a ordem e toque em Salvar check-list.",
         ],

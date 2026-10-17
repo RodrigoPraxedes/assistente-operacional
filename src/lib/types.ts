@@ -113,9 +113,9 @@ export type TipoResposta = "sim_nao" | "numero" | "texto";
 export type ProblemaQuando = "nao" | "sim" | "nunca";
 
 export const PROBLEMA_QUANDO: { valor: ProblemaQuando; rotulo: string }[] = [
-  { valor: "nao", rotulo: 'Quando a resposta for "Não"' },
-  { valor: "sim", rotulo: 'Quando a resposta for "Sim"' },
-  { valor: "nunca", rotulo: "Nunca (só registrar)" },
+  { valor: "nao", rotulo: "Sim = normal · Não = problema" },
+  { valor: "sim", rotulo: "Sim = problema · Não = normal" },
+  { valor: "nunca", rotulo: "Nenhuma resposta é problema (só registrar)" },
 ];
 
 export type ModoExecutor = "aberto" | "usuarios";
