@@ -1,10 +1,14 @@
 import Link from "next/link";
-import { Wrench } from "lucide-react";
+import { CheckCircle2, Wrench } from "lucide-react";
 import { notFound } from "next/navigation";
 import { carregarCentral } from "@/lib/qr";
 import { Vazio } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+
+function hora(iso: string, fuso: string) {
+  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso }).format(new Date(iso));
+}
 
 export default async function CentralQr({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -42,7 +46,15 @@ export default async function CentralQr({ params }: { params: Promise<{ token: s
                   <span className="block font-medium">{m.nome}</span>
                   {m.descricao && <span className="text-sm text-slate-500">{m.descricao}</span>}
                 </span>
-                <span className="text-sm text-slate-500">{m.horario_preferencial}</span>
+                <span className="shrink-0 pl-2 text-right text-sm text-slate-500">
+                  {m.horario_preferencial}
+                  {m.feito_hoje_em && (
+                    <span className="mt-1 flex items-center justify-end gap-1 text-xs font-medium text-green-600">
+                      <CheckCircle2 size={14} />
+                      Feito hoje às {hora(m.feito_hoje_em, central.empresa.fuso_horario)}
+                    </span>
+                  )}
+                </span>
               </Link>
             </li>
           ))}

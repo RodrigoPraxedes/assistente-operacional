@@ -11,8 +11,8 @@ function anon() {
 
 export interface CentralQr {
   unidade: { id: string; nome: string };
-  empresa: { id: string; nome: string };
-  modelos: { id: string; nome: string; descricao: string | null; horario_preferencial: string; modo_executor: ModoExecutor }[];
+  empresa: { id: string; nome: string; fuso_horario: string };
+  modelos: { id: string; nome: string; descricao: string | null; horario_preferencial: string; modo_executor: ModoExecutor; feito_hoje_em: string | null }[];
   colaboradores: { id: string; nome: string }[];
 }
 
