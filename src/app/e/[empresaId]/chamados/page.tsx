@@ -42,15 +42,19 @@ export default async function PaginaChamados({
       consulta.returns<(Chamado & { tarefas: Tarefa })[]>(),
       supabase.from("membros").select("id, nome").eq("empresa_id", empresaId),
       supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
-      supabase.from("equipamentos").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+      supabase.from("equipamentos").select("id, nome, ativo").eq("empresa_id", empresaId).order("nome"),
     ]);
 
   const lista = chamados ?? [];
+  const nomeEquipamento = new Map((equipamentos ?? []).map((e) => [e.id, e.nome]));
   const etiquetas = Object.fromEntries(
     lista.map((c) => [
       c.tarefa_id,
       [
         { texto: `#${c.numero}`, cor: "#475569" },
+        ...(c.equipamento_id && nomeEquipamento.get(c.equipamento_id)
+          ? [{ texto: nomeEquipamento.get(c.equipamento_id)!, cor: "#0f766e" }]
+          : []),
         { texto: PRIORIDADES[c.prioridade].rotulo, cor: PRIORIDADES[c.prioridade].cor },
       ],
     ]),
@@ -93,10 +97,10 @@ export default async function PaginaChamados({
             ))}
           </Select>
         )}
-        {(equipamentos?.length ?? 0) > 0 && (
+        {(equipamentos ?? []).some((e) => e.ativo) && (
           <Select name="equipamento" defaultValue={filtros.equipamento ?? ""} className="w-auto">
             <option value="">Todos os equipamentos</option>
-            {equipamentos!.map((e) => (
+            {equipamentos!.filter((e) => e.ativo).map((e) => (
               <option key={e.id} value={e.id}>
                 {e.nome}
               </option>

@@ -158,7 +158,7 @@ export default async function PaginaPainel({
     (() => {
       let q = supabase
         .from("chamados")
-        .select("tarefa_id, numero, prioridade, created_at, tarefas!inner(titulo, status_id, responsaveis)")
+        .select("tarefa_id, numero, prioridade, equipamento_id, created_at, tarefas!inner(titulo, status_id, responsaveis)")
         .eq("empresa_id", empresaId)
         .in("tarefas.status_id", idsPendentes)
         .order("created_at", { ascending: true })
@@ -169,6 +169,7 @@ export default async function PaginaPainel({
           tarefa_id: string;
           numero: number;
           prioridade: Prioridade;
+          equipamento_id: string | null;
           created_at: string;
           tarefas: { titulo: string; status_id: string };
         }[]
@@ -245,6 +246,12 @@ export default async function PaginaPainel({
   const porPrioridade = (Object.keys(PRIORIDADES) as Prioridade[])
     .map((p) => ({ p, n: abertas.filter((c) => c.prioridade === p).length }))
     .filter((x) => x.n > 0);
+  // nome do equipamento só dos 5 que aparecem na lista (uma consulta, sem N+1)
+  const idsEquip = [...new Set(abertas.slice(0, 5).map((c) => c.equipamento_id).filter((x): x is string => !!x))];
+  const { data: equipsPainel } = idsEquip.length
+    ? await supabase.from("equipamentos").select("id, nome").in("id", idsEquip)
+    : { data: [] as { id: string; nome: string }[] };
+  const nomeEquip = new Map((equipsPainel ?? []).map((e) => [e.id, e.nome]));
   const diasAberto = (iso: string) => Math.floor((agoraMs - new Date(iso).getTime()) / DIA);
 
   // 4. próximos 7 dias: alertas (data do evento) e etapas de projetos
@@ -440,6 +447,9 @@ export default async function PaginaPainel({
                       <Link href={`${base}/chamados/${c.tarefa_id}`} className="flex items-center justify-between gap-2 px-1 py-2 text-sm hover:bg-slate-100">
                         <span className="min-w-0 truncate">
                           <span className="text-slate-500">#{c.numero}</span> {c.tarefas.titulo}
+                          {c.equipamento_id && nomeEquip.get(c.equipamento_id) && (
+                            <span className="text-slate-500"> · {nomeEquip.get(c.equipamento_id)}</span>
+                          )}
                         </span>
                         <span className={`shrink-0 text-xs ${dias >= 7 ? "font-medium text-red-700" : "text-slate-500"}`}>
                           {dias === 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`}

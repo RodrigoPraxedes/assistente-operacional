@@ -369,6 +369,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Acompanhar",
         passos: [
           "Os chamados aparecem num quadro como o de Tarefas, que pode ser filtrado por prioridade, unidade e equipamento.",
+          "Quando o chamado tem um equipamento do patrimônio, o nome dele aparece no cartão do quadro, no Painel, na lista de Tarefas e no aviso de WhatsApp, para você saber qual é o equipamento sem abrir o chamado.",
           "Dentro do chamado, em Andamento, mude o status com um comentário. Para adiar, informe a nova data.",
           "Registre o prestador que atendeu, o custo, novas fotos e comentários. Tudo fica no histórico.",
         ],
