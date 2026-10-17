@@ -161,7 +161,7 @@ export const ORIGENS: Record<Origem, string> = {
   acao: "Ação recorrente",
   chamado: "Chamado",
   alerta: "Alerta",
-  plano: "Plano (PMLP)",
+  plano: "Projeto (PMLP)",
 };
 
 export const TIPOS_STATUS: Record<TipoStatus, string> = {

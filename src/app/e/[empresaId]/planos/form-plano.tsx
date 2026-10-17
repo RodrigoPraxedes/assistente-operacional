@@ -37,7 +37,7 @@ export function FormPlano({
   return (
     <form action={salvarPlano.bind(null, empresaId, plano?.id ?? null)} className="space-y-4">
       <Cartao className="space-y-4">
-        <Campo rotulo="Nome do plano">
+        <Campo rotulo="Nome do projeto">
           <Input name="nome" defaultValue={plano?.nome} placeholder="Ex.: Reforma do letreiro" required />
         </Campo>
         <Campo rotulo="Objetivo" dica="O que se quer alcançar e por quê">
@@ -49,7 +49,7 @@ export function FormPlano({
           />
         </Campo>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo rotulo="Prazo do plano">
+          <Campo rotulo="Prazo do projeto">
             <Select name="horizonte" defaultValue={plano?.horizonte ?? "medio"}>
               {(Object.keys(HORIZONTES) as Horizonte[]).map((h) => (
                 <option key={h} value={h}>
@@ -106,7 +106,7 @@ export function FormPlano({
           )}
         </div>
       </Cartao>
-      <BotaoEnviar>{plano ? "Salvar" : "Criar plano"}</BotaoEnviar>
+      <BotaoEnviar>{plano ? "Salvar" : "Criar projeto"}</BotaoEnviar>
     </form>
   );
 }

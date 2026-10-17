@@ -28,20 +28,20 @@ export default async function EditarPlano({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Titulo voltar={{ href: `/e/${empresaId}/planos/${planoId}`, rotulo: plano.nome }}>Editar plano</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/planos/${planoId}`, rotulo: plano.nome }}>Editar projeto</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       <FormPlano empresaId={empresaId} plano={plano} podeMudarPrivado={souAutor} {...opcoes} />
 
       {(!plano.privado || souAutor) && (
         <Cartao className="space-y-2">
-          <h2 className="font-medium text-slate-900">Excluir plano</h2>
-          <p className="text-sm text-slate-500">Apaga o plano e todas as etapas dele, inclusive as tarefas no Kanban.</p>
+          <h2 className="font-medium text-slate-900">Excluir projeto</h2>
+          <p className="text-sm text-slate-500">Apaga o projeto e todas as etapas dele, inclusive as tarefas no Kanban.</p>
           <form action={excluirPlano.bind(null, empresaId, planoId)}>
             <BotaoConfirmar
-              mensagem={`Excluir o plano "${plano.nome}" e todas as etapas?`}
+              mensagem={`Excluir o projeto "${plano.nome}" e todas as etapas?`}
               className={estilos.botaoPerigo}
             >
-              Excluir plano
+              Excluir projeto
             </BotaoConfirmar>
           </form>
         </Cartao>

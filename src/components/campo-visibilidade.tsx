@@ -18,7 +18,7 @@ export function CampoVisibilidade({
   privado?: boolean;
   podeMudar: boolean;
   perguntar?: boolean;
-  // quem vê o item privado, quando não é "você e os responsáveis" (ex.: planos)
+  // quem vê o item privado, quando não é "você e os responsáveis" (ex.: projetos)
   quemVe?: string;
 }) {
   const [valor, setValor] = useState(String(privado));

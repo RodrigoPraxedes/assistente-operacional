@@ -84,12 +84,12 @@ export default async function DetalhePlano({
       {avisos.salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
       {avisos.erro && <Aviso>{avisos.erro}</Aviso>}
       <Titulo
-        voltar={{ href: `/e/${empresaId}/planos`, rotulo: "Planos" }}
+        voltar={{ href: `/e/${empresaId}/planos`, rotulo: "Projetos" }}
         acoes={
           edita && (
             <>
               <LinkBotao variante="secundario" href={`/e/${empresaId}/planos/${planoId}/editar`}>
-                Editar plano
+                Editar projeto
               </LinkBotao>
               <LinkBotao href={`/e/${empresaId}/planos/${planoId}/etapas/nova`}>Nova etapa</LinkBotao>
             </>

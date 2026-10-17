@@ -31,7 +31,7 @@ const NOMES_ORIGEM: Record<string, string> = {
   acao: "Ação",
   chamado: "Chamado",
   alerta: "Alerta",
-  plano: "Plano",
+  plano: "Projeto",
 };
 
 // Duração no calendário: até o prazo, se for curto; senão um bloco de 30 min

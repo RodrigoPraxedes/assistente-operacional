@@ -337,7 +337,7 @@ const buscar_tarefas: Ferramenta = {
   nome: "buscar_tarefas",
   titulo: "Buscar tarefas",
   descricao:
-    "Busca tarefas de todos os módulos (avulsas, check-lists, ações recorrentes, manutenções, alertas, etapas de planos) com filtros. Ocorrências futuras de recorrências só aparecem com recorte 'todas' ou período.",
+    "Busca tarefas de todos os módulos (avulsas, check-lists, ações recorrentes, manutenções, alertas, etapas de projetos) com filtros. Ocorrências futuras de recorrências só aparecem com recorte 'todas' ou período.",
   parametros: {
     type: "object",
     properties: {
@@ -678,14 +678,14 @@ const proximos_alertas: Ferramenta = {
 
 const planos: Ferramenta = {
   nome: "planos",
-  titulo: "Planos",
-  descricao: "Planos de médio e longo prazo (PMLP): situação, responsável, previsão, andamento das etapas, etapas atrasadas e próximas etapas.",
+  titulo: "Projetos",
+  descricao: "Projetos de médio e longo prazo (PMLP): situação, responsável, previsão, andamento das etapas, etapas atrasadas e próximas etapas.",
   parametros: {
     type: "object",
     properties: {
       empresa: P_EMPRESA,
-      incluir_encerrados: { type: "boolean", description: "Incluir planos concluídos e cancelados." },
-      texto: { type: "string", description: "Parte do nome do plano." },
+      incluir_encerrados: { type: "boolean", description: "Incluir projetos concluídos e cancelados." },
+      texto: { type: "string", description: "Parte do nome do projeto." },
     },
     additionalProperties: false,
   },
@@ -710,7 +710,7 @@ const planos: Ferramenta = {
         privado: boolean;
       }[]
     >();
-    if (error) throw new Error("Não consegui consultar os planos.");
+    if (error) throw new Error("Não consegui consultar os projetos.");
     const ids = (lista ?? []).map((p) => p.id);
     const { data: etapas } = ids.length
       ? await ctx.supabase

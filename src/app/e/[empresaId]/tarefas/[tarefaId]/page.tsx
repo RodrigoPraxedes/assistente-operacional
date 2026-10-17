@@ -60,7 +60,7 @@ export default async function DetalheTarefa({
     ? await supabase.storage.from("anexos").createSignedUrls(fotos.map((f) => f.path), 3600)
     : { data: [] };
 
-  // etapa de plano (PMLP): nome do plano e equipe da etapa
+  // etapa de projeto (PMLP): nome do projeto e equipe da etapa
   const [{ data: plano }, { data: equipe }] =
     tarefa.origem === "plano" && tarefa.origem_id
       ? await Promise.all([
@@ -117,7 +117,7 @@ export default async function DetalheTarefa({
           <dd>{responsaveis.map((m) => m.nome).join(", ") || "—"}</dd>
           {plano && (
             <>
-              <dt className="text-slate-500">Plano</dt>
+              <dt className="text-slate-500">Projeto</dt>
               <dd>
                 <Link href={`/e/${empresaId}/planos/${plano.id}`} className="text-blue-700">
                   {plano.nome}

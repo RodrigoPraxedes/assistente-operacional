@@ -58,7 +58,7 @@ async function atender(p: Pedido, ctx: NonNullable<Awaited<ReturnType<typeof cli
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: "atalaia", title: "Atalaia", version: "1.0.0" },
         instructions:
-          "Consultas da operação no Atalaia (tarefas, check-lists, manutenções, escalas, alertas, planos, equipe, prestadores e patrimônio). " +
+          "Consultas da operação no Atalaia (tarefas, check-lists, manutenções, escalas, alertas, projetos, equipe, prestadores e patrimônio). " +
           "Só leitura: nada é alterado. Mostra apenas o que a pessoa logada pode ver no app. " +
           "Se ela participa de mais de uma empresa, informe o parâmetro empresa (nome ou id; veja minhas_empresas). " +
           "Datas e horários já vêm no fuso da empresa. Responda em português do Brasil.",
