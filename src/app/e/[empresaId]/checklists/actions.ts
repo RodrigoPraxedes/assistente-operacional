@@ -6,7 +6,7 @@ import { getContexto } from "@/lib/contexto";
 import { gerarTarefasRecorrentes } from "@/lib/gerar-tarefas";
 import { regraValida } from "@/lib/recorrencia";
 import { soDigitos } from "@/lib/formato";
-import type { TipoResposta } from "@/lib/types";
+import type { ProblemaQuando, TipoResposta } from "@/lib/types";
 
 interface ItemForm {
   id?: string;
@@ -17,6 +17,7 @@ interface ItemForm {
   foto_obrigatoria?: boolean;
   foto_obrigatoria_se_nao: boolean;
   permite_na?: boolean;
+  problema_quando?: ProblemaQuando;
   abre_chamado_se_nao?: boolean;
   prioridade_chamado?: string;
 }
@@ -84,15 +85,19 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
     await supabase.from("checklist_itens").update({ ativo: false }).in("id", removidos);
   }
   for (const [ordem, item] of itens.entries()) {
+    const problemaQuando = item.tipo_resposta === "sim_nao" ? (item.problema_quando ?? "nao") : "nao";
+    // foto e chamado automáticos valem para o "Não"; só fazem sentido quando "Não" é o problema
+    const regraNao = item.tipo_resposta === "sim_nao" && problemaQuando === "nao";
     const linha = {
       texto: item.texto.trim(),
       tipo_resposta: item.tipo_resposta,
       obrigatorio: item.obrigatorio,
       permite_foto: item.permite_foto,
       foto_obrigatoria: item.permite_foto && !!item.foto_obrigatoria,
-      foto_obrigatoria_se_nao: item.tipo_resposta === "sim_nao" && item.foto_obrigatoria_se_nao,
+      foto_obrigatoria_se_nao: regraNao && item.foto_obrigatoria_se_nao,
+      problema_quando: problemaQuando,
       permite_na: item.permite_na ?? true,
-      abre_chamado_se_nao: item.tipo_resposta === "sim_nao" && !!item.abre_chamado_se_nao,
+      abre_chamado_se_nao: regraNao && !!item.abre_chamado_se_nao,
       prioridade_chamado: item.prioridade_chamado ?? "media",
       ordem: ordem + 1,
     };

@@ -46,6 +46,6 @@ export const TEXTO_TESTE = [
   "*TESTE · Relatório do fechamento pronto para revisão*",
   "Unidade: Unidade Exemplo",
   "Enviado por: Colaborador Fictício às 22:40",
-  'Itens com "Não": 2',
+  'Itens com problema: 2',
   "Mensagem de ensaio com dados fictícios.",
 ].join("\n");

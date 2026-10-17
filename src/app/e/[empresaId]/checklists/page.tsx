@@ -102,7 +102,7 @@ export default async function PaginaChecklists({
                       </span>
                     </span>
                     <span className="flex items-center gap-2">
-                      {e.qtd_nao > 0 ? <Etiqueta cor="#dc2626">{e.qtd_nao} Não</Etiqueta> : <Etiqueta cor="#16a34a">OK</Etiqueta>}
+                      {e.qtd_nao > 0 ? <Etiqueta cor="#dc2626">{e.qtd_nao} {e.qtd_nao === 1 ? "problema" : "problemas"}</Etiqueta> : <Etiqueta cor="#16a34a">OK</Etiqueta>}
                       <span className="text-xs text-slate-500">{formatarDataHora(e.enviado_em, empresa.fuso_horario)}</span>
                     </span>
                   </Link>

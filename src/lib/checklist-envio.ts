@@ -20,6 +20,7 @@ interface ItemEnviado {
 }
 
 const ROTULO = Object.fromEntries(RESPOSTAS_SIM_NAO.map((r) => [r.valor, r.rotulo]));
+// "Não" que não é problema (item configurado assim) sai neutro, sem ❌
 const MARCA: Record<string, string> = { sim: "✅", nao: "❌", em_processo: "⏳" };
 
 // Recebe o formulário de preenchimento (app ou QR), sobe as fotos e grava.
@@ -135,6 +136,13 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
       checklist_modelos: { whatsapp_destino: string | null } | null;
     }>();
 
+  const { data: marcadas } = await supabase
+    .from("checklist_respostas")
+    .select("item_id, problema")
+    .eq("execucao_id", execucaoId as string)
+    .eq("problema", true);
+  const problemas = new Set((marcadas ?? []).map((m) => m.item_id as string));
+
   const linhas = itens
     .map((i) => {
       const r = respostas.find((x) => x.item_id === i.id);
@@ -142,7 +150,7 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
       const valor =
         i.tipo_resposta === "sim_nao" ? ROTULO[r.resposta] : i.tipo_resposta === "numero" ? r.valor_numero : r.valor_texto;
       if (!valor) return null;
-      const marca = MARCA[r.resposta] ?? "•";
+      const marca = problemas.has(i.id) ? "❌" : r.resposta === "nao" ? "➖" : (MARCA[r.resposta] ?? "•");
       return `${marca} ${i.texto}: ${valor}${r.observacao ? ` (${r.observacao})` : ""}`;
     })
     .filter(Boolean);
@@ -151,7 +159,7 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
   const resumo = [
     `*${exec?.modelo_nome}* — ${exec?.unidades?.nome ?? ""}`,
     `Por ${exec?.executor_nome} em ${formatarDataHora(exec?.enviado_em, exec?.empresas?.fuso_horario)}`,
-    exec?.qtd_nao ? `⚠️ ${exec.qtd_nao} item(ns) com "Não"` : emProcesso ? null : "Tudo certo ✅",
+    exec?.qtd_nao ? `⚠️ ${exec.qtd_nao} item(ns) com problema` : emProcesso ? null : "Tudo certo ✅",
     emProcesso ? `⏳ ${emProcesso} item(ns) em processo` : null,
     "",
     ...linhas,
