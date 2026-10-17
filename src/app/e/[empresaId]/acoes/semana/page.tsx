@@ -33,8 +33,6 @@ export default async function PaginaSemanaAcoes({
   const url = (semana: string) => `/e/${empresaId}/acoes/semana?${consulta(semana)}`;
   const setaClasse =
     "flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-superficie text-slate-600 hover:bg-slate-100";
-  const botaoPequeno =
-    "inline-flex h-8 items-center rounded-lg border border-slate-200 bg-superficie px-3 text-xs font-medium text-slate-700 hover:bg-slate-100";
 
   return (
     <div className="space-y-4">
@@ -71,10 +69,7 @@ export default async function PaginaSemanaAcoes({
           setores={setores}
           categorias={categorias}
         />
-        <div className="ml-auto flex gap-2">
-          <a href={`/e/${empresaId}/acoes/semana/exportar?${consulta(segunda)}`} className={botaoPequeno}>
-            Exportar Excel
-          </a>
+        <div className="ml-auto">
           <BotaoImprimir />
         </div>
       </div>

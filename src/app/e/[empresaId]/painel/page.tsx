@@ -367,7 +367,7 @@ export default async function PaginaPainel({
       {/* semana das ações recorrentes */}
       <Bloco
         titulo={`Semana das ações, ${rotuloSemana(segundaSemana)}`}
-        link={{ href: `${base}/acoes/semana`, rotulo: "Imprimir ou exportar" }}
+        link={{ href: `${base}/acoes/semana`, rotulo: "Exportar PDF" }}
       >
         <QuadroSemana
           dias={semana.dias}

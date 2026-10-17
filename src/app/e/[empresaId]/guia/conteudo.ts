@@ -97,7 +97,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "O que aparece",
         passos: [
-          "Semana das ações: logo no topo, o quadro de segunda a domingo com as ações recorrentes previstas para cada dia, na cor da categoria. Toque em Imprimir ou exportar para abrir a tela com Excel e impressão.",
+          "Semana das ações: logo no topo, o quadro de segunda a domingo com as ações recorrentes previstas para cada dia, na cor da categoria. Toque em Exportar PDF para abrir a tela com a impressão.",
           "Hoje em números: tarefas atrasadas, que vencem hoje, em andamento e concluídas hoje. Toque num número para abrir a lista dessas tarefas.",
           "Check-lists de hoje: quantos foram feitos, quantos estão pendentes e quantos não foram realizados no tempo, mais os itens respondidos \"Não\".",
           "Manutenções em aberto: total por status e por prioridade, e as abertas há mais tempo (em vermelho a partir de 7 dias).",
@@ -262,7 +262,7 @@ export const SECOES: SecaoGuia[] = [
           "Em Ações, toque em Ver semana: aparece um quadro de segunda a domingo com as ações previstas para cada dia, no horário de cada uma.",
           "Cada cartão usa a cor da categoria da ação; sem categoria fica branco. Toque no cartão para abrir a ação.",
           "Use as setas para ir à semana anterior ou à próxima, \"Esta semana\" para voltar a hoje, e os filtros de setor e categoria (aplicam assim que você escolhe) para enxergar só uma parte.",
-          "Exportar Excel baixa a semana em planilha, e Imprimir abre a impressão só com o quadro, útil para quem não tem celular nem computador no trabalho.",
+          "Exportar PDF abre a impressão só com o quadro, em paisagem: imprima para quem não tem celular nem computador no trabalho ou escolha \"Salvar como PDF\" para guardar o arquivo.",
           "A mesma semana aparece no Painel, logo ao abrir o sistema (em Meu painel, só as ações em que você é responsável).",
           "Concluir a tarefa de uma ação não a tira do quadro: ele mostra o que está programado pela repetição, não o que falta fazer.",
           "Diferente do quadro de Tarefas (o que já entrou na fila), aqui você vê o que ainda vai acontecer. Ações privadas só aparecem para quem pode vê-las.",
