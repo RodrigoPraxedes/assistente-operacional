@@ -1,7 +1,7 @@
 "use client";
 
 // Reduz a foto no navegador antes de enviar (celular tira fotos de vários MB)
-export async function reduzirFoto(arquivo: File, lado = 1280, qualidade = 0.75): Promise<File> {
+export async function reduzirFoto(arquivo: File, lado = 1024, qualidade = 0.7): Promise<File> {
   if (!arquivo.type.startsWith("image/")) return arquivo;
   try {
     const bitmap = await createImageBitmap(arquivo);

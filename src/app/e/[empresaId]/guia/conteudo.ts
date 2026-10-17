@@ -215,6 +215,7 @@ export const SECOES: SecaoGuia[] = [
           "Os check-lists já preenchidos hoje mostram o selo verde Feito hoje às HH:MM. É só um aviso: dá para abrir e preencher de novo no mesmo dia.",
           "Responda os itens, tire as fotos e toque em Salvar e enviar.",
           "As fotos são tiradas na hora: o botão de foto abre a câmera e uma foto antiga (de mais de 10 minutos, da galeria) é recusada.",
+          "As fotos de check-lists, tarefas e manutenções ficam guardadas por 30 dias e depois são apagadas sozinhas, para não encher o espaço do sistema. As respostas e o histórico continuam; só a imagem some. Se precisar de uma foto por mais tempo, abra a imagem e salve no celular antes.",
           "Depois de salvo, o botão Enviar resumo no WhatsApp manda o resultado para o grupo ou para quem você escolher.",
         ],
       },
