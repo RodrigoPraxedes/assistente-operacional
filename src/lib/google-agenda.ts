@@ -50,27 +50,37 @@ export async function eventosDoGoogle(url: string, de: Date, ate: Date): Promise
     if (item.component.getFirstPropertyValue("status") === "CANCELLED") return;
     if (inicio.compare(fimJanela) > 0 || fim.compare(inicioJanela) < 0) return;
     const diaTodo = inicio.isDate;
+    const ini = diaTodo ? inicio.toString() : inicio.toJSDate();
+    const fi = diaTodo ? fim.toString() : fim.toJSDate();
+    // data inválida (fuso desconhecido, evento sem fim) derrubaria a tela inteira ao formatar
+    if (typeof ini !== "string" && (isNaN(+ini) || typeof fi === "string" || isNaN(+fi))) return;
+    if (typeof ini === "string" && typeof fi !== "string") return;
     lista.push({
       tipo: "google",
       uid: `google-${uid}-${inicio.toString()}`,
       titulo: item.summary || "(sem título)",
       descricao: item.description || null,
       local: item.location || null,
-      inicio: diaTodo ? inicio.toString() : inicio.toJSDate(),
-      fim: diaTodo ? fim.toString() : fim.toJSDate(),
+      inicio: ini,
+      fim: fi,
     });
   };
 
   for (const e of principais.values()) {
-    if (!e.isRecurring()) {
-      adicionar(e.uid, e, e.startDate, e.endDate ?? e.startDate);
+    // um evento estranho não pode esconder os demais
+    try {
+      if (!e.isRecurring()) {
+        adicionar(e.uid, e, e.startDate, e.endDate ?? e.startDate);
+        continue;
+      }
+      const it = e.iterator();
+      for (let n = 0, prox = it.next(); prox && n < MAX_REPETICOES; n++, prox = it.next()) {
+        if (prox.compare(fimJanela) > 0) break;
+        const d = e.getOccurrenceDetails(prox);
+        adicionar(e.uid, d.item, d.startDate, d.endDate);
+      }
+    } catch {
       continue;
-    }
-    const it = e.iterator();
-    for (let n = 0, prox = it.next(); prox && n < MAX_REPETICOES; n++, prox = it.next()) {
-      if (prox.compare(fimJanela) > 0) break;
-      const d = e.getOccurrenceDetails(prox);
-      adicionar(e.uid, d.item, d.startDate, d.endDate);
     }
   }
   return lista;
