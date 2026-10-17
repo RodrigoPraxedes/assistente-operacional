@@ -461,6 +461,7 @@ export const SECOES: SecaoGuia[] = [
           "No computador, abra o Google Agenda › engrenagem › Configurações › sua agenda › Integrar agenda.",
           "Copie o Endereço secreto no formato iCal e cole em Trazer meus eventos do Google.",
           "Seus eventos pessoais passam a aparecer na sua semana. Só você vê.",
+          "Se aparecer o aviso de que não foi possível ler a agenda do Google, toque em Reconectar e cole o endereço secreto de novo. A Agenda continua abrindo normalmente.",
         ],
       },
     ],

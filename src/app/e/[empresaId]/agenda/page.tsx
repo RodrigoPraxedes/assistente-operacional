@@ -118,7 +118,14 @@ export default async function PaginaAgenda({
 
       {doGoogle === null && (
         <Aviso>
-          Não consegui ler sua agenda do Google agora. Se o endereço secreto foi trocado, cole o novo abaixo.
+          <span className="flex flex-wrap items-center gap-3">
+            <span className="flex-1">
+              Não consegui ler sua agenda do Google agora. Se o endereço secreto foi trocado, reconecte e cole o novo.
+            </span>
+            <form action={removerAgendaGoogle.bind(null, empresaId)}>
+              <Botao variante="secundario">Reconectar</Botao>
+            </form>
+          </span>
         </Aviso>
       )}
       <CalendarioSemana dias={dias} hoje={hoje} eventos={[...eventos, ...(doGoogle ?? [])]} fuso={fuso} />
