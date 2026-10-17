@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { DIAS_SEMANA, diaDeHoje, passosDe, rotuloDias } from "@/lib/rotinas";
 import type { Rotina } from "@/lib/types";
-import { Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
+import { Aviso, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
 import { BotaoImprimir } from "../acoes/semana/botao-imprimir";
 import { FiltrosRotinas } from "./filtros-rotinas";
 
@@ -18,7 +18,7 @@ export default async function PaginaRotinas({
   const { supabase, empresa, pode } = await getContexto(empresaId);
   const podeEditar = pode("rotinas.editar");
 
-  const [{ data: rotinas }, { data: setores }, { data: funcoes }, { data: unidades }] = await Promise.all([
+  const [{ data: rotinas, error: erroRotinas }, { data: setores }, { data: funcoes }, { data: unidades }] = await Promise.all([
     supabase.from("rotinas").select("*").eq("empresa_id", empresaId).eq("ativo", true).order("horario").order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("funcoes").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
@@ -79,7 +79,9 @@ export default async function PaginaRotinas({
         </div>
       </div>
 
-      {lista.length === 0 ? (
+      {erroRotinas ? (
+        <Aviso>Não foi possível carregar as rotinas: {erroRotinas.message}</Aviso>
+      ) : lista.length === 0 ? (
         <Vazio>
           {(rotinas ?? []).length === 0
             ? podeEditar
