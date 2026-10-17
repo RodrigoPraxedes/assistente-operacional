@@ -1,4 +1,5 @@
 import {
+  AlarmClock,
   BookOpen,
   Bot,
   CalendarClock,
@@ -294,6 +295,45 @@ export const SECOES: SecaoGuia[] = [
     ],
   },
   {
+    slug: "rotinas",
+    titulo: "Rotinas",
+    icone: AlarmClock,
+    resumo: "O cronograma da operação: o que fazer em cada horário.",
+    tela: "/rotinas",
+    paraQue:
+      "Rotinas são as atividades-chave que se repetem nos mesmos horários, como abrir o caixa às 8h ou conferir a vitrine às 11h, para a casa estar pronta quando o movimento chegar. É um quadro de consulta: mostra o que precisa acontecer, a que horas e qual função responde. Não cria tarefas nem cobra prazo; para isso use Ações.",
+    topicos: [
+      {
+        titulo: "Consultar o quadro",
+        passos: [
+          "Ao abrir, aparece o dia de hoje, agrupado por horário. Escolha outro dia da semana, ou Semana toda, para ver uma tabela com os dias marcados de cada rotina.",
+          "Filtre por setor e por função: a lista muda assim que você escolhe.",
+          "Em cada rotina, toque em Passo a passo para ver as instruções.",
+          "Exportar PDF abre a impressão só com o quadro (com o passo a passo aberto), em paisagem.",
+        ],
+      },
+      {
+        titulo: "Cadastrar uma rotina",
+        passos: [
+          "Quem tem permissão vê o botão Nova rotina. Informe a atividade, o horário e o dia da semana em que vale (vêm todos marcados).",
+          "Em Instrução e passo a passo, escreva um passo por linha: eles aparecem numerados.",
+          "Escolha a função, o setor e, se a empresa tiver mais de uma unidade, a unidade (vazio = todas).",
+          "Para tirar do quadro sem apagar, mude a situação para Inativa.",
+        ],
+      },
+      {
+        titulo: "Funções",
+        passos: [
+          "As funções ficam em Configurações › Geral. Cadastre as que existem na operação (Caixa, Montador, Churrasqueiro...).",
+          "Ligar a função a cada colaborador é opcional, em Configurações › Colaboradores.",
+        ],
+      },
+    ],
+    dicas: [
+      "Para o aviso de uma atividade chegar à pessoa com prazo, crie também uma Ação com o mesmo horário.",
+    ],
+  },
+  {
     slug: "alertas",
     titulo: "Alertas",
     icone: CalendarClock,
@@ -559,13 +599,14 @@ export const SECOES: SecaoGuia[] = [
           "Unidades: cada loja ou endereço. Em QR Code e detalhes você imprime o QR da unidade. Se ele vazou, Gerar novo QR faz o antigo parar de funcionar.",
           "Status do Kanban: nome, cor e tipo de cada coluna. Dá para criar status de um módulo só, como \"Aguardando peça\" nas manutenções.",
           "Prazos dos chamados: quantas horas cada prioridade tem para ser atendida.",
+          "Funções: quem responde por cada atividade, sem citar a pessoa (Caixa, Cozinheiro, Líder de salão...). Servem para as Rotinas e podem ser ligadas a cada colaborador. Clique no nome para ativar ou desativar; excluir deixa colaboradores e rotinas dela sem função.",
           "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado).",
         ],
       },
       {
         titulo: "Colaboradores",
         passos: [
-          "Toque em Novo colaborador e preencha nome, cargo, WhatsApp, perfil, setor e unidades.",
+          "Toque em Novo colaborador e preencha nome, cargo, WhatsApp, perfil, setor, função (opcional) e unidades.",
           "Com e-mail, a pessoa pode entrar no app: ela cria a conta com o mesmo e-mail e já entra vinculada. Até lá aparece Convite pendente.",
           "Com PIN de 4 dígitos, a pessoa preenche check-lists pelo QR Code sem login.",
           "Para tirar alguém sem perder o histórico, mude a situação para inativo.",

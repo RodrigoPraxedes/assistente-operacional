@@ -161,6 +161,28 @@ export async function alternarStatus(empresaId: string, statusId: string, ativo:
   revalidatePath(`/e/${empresaId}`, "layout");
 }
 
+// ---------------------------------------------------------------- funções
+export async function salvarFuncao(empresaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const { error } = await supabase.from("funcoes").insert({ empresa_id: empresaId, nome: txt(form, "nome") });
+  if (error) falhar(`/e/${empresaId}/config`, error.code === "23505" ? "Já existe uma função com esse nome" : error.message);
+  revalidatePath(`/e/${empresaId}`, "layout");
+}
+
+export async function alternarFuncao(empresaId: string, funcaoId: string, ativo: boolean) {
+  const { supabase } = await getContexto(empresaId);
+  await supabase.from("funcoes").update({ ativo }).eq("id", funcaoId);
+  revalidatePath(`/e/${empresaId}`, "layout");
+}
+
+// colaboradores e rotinas da função ficam sem função
+export async function excluirFuncao(empresaId: string, funcaoId: string) {
+  const { supabase } = await getContexto(empresaId);
+  const { error } = await supabase.from("funcoes").delete().eq("id", funcaoId);
+  if (error) falhar(`/e/${empresaId}/config`, error.message);
+  revalidatePath(`/e/${empresaId}`, "layout");
+}
+
 // ---------------------------------------------------------------- membros
 export async function salvarMembro(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
@@ -174,6 +196,7 @@ export async function salvarMembro(empresaId: string, form: FormData) {
     email: opcional(form, "email")?.toLowerCase() ?? null,
     perfil_id: opcional(form, "perfil_id"),
     setor_id: opcional(form, "setor_id"),
+    funcao_id: opcional(form, "funcao_id"),
     todas_unidades: todas,
     ativo: form.get("ativo") !== "false",
   };

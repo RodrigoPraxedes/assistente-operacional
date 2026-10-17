@@ -7,6 +7,7 @@ import icone from "@/app/icon.png";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
+  AlarmClock,
   ArrowLeftRight,
   BookOpen,
   CalendarClock,
@@ -71,6 +72,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
     { href: `${base}/tarefas`, rotulo: "Tarefas", icone: SquareKanban },
     { href: `${base}/checklists`, rotulo: "Check-lists", icone: ListChecks },
     { href: `${base}/acoes`, rotulo: "Ações", icone: Repeat },
+    { href: `${base}/rotinas`, rotulo: "Rotinas", icone: AlarmClock },
     { href: `${base}/alertas`, rotulo: "Alertas", icone: CalendarClock },
     { href: `${base}/planos`, rotulo: "Projeto", icone: ChartGantt },
     { href: `${base}/chamados`, rotulo: "Manutenções", icone: Wrench, ativoEm: [`${base}/chamados`, `${base}/prestadores`, `${base}/patrimonio`] },

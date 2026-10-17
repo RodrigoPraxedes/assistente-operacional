@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
-import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
+import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Funcao, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { Aviso, Botao, Cartao, Etiqueta, Input, Select } from "@/components/ui";
 import {
+  alternarFuncao,
   alternarSetor,
   alternarStatus,
   editarCategoria,
   excluirCategoria,
+  excluirFuncao,
   excluirSetor,
   moverStatus,
   salvarCategoria,
   salvarEmpresa,
+  salvarFuncao,
   salvarSetor,
   salvarSla,
   salvarStatus,
@@ -29,9 +32,10 @@ export default async function ConfigGeral({
   const { erro } = await searchParams;
   const { supabase, empresa, pode } = await getContexto(empresaId);
 
-  const [{ data: unidades }, { data: setores }, { data: categorias }, { data: status }] = await Promise.all([
+  const [{ data: unidades }, { data: setores }, { data: funcoes }, { data: categorias }, { data: status }] = await Promise.all([
     supabase.from("unidades").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("setores").select("*").eq("empresa_id", empresaId).order("nome"),
+    supabase.from("funcoes").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("categorias").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("status").select("*").eq("empresa_id", empresaId).order("ordem"),
   ]);
@@ -202,6 +206,46 @@ export default async function ConfigGeral({
         {pode("config.setores") && (
           <form action={salvarSetor.bind(null, e)} className="flex gap-2">
             <Input name="nome" placeholder="Novo setor" required />
+            <Botao variante="secundario">Adicionar</Botao>
+          </form>
+        )}
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <h2 className="font-medium">Funções</h2>
+        <p className="text-xs text-slate-500">
+          Quem responde por cada atividade, sem citar a pessoa (ex.: Caixa, Cozinheiro, Líder de salão). Valem nas Rotinas e
+          podem ser ligadas a cada colaborador. Clique no nome para ativar ou desativar.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {(funcoes as Funcao[] | null)?.map((f) => (
+            <span key={f.id} className="flex items-center gap-1">
+              <form action={alternarFuncao.bind(null, e, f.id, !f.ativo)}>
+                <button
+                  disabled={!pode("config.funcoes")}
+                  title={f.ativo ? "Clique para desativar" : "Clique para ativar"}
+                  className={`rounded-full border px-3 py-1 text-sm ${f.ativo ? "border-slate-300" : "border-dashed text-slate-400"}`}
+                >
+                  {f.nome}
+                </button>
+              </form>
+              {pode("config.funcoes") && (
+                <form action={excluirFuncao.bind(null, e, f.id)}>
+                  <BotaoConfirmar
+                    mensagem={`Excluir a função "${f.nome}"? Colaboradores e rotinas dela ficam sem função.`}
+                    className="text-xs text-slate-400 hover:text-red-600"
+                    title="Excluir"
+                  >
+                    ×
+                  </BotaoConfirmar>
+                </form>
+              )}
+            </span>
+          ))}
+        </div>
+        {pode("config.funcoes") && (
+          <form action={salvarFuncao.bind(null, e)} className="flex gap-2">
+            <Input name="nome" placeholder="Nova função" required />
             <Botao variante="secundario">Adicionar</Botao>
           </form>
         )}
