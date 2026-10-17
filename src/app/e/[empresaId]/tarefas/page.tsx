@@ -91,6 +91,23 @@ export default async function PaginaTarefas({
     unidades: Object.fromEntries((unidades ?? []).map((u) => [u.id, u.nome])),
   };
 
+  // chamados na lista: nome do equipamento atrelado (duas consultas, sem N+1)
+  const idsChamados = ((tarefas ?? []) as Tarefa[]).filter((t) => t.origem === "chamado").map((t) => t.id);
+  const { data: chamadosEq } = idsChamados.length
+    ? await supabase.from("chamados").select("tarefa_id, equipamento_id").in("tarefa_id", idsChamados).not("equipamento_id", "is", null)
+    : { data: [] as { tarefa_id: string; equipamento_id: string }[] };
+  const idsEq = [...new Set((chamadosEq ?? []).map((c) => c.equipamento_id))];
+  const { data: equips } = idsEq.length
+    ? await supabase.from("equipamentos").select("id, nome").in("id", idsEq)
+    : { data: [] as { id: string; nome: string }[] };
+  const nomeEquip = new Map((equips ?? []).map((e) => [e.id, e.nome]));
+  const equipDaTarefa = new Map((chamadosEq ?? []).map((c) => [c.tarefa_id, nomeEquip.get(c.equipamento_id) ?? null]));
+  const etiquetas = Object.fromEntries(
+    [...equipDaTarefa.entries()]
+      .filter(([, nome]) => nome)
+      .map(([id, nome]) => [id, [{ texto: ORIGENS.chamado, cor: "#7c3aed" }, { texto: nome!, cor: "#0f766e" }]]),
+  );
+
   // botão do WhatsApp em cada tarefa: mensagem pronta para o responsável
   // (com vários, sem número: a pessoa escolhe o contato ou o grupo)
   const membroPorId = new Map((membros ?? []).map((m) => [m.id, m]));
@@ -103,6 +120,7 @@ export default async function PaginaTarefas({
         fuso: empresa.fuso_horario,
         responsavel: resp?.telefone ? resp.nome : null,
         status: nomeStatus.get(t.status_id),
+        equipamento: equipDaTarefa.get(t.id),
       });
       return [t.id, linkWhatsApp(texto, resp?.telefone)];
     }),
@@ -201,6 +219,7 @@ export default async function PaginaTarefas({
         nomes={nomes}
         podeMover={pode("tarefas.mudar_status")}
         whatsapp={whatsapp}
+        etiquetas={etiquetas}
         podePreencher={pode("checklist.executar")}
       />
     </div>

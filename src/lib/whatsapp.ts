@@ -21,12 +21,13 @@ export function urlDoSite(caminho: string) {
 // Mensagem sobre uma tarefa: título, prazo, situação, descrição e o link para abrir no app
 export function mensagemTarefa(
   t: { id: string; titulo: string; prazo: string | null; descricao: string | null; origem: string },
-  { empresaId, fuso, responsavel, status }: { empresaId: string; fuso: string; responsavel?: string | null; status?: string | null },
+  { empresaId, fuso, responsavel, status, equipamento }: { empresaId: string; fuso: string; responsavel?: string | null; status?: string | null; equipamento?: string | null },
 ) {
   const caminho = t.origem === "chamado" ? `/e/${empresaId}/chamados/${t.id}` : `/e/${empresaId}/tarefas/${t.id}`;
   return [
     responsavel ? `Olá, ${responsavel.trim().split(/\s+/)[0]}!` : null,
     `*Tarefa:* ${t.titulo}`,
+    equipamento ? `*Equipamento:* ${equipamento}` : null,
     t.prazo ? `*Prazo:* ${formatarDataHora(t.prazo, fuso)}` : null,
     status ? `*Status:* ${status}` : null,
     t.descricao,
