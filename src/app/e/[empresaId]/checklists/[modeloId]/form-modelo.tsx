@@ -3,7 +3,7 @@
 import { useActionState, useRef, useState, type PointerEvent } from "react";
 import { GripVertical } from "lucide-react";
 import { salvarModelo } from "../actions";
-import { RECORRENCIAS_PRONTAS } from "@/lib/recorrencias-prontas";
+import { SeletorRecorrencia } from "@/components/seletor-recorrencia";
 import { PRIORIDADES, PROBLEMA_QUANDO, type ChecklistItem, type ChecklistModelo, type Prioridade, type ProblemaQuando, type TipoResposta } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
@@ -55,7 +55,6 @@ export function FormModelo({
     iniciais.length ? iniciais.map((i) => ({ ...i, chave: i.id })) : [novoItem()],
   );
   const regra = modelo?.recorrencia ?? "FREQ=DAILY";
-  const [personalizada, setPersonalizada] = useState(!RECORRENCIAS_PRONTAS.some((r) => r.regra === regra));
 
   const alterar = (chave: string, mudanca: Partial<ItemEditavel>) =>
     setItens((xs) => xs.map((x) => (x.chave === chave ? { ...x, ...mudanca } : x)));
@@ -119,22 +118,7 @@ export function FormModelo({
             <Input type="number" min={0} max={720} name="lembrete_minutos" defaultValue={modelo?.lembrete_minutos ?? 30} />
           </Campo>
           <Campo rotulo="Repetir">
-            {personalizada ? (
-              <Input name="recorrencia" defaultValue={regra} placeholder="RRULE, ex.: FREQ=WEEKLY;BYDAY=MO,TH" />
-            ) : (
-              <Select
-                name="recorrencia"
-                defaultValue={regra}
-                onChange={(e) => e.target.value === "__outra" && setPersonalizada(true)}
-              >
-                {RECORRENCIAS_PRONTAS.map((r) => (
-                  <option key={r.regra} value={r.regra}>
-                    {r.rotulo}
-                  </option>
-                ))}
-                <option value="__outra">Outra regra...</option>
-              </Select>
-            )}
+            <SeletorRecorrencia inicial={regra} />
           </Campo>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { excluirAcao, salvarAcao } from "../actions";
-import { RECORRENCIAS_PRONTAS } from "@/lib/recorrencias-prontas";
+import { SeletorRecorrencia } from "@/components/seletor-recorrencia";
 import type { Acao } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
@@ -33,7 +33,6 @@ export function FormAcao({
   const [estado, acaoForm] = useActionState(salvarAcao.bind(null, empresaId), undefined);
   const inicial = acao?.recorrencia ?? "";
   const [regra, setRegra] = useState(inicial);
-  const [personalizada, setPersonalizada] = useState(!!inicial && !RECORRENCIAS_PRONTAS.some((r) => r.regra === inicial));
 
   return (
     <form action={acaoForm} className="space-y-4">
@@ -48,28 +47,7 @@ export function FormAcao({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo rotulo="Repetir">
-            {personalizada ? (
-              <Input
-                name="recorrencia"
-                value={regra}
-                onChange={(e) => setRegra(e.target.value)}
-                placeholder="RRULE, ex.: FREQ=MONTHLY;BYMONTHDAY=10"
-              />
-            ) : (
-              <Select
-                name="recorrencia"
-                value={regra}
-                onChange={(e) => (e.target.value === "__outra" ? setPersonalizada(true) : setRegra(e.target.value))}
-              >
-                <option value="">Não repete (uma vez só)</option>
-                {RECORRENCIAS_PRONTAS.map((r) => (
-                  <option key={r.regra} value={r.regra}>
-                    {r.rotulo}
-                  </option>
-                ))}
-                <option value="__outra">Outra regra...</option>
-              </Select>
-            )}
+            <SeletorRecorrencia inicial={inicial} permitirNenhuma onChange={setRegra} />
           </Campo>
           <Campo rotulo="Horário">
             <Input type="time" name="horario" defaultValue={acao?.horario?.slice(0, 5) ?? "09:00"} required />
