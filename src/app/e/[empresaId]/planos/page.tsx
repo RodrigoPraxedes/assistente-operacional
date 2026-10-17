@@ -34,8 +34,8 @@ export default async function PaginaPlanos({
 
   return (
     <div className="space-y-4">
-      <Titulo acoes={pode("planos.editar") && <LinkBotao href={`/e/${empresaId}/planos/novo`}>Novo plano</LinkBotao>}>
-        Planos de médio e longo prazo
+      <Titulo acoes={pode("planos.editar") && <LinkBotao href={`/e/${empresaId}/planos/novo`}>Novo projeto</LinkBotao>}>
+        Projetos de médio e longo prazo
       </Titulo>
       <p className="text-sm text-slate-500">
         Projetos que levam meses e têm várias etapas, uma dependendo da outra (ex.: reforma do letreiro). Cada etapa vira
@@ -44,7 +44,7 @@ export default async function PaginaPlanos({
 
       {lista.length === 0 ? (
         <Vazio>
-          {encerrados > 0 ? "Nenhum plano em aberto." : "Nenhum plano cadastrado."} Ex.: reforma do letreiro, troca do
+          {encerrados > 0 ? "Nenhum projeto em aberto." : "Nenhum projeto cadastrado."} Ex.: reforma do letreiro, troca do
           sistema de exaustão, abertura de nova unidade.
         </Vazio>
       ) : (

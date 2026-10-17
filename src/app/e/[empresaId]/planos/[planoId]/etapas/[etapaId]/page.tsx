@@ -100,7 +100,7 @@ export default async function FormEtapa({
             </p>
           </div>
           {outras.length === 0 ? (
-            <p className="text-sm text-slate-500">É a primeira etapa do plano.</p>
+            <p className="text-sm text-slate-500">É a primeira etapa do projeto.</p>
           ) : (
             <ul className="space-y-1">
               {outras.map((o) => (
@@ -119,7 +119,7 @@ export default async function FormEtapa({
           <div>
             <h2 className="font-medium text-slate-900">Equipe da etapa</h2>
             <p className="text-xs text-slate-500">
-              Quem mais trabalha nesta etapa (força-tarefa). A equipe vê o plano e pode atualizar a etapa no Kanban.
+              Quem mais trabalha nesta etapa (força-tarefa). A equipe vê o projeto e pode atualizar a etapa no Kanban.
             </p>
           </div>
           <ul className="grid gap-1 sm:grid-cols-2">

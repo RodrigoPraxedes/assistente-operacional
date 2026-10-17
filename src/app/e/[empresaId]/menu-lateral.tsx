@@ -72,7 +72,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
     { href: `${base}/checklists`, rotulo: "Check-lists", icone: ListChecks },
     { href: `${base}/acoes`, rotulo: "Ações", icone: Repeat },
     { href: `${base}/alertas`, rotulo: "Alertas", icone: CalendarClock },
-    { href: `${base}/planos`, rotulo: "Planos", icone: ChartGantt },
+    { href: `${base}/planos`, rotulo: "Projeto", icone: ChartGantt },
     { href: `${base}/chamados`, rotulo: "Manutenções", icone: Wrench, ativoEm: [`${base}/chamados`, `${base}/prestadores`, `${base}/patrimonio`] },
     { href: `${base}/escalas`, rotulo: "Escalas", icone: CalendarDays },
     { href: `${base}/agenda`, rotulo: "Agenda", icone: CalendarSync },

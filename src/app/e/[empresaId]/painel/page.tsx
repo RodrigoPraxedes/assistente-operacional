@@ -247,7 +247,7 @@ export default async function PaginaPainel({
     .filter((x) => x.n > 0);
   const diasAberto = (iso: string) => Math.floor((agoraMs - new Date(iso).getTime()) / DIA);
 
-  // 4. próximos 7 dias: alertas (data do evento) e etapas de planos
+  // 4. próximos 7 dias: alertas (data do evento) e etapas de projetos
   const hojeUtc = Date.UTC(h.y, h.m - 1, h.d);
   const proximosAlertas = ((alertas ?? []) as Alerta[])
     .map((a) => {
@@ -456,7 +456,7 @@ export default async function PaginaPainel({
         {/* 4. próximos 7 dias */}
         <Bloco titulo="Próximos 7 dias">
           {proximosAlertas.length === 0 && (etapas?.length ?? 0) === 0 ? (
-            <Nada>Nenhuma data ou etapa de plano nos próximos 7 dias.</Nada>
+            <Nada>Nenhuma data ou etapa de projeto nos próximos 7 dias.</Nada>
           ) : (
             <ul className="divide-y divide-slate-200">
               {proximosAlertas.map(({ a, proxima, faltam }) => (
@@ -477,7 +477,7 @@ export default async function PaginaPainel({
                   <li key={t.id}>
                     <Link href={`${base}/planos/${t.origem_id}`} className="flex items-center justify-between gap-2 px-1 py-2 text-sm hover:bg-slate-100">
                       <span className="min-w-0 truncate">
-                        <Etiqueta>Plano</Etiqueta> {t.titulo}
+                        <Etiqueta>Projeto</Etiqueta> {t.titulo}
                       </span>
                       <span className={`shrink-0 text-xs ${atrasada ? "font-medium text-red-700" : "text-slate-500"}`}>
                         {atrasada ? "atrasada" : formatarData(t.prazo, fuso)}
