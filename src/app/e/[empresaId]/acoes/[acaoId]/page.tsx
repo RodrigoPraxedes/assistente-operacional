@@ -11,23 +11,25 @@ export default async function EditarAcao({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; acaoId: string }>;
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; copiar?: string }>;
 }) {
   const { empresaId, acaoId } = await params;
-  const { erro } = await searchParams;
+  const { erro, copiar } = await searchParams;
   const { supabase, empresa, membro } = await exigirPermissao(empresaId, "acoes.editar");
   const novo = acaoId === "novo";
+  // modelo para "criar nova a partir desta": busca a ação de origem
+  const origemId = novo ? copiar : undefined;
 
   const [{ data: acao }, { data: unidades }, { data: setores }, { data: categorias }, { data: membros }] = await Promise.all([
-    novo
+    novo && !origemId
       ? Promise.resolve({ data: null })
-      : supabase.from("acoes").select("*").eq("id", acaoId).eq("empresa_id", empresaId).maybeSingle(),
+      : supabase.from("acoes").select("*").eq("id", origemId ?? acaoId).eq("empresa_id", empresaId).maybeSingle(),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
     supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
-  if (!novo && !acao) notFound();
+  if ((!novo || origemId) && !acao) notFound();
 
   const h = hojeNoFuso(empresa.fuso_horario);
   const hoje = `${h.y}-${String(h.m).padStart(2, "0")}-${String(h.d).padStart(2, "0")}`;
@@ -36,12 +38,16 @@ export default async function EditarAcao({
     <div className="mx-auto max-w-3xl space-y-4">
       <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações recorrentes" }}>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
+      {origemId && (
+        <p className="text-xs text-slate-500">Nova ação com as configurações de “{acao!.nome}”. Ajuste o nome e o que mudar e salve.</p>
+      )}
       {!novo && (
         <p className="text-xs text-slate-500">Mudanças valem para as próximas ocorrências. Nas tarefas já criadas, só os responsáveis acompanham (enquanto estiverem abertas).</p>
       )}
       <FormAcao
         empresaId={empresaId}
-        acao={acao as Acao | null}
+        acao={novo ? null : (acao as Acao | null)}
+        modelo={origemId ? (acao as Acao) : null}
         hoje={hoje}
         unidades={unidades ?? []}
         setores={setores ?? []}

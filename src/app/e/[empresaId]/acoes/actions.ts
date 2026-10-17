@@ -60,6 +60,8 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
   }
 
   revalidatePath(`/e/${empresaId}/acoes`);
+  // "Salvar e criar nova a partir desta": abre o formulário novo já preenchido
+  if (form.get("continuar")) redirect(`/e/${empresaId}/acoes/novo?copiar=${acaoId}`);
   redirect(`/e/${empresaId}/acoes?salvo=1`);
 }
 

@@ -256,6 +256,13 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Criar várias parecidas",
+        passos: [
+          "Com o formulário preenchido, toque em Salvar e criar nova a partir desta: a ação é salva e abre uma nova com a mesma repetição, horário, datas, prazo, responsáveis, unidade, setor, categoria, visibilidade e situação.",
+          "O nome vem como \"Cópia de ...\", já selecionado: digite o novo nome, ajuste o que mudar e salve (ou repita o botão para a próxima).",
+        ],
+      },
+      {
         titulo: "Procurar uma ação",
         passos: [
           "A lista vem separada por categoria, cada uma com seu título; as ações sem categoria ficam no fim, em Sem categoria.",
