@@ -70,6 +70,7 @@ export interface Membro {
   email: string | null;
   perfil_id: string | null;
   setor_id: string | null;
+  funcao_id: string | null;
   todas_unidades: boolean;
   dono: boolean;
   // Admin Master que entrou na empresa: tem acesso total, como o dono
@@ -461,4 +462,26 @@ export interface PlanoEtapa {
   plano_id: string;
   ordem: number;
   inicio_previsto: string | null;
+}
+
+export interface Funcao {
+  id: string;
+  empresa_id: string;
+  nome: string;
+  ativo: boolean;
+}
+
+export interface Rotina {
+  id: string;
+  empresa_id: string;
+  nome: string;
+  descricao: string | null;
+  // "HH:MM:SS"
+  horario: string;
+  // 1 = segunda ... 7 = domingo
+  dias: number[];
+  setor_id: string | null;
+  funcao_id: string | null;
+  unidade_id: string | null;
+  ativo: boolean;
 }

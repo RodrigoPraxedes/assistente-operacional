@@ -16,13 +16,14 @@ export default async function EditarMembro({
   const { supabase } = await exigirPermissao(empresaId, "config.membros");
   const novo = membroId === "novo";
 
-  const [{ data: membro }, { data: perfis }, { data: setores }, { data: unidades }, { data: vinculos }, { data: comPin }] =
+  const [{ data: membro }, { data: perfis }, { data: setores }, { data: funcoes }, { data: unidades }, { data: vinculos }, { data: comPin }] =
     await Promise.all([
       novo
         ? Promise.resolve({ data: null })
         : supabase.from("membros").select("*").eq("id", membroId).eq("empresa_id", empresaId).maybeSingle<Membro>(),
       supabase.from("perfis").select("id, nome").eq("empresa_id", empresaId).order("nome"),
       supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+      supabase.from("funcoes").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
       supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
       novo ? Promise.resolve({ data: [] }) : supabase.from("membro_unidades").select("unidade_id").eq("membro_id", membroId),
       supabase.rpc("membros_com_pin", { p_empresa: empresaId }),
@@ -71,6 +72,16 @@ export default async function EditarMembro({
                 {(setores ?? []).map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.nome}
+                  </option>
+                ))}
+              </Select>
+            </Campo>
+            <Campo rotulo="Função" dica="Opcional. Quem responde pelas rotinas desta função.">
+              <Select name="funcao_id" defaultValue={m?.funcao_id ?? ""}>
+                <option value="">—</option>
+                {(funcoes ?? []).map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.nome}
                   </option>
                 ))}
               </Select>
