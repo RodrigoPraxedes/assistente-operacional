@@ -108,9 +108,14 @@ export default async function PaginaAcoes({
     <div className="space-y-4">
       <Titulo
         acoes={
-          pode("acoes.editar") && (
-            <LinkBotao href={`/e/${empresaId}/acoes/novo`}>Nova ação</LinkBotao>
-          )
+          <>
+            <LinkBotao variante="secundario" href={`/e/${empresaId}/acoes/semana`}>
+              Ver semana
+            </LinkBotao>
+            {pode("acoes.editar") && (
+              <LinkBotao href={`/e/${empresaId}/acoes/novo`}>Nova ação</LinkBotao>
+            )}
+          </>
         }
       >
         Ações recorrentes

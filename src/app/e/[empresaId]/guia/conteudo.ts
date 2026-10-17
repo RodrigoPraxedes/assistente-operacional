@@ -256,6 +256,15 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Ver a semana",
+        passos: [
+          "Em Ações, toque em Ver semana: aparece um quadro de segunda a domingo com as ações previstas para cada dia, no horário de cada uma.",
+          "Cada cartão usa a cor da categoria da ação; sem categoria fica branco. Toque no cartão para abrir a ação.",
+          "Use as setas para ir à semana anterior ou à próxima, \"Esta semana\" para voltar a hoje, e os filtros de setor e categoria para enxergar só uma parte.",
+          "Diferente do quadro de Tarefas (o que já entrou na fila), aqui você vê o que ainda vai acontecer. Ações privadas só aparecem para quem pode vê-las.",
+        ],
+      },
+      {
         titulo: "Criar várias parecidas",
         passos: [
           "Com o formulário preenchido, toque em Salvar e criar nova a partir desta: a ação é salva e abre uma nova com a mesma repetição, horário, datas, prazo, responsáveis, unidade, setor, categoria, visibilidade e situação.",
