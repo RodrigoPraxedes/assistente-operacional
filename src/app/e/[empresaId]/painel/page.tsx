@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { getContexto } from "@/lib/contexto";
 import { formatarData, formatarDataHora, hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
-import { hojeIso, horarioTurno, ordenarTurnos } from "@/lib/escala";
+import { hojeIso, horarioTurno, ordenarTurnos, rotuloSemana, segundaDaSemana } from "@/lib/escala";
+import { carregarSemana } from "@/lib/semana-acoes";
+import { QuadroSemana } from "@/components/quadro-semana";
 import { proximaOcorrencia } from "@/lib/recorrencia";
 import { AUSENCIAS, PRIORIDADES, type Alerta, type Prioridade, type Status, type Turno } from "@/lib/types";
 import { Cartao, Etiqueta, Titulo } from "@/components/ui";
@@ -66,6 +68,11 @@ export default async function PaginaPainel({
   const daquiSeteDias = new Date(agora.getTime() + 7 * DIA);
   const trintaDiasAtras = new Date(agora.getTime() - 30 * DIA).toISOString();
   const hoje = hojeIso(fuso);
+
+  const segundaSemana = segundaDaSemana(hoje);
+  const semana = await carregarSemana(supabase, empresaId, fuso, segundaSemana, {
+    membroId: minhas ? membro.id : undefined,
+  });
 
   const { data: statusDados } = await supabase.from("status").select("*").eq("empresa_id", empresaId);
   const status = (statusDados ?? []) as Status[];
@@ -356,6 +363,20 @@ export default async function PaginaPainel({
           })}
         </div>
       )}
+
+      {/* semana das ações recorrentes */}
+      <Bloco
+        titulo={`Semana das ações, ${rotuloSemana(segundaSemana)}`}
+        link={{ href: `${base}/acoes/semana`, rotulo: "Exportar PDF" }}
+      >
+        <QuadroSemana
+          dias={semana.dias}
+          porDia={semana.porDia}
+          hoje={hoje}
+          empresaId={empresaId}
+          podeAbrir={pode("acoes.editar")}
+        />
+      </Bloco>
 
       {/* 1. hoje em números */}
       <section aria-labelledby="hoje" className="space-y-2">
