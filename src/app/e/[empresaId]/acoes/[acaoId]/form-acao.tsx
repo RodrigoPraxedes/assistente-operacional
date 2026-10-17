@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { excluirAcao, salvarAcao } from "../actions";
 import { SeletorRecorrencia } from "@/components/seletor-recorrencia";
 import type { Acao } from "@/lib/types";
@@ -37,9 +37,13 @@ export function FormAcao({
   const base = acao ?? modelo;
   const inicial = base?.recorrencia ?? "";
   const [regra, setRegra] = useState(inicial);
+  // o aviso de visibilidade reenvia o formulário sem o botão clicado; por isso a escolha vai num campo oculto
+  const continuar = useRef<HTMLInputElement>(null);
+  const marcar = (v: string) => continuar.current && (continuar.current.value = v);
 
   return (
     <form action={acaoForm} className="space-y-4">
+      <input ref={continuar} type="hidden" name="continuar" defaultValue="" />
       {acao && <input type="hidden" name="id" value={acao.id} />}
       <Cartao className="space-y-4">
         <Campo rotulo="Nome da ação">
@@ -121,8 +125,8 @@ export function FormAcao({
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <div className="flex justify-between">
         <div className="flex flex-wrap gap-2">
-          <BotaoEnviar>Salvar ação</BotaoEnviar>
-          <BotaoEnviar variante="secundario" name="continuar" value="1">
+          <BotaoEnviar onClick={() => marcar("")}>Salvar ação</BotaoEnviar>
+          <BotaoEnviar variante="secundario" onClick={() => marcar("1")}>
             Salvar e criar nova a partir desta
           </BotaoEnviar>
         </div>
