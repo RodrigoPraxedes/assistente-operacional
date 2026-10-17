@@ -32,8 +32,8 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
   const itens: ItemForm[] = JSON.parse(String(form.get("itens") ?? "[]")).filter((i: ItemForm) => i.texto?.trim());
   if (!itens.length) return { erro: "Adicione pelo menos um item ao check-list" };
 
-  const responsavel = txt("responsavel_id");
-  if (!responsavel) return { erro: "Escolha o responsável pelo check-list" };
+  const responsaveis = form.getAll("responsaveis").map(String).filter(Boolean);
+  if (!responsaveis.length) return { erro: "Escolha ao menos um responsável pelo check-list" };
   const resultado = txt("resultado_membro_id");
   // o link de WhatsApp ao final do preenchimento vai para quem recebe o resultado
   const { data: destino } = resultado
@@ -49,7 +49,7 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
     unidade_id: txt("unidade_id"),
     setor_id: txt("setor_id"),
     categoria_id: txt("categoria_id"),
-    responsavel_id: responsavel,
+    responsaveis,
     resultado_membro_id: resultado,
     lembrete_minutos: Number.isInteger(lembrete) && lembrete >= 0 && lembrete <= 720 ? lembrete : 30,
     horario_preferencial: txt("horario_preferencial") ?? "08:00",

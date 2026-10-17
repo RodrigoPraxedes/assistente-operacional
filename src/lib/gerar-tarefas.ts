@@ -57,7 +57,7 @@ async function fontesChecklist(admin: Admin, { id: modeloId, empresaId }: Filtro
   let q = admin
     .from("checklist_modelos")
     .select(
-      "id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, horario_preferencial, tolerancia_minutos, recorrencia, created_at, empresas(fuso_horario)",
+      "id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, responsaveis, nome, horario_preferencial, tolerancia_minutos, recorrencia, created_at, empresas(fuso_horario)",
     )
     .eq("ativo", true);
   if (modeloId) q = q.eq("id", modeloId);
@@ -70,6 +70,7 @@ async function fontesChecklist(admin: Admin, { id: modeloId, empresaId }: Filtro
       setor_id: string | null;
       categoria_id: string | null;
       responsavel_id: string | null;
+      responsaveis: string[];
       nome: string;
       horario_preferencial: string;
       tolerancia_minutos: number;
@@ -85,7 +86,7 @@ async function fontesChecklist(admin: Admin, { id: modeloId, empresaId }: Filtro
     unidade_id: m.unidade_id,
     setor_id: m.setor_id,
     categoria_id: m.categoria_id,
-    responsaveis: m.responsavel_id ? [m.responsavel_id] : [],
+    responsaveis: m.responsaveis.length ? m.responsaveis : m.responsavel_id ? [m.responsavel_id] : [],
     titulo: `Check-list: ${m.nome}`,
     fuso: m.empresas?.fuso_horario ?? "America/Sao_Paulo",
     momentos: porRegra(
