@@ -45,6 +45,7 @@ export default async function EditarAcao({
         <p className="text-xs text-slate-500">Mudanças valem para as próximas ocorrências. Nas tarefas já criadas, só os responsáveis acompanham (enquanto estiverem abertas).</p>
       )}
       <FormAcao
+        key={`${acaoId}-${origemId ?? ""}`}
         empresaId={empresaId}
         acao={novo ? null : (acao as Acao | null)}
         modelo={origemId ? (acao as Acao) : null}
