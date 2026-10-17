@@ -15,6 +15,15 @@ const COR_ESCOLHIDA: Record<string, string> = {
   na: "border-slate-400 bg-slate-100 text-slate-700",
 };
 
+// Cor da resposta escolhida: vermelho só quando é a resposta que o item conta como problema
+function corEscolhida(valor: string, problemaQuando: string | undefined) {
+  if (valor === "sim" || valor === "nao") {
+    if (valor === (problemaQuando ?? "nao")) return COR_ESCOLHIDA.nao;
+    return valor === "sim" ? COR_ESCOLHIDA.sim : COR_ESCOLHIDA.na;
+  }
+  return COR_ESCOLHIDA[valor];
+}
+
 export interface ItemPreencher {
   id: string;
   texto: string;
@@ -24,6 +33,7 @@ export interface ItemPreencher {
   foto_obrigatoria?: boolean;
   foto_obrigatoria_se_nao: boolean;
   permite_na?: boolean;
+  problema_quando?: "nao" | "sim" | "nunca";
 }
 
 interface Props {
@@ -126,7 +136,7 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, mo
                     <label
                       key={r.valor}
                       className={`cursor-pointer rounded-lg border px-3 py-2 text-center text-sm ${
-                        resposta === r.valor ? COR_ESCOLHIDA[r.valor] : "border-slate-200"
+                        resposta === r.valor ? corEscolhida(r.valor, item.problema_quando) : "border-slate-200"
                       }`}
                     >
                       <input

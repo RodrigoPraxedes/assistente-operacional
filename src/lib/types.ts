@@ -109,6 +109,15 @@ export interface Tarefa {
 
 export type TipoResposta = "sim_nao" | "numero" | "texto";
 
+// qual resposta Sim/Não conta como problema no item
+export type ProblemaQuando = "nao" | "sim" | "nunca";
+
+export const PROBLEMA_QUANDO: { valor: ProblemaQuando; rotulo: string }[] = [
+  { valor: "nao", rotulo: "Sim = normal · Não = problema" },
+  { valor: "sim", rotulo: "Sim = problema · Não = normal" },
+  { valor: "nunca", rotulo: "Nenhuma resposta é problema (só registrar)" },
+];
+
 export type ModoExecutor = "aberto" | "usuarios";
 
 export interface ChecklistModelo {
@@ -151,6 +160,7 @@ export interface ChecklistItem {
   foto_obrigatoria_se_nao: boolean;
   // mostra a opção N/A (não se aplica) nos itens Sim/Não
   permite_na: boolean;
+  problema_quando: ProblemaQuando;
   abre_chamado_se_nao: boolean;
   prioridade_chamado: Prioridade;
   ativo: boolean;

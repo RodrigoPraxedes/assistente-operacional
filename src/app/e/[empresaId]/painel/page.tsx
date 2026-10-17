@@ -148,7 +148,7 @@ export default async function PaginaPainel({
         .eq("empresa_id", empresaId)
         .gte("enviado_em", inicioHoje)
         .gt("qtd_nao", 0)
-        .eq("checklist_respostas.resposta", "nao")
+        .eq("checklist_respostas.problema", true)
         .order("enviado_em", { ascending: false })
         .limit(20);
       if (minhas) q = q.eq("executor_id", membro.id);
@@ -393,14 +393,14 @@ export default async function PaginaPainel({
           )}
           {(execucoesComNao?.length ?? 0) > 0 && (
             <div className="mt-4 border-t border-slate-200 pt-3">
-              <p className="mb-2 text-sm font-medium text-slate-700">Problemas encontrados (respostas &quot;Não&quot;)</p>
+              <p className="mb-2 text-sm font-medium text-slate-700">Problemas encontrados nos check-lists</p>
               <ul className="space-y-2">
                 {execucoesComNao!.map((e) => (
                   <li key={e.id}>
                     <Link href={`${base}/checklists/execucoes/${e.id}`} className="block rounded-lg px-2 py-1.5 hover:bg-slate-100">
                       <span className="flex items-center justify-between gap-2 text-sm">
                         <span className="font-medium text-slate-900">{e.modelo_nome}</span>
-                        <Etiqueta cor="#dc2626">{e.qtd_nao} Não</Etiqueta>
+                        <Etiqueta cor="#dc2626">{e.qtd_nao} {e.qtd_nao === 1 ? "problema" : "problemas"}</Etiqueta>
                       </span>
                       <span className="block text-xs text-slate-500">
                         {e.executor_nome} · {formatarDataHora(e.enviado_em, fuso)}

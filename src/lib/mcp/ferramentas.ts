@@ -421,7 +421,7 @@ const checklists_do_dia: Ferramenta = {
     properties: {
       empresa: P_EMPRESA,
       data: { type: "string", description: "Dia (AAAA-MM-DD). Padrão: hoje." },
-      so_com_problema: { type: "boolean", description: "true = só os preenchimentos com alguma resposta \"Não\"." },
+      so_com_problema: { type: "boolean", description: "true = só os preenchimentos com algum item que conta como problema (cada item define se o problema é a resposta Não, Sim ou nenhuma)." },
     },
     additionalProperties: false,
   },
@@ -444,7 +444,7 @@ const checklists_do_dia: Ferramenta = {
       (() => {
         let q = ctx.supabase
           .from("checklist_execucoes")
-          .select("modelo_nome, executor_nome, canal, observacao, qtd_nao, enviado_em, unidade_id, checklist_respostas(item_texto, resposta, ordem)")
+          .select("modelo_nome, executor_nome, canal, observacao, qtd_nao, enviado_em, unidade_id, checklist_respostas(item_texto, resposta, problema, ordem)")
           .eq("empresa_id", e.empresaId)
           .gte("enviado_em", inicio)
           .lte("enviado_em", fim)
@@ -460,7 +460,7 @@ const checklists_do_dia: Ferramenta = {
             qtd_nao: number;
             enviado_em: string;
             unidade_id: string;
-            checklist_respostas: { item_texto: string; resposta: string | null; ordem: number }[];
+            checklist_respostas: { item_texto: string; resposta: string | null; problema: boolean; ordem: number }[];
           }[]
         >();
       })(),
@@ -482,9 +482,9 @@ const checklists_do_dia: Ferramenta = {
         pelo: x.canal === "qr" ? "QR Code" : "app",
         enviado_em: formatarDataHora(x.enviado_em, e.fuso),
         unidade: n.unidade(x.unidade_id) ?? undefined,
-        respostas_nao: x.qtd_nao,
-        itens_com_nao: x.checklist_respostas
-          .filter((r) => r.resposta === "nao")
+        problemas: x.qtd_nao,
+        itens_com_problema: x.checklist_respostas
+          .filter((r) => r.problema)
           .sort((a, b) => a.ordem - b.ordem)
           .map((r) => r.item_texto),
         observacao: x.observacao || undefined,

@@ -50,11 +50,15 @@ export default async function Execucao({ params }: { params: Promise<{ empresaId
 
       <ol className="space-y-2">
         {(respostas ?? []).map((r) => (
-          <li key={r.id} className="rounded-xl border border-slate-200 bg-superficie p-3 text-sm">
+          <li key={r.id} className={`rounded-xl border bg-superficie p-3 text-sm ${r.problema ? "border-red-300" : "border-slate-200"}`}>
             <div className="flex items-start justify-between gap-2">
               <p className="font-medium">{r.item_texto}</p>
               {r.tipo_resposta === "sim_nao" ? (
-                r.resposta && <Etiqueta cor={COR[r.resposta]}>{ROTULO[r.resposta]}</Etiqueta>
+                r.resposta && (
+                  <Etiqueta cor={r.problema ? COR.nao : r.resposta === "nao" ? COR.na : r.resposta === "sim" ? COR.sim : COR[r.resposta]}>
+                    {ROTULO[r.resposta]}
+                  </Etiqueta>
+                )
               ) : (
                 <span className="font-medium">{r.tipo_resposta === "numero" ? r.valor_numero : null}</span>
               )}

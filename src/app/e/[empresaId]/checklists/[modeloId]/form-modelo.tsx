@@ -4,7 +4,7 @@ import { useActionState, useRef, useState, type PointerEvent } from "react";
 import { GripVertical } from "lucide-react";
 import { salvarModelo } from "../actions";
 import { RECORRENCIAS_PRONTAS } from "@/lib/recorrencias-prontas";
-import { PRIORIDADES, type ChecklistItem, type ChecklistModelo, type Prioridade, type TipoResposta } from "@/lib/types";
+import { PRIORIDADES, PROBLEMA_QUANDO, type ChecklistItem, type ChecklistModelo, type Prioridade, type ProblemaQuando, type TipoResposta } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
@@ -12,7 +12,7 @@ import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 type Opcao = { id: string; nome: string };
 type ItemEditavel = Pick<
   ChecklistItem,
-  "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria" | "foto_obrigatoria_se_nao" | "permite_na" | "abre_chamado_se_nao" | "prioridade_chamado"
+  "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria" | "foto_obrigatoria_se_nao" | "permite_na" | "problema_quando" | "abre_chamado_se_nao" | "prioridade_chamado"
 > & {
   id?: string;
   chave: string;
@@ -28,6 +28,7 @@ const novoItem = (): ItemEditavel => ({
   foto_obrigatoria: false,
   foto_obrigatoria_se_nao: false,
   permite_na: true,
+  problema_quando: "nao",
   abre_chamado_se_nao: false,
   prioridade_chamado: "media",
 });
@@ -274,7 +275,23 @@ export function FormModelo({
                     Mostrar N/A
                   </label>
                 )}
-                {item.tipo_resposta === "sim_nao" && item.permite_foto && !item.foto_obrigatoria && (
+                {item.tipo_resposta === "sim_nao" && (
+                  <label className="flex items-center gap-1">
+                    Problema:
+                    <select
+                      value={item.problema_quando}
+                      onChange={(e) => alterar(item.chave, { problema_quando: e.target.value as ProblemaQuando })}
+                      className="rounded border border-slate-200 bg-superficie px-1 py-0.5"
+                    >
+                      {PROBLEMA_QUANDO.map((o) => (
+                        <option key={o.valor} value={o.valor}>
+                          {o.rotulo}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {item.tipo_resposta === "sim_nao" && item.problema_quando === "nao" && item.permite_foto && !item.foto_obrigatoria && (
                   <label className="flex items-center gap-1">
                     <input
                       type="checkbox"
@@ -284,7 +301,7 @@ export function FormModelo({
                     Foto obrigatória se &quot;Não&quot;
                   </label>
                 )}
-                {item.tipo_resposta === "sim_nao" && (
+                {item.tipo_resposta === "sim_nao" && item.problema_quando === "nao" && (
                   <label className="flex items-center gap-1">
                     <input
                       type="checkbox"
