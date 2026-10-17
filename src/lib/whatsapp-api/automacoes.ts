@@ -267,7 +267,7 @@ export async function gerarLembretesChecklist(agora = new Date()) {
     const [{ data: tarefas }, { data: abertos }] = await Promise.all([
       admin
         .from("tarefas")
-        .select("id, origem_id, unidade_id, responsavel_id, status_id, ocorrencia_em, unidades(nome)")
+        .select("id, origem_id, unidade_id, responsaveis, status_id, ocorrencia_em, unidades(nome)")
         .eq("empresa_id", c.empresa_id)
         .eq("origem", "checklist")
         .not("responsavel_id", "is", null)
@@ -279,7 +279,7 @@ export async function gerarLembretesChecklist(agora = new Date()) {
             id: string;
             origem_id: string;
             unidade_id: string | null;
-            responsavel_id: string;
+            responsaveis: string[];
             status_id: string;
             ocorrencia_em: string;
             unidades: { nome: string } | null;
@@ -303,20 +303,23 @@ export async function gerarLembretesChecklist(agora = new Date()) {
       const quando = new Date(t.ocorrencia_em);
       if (quando.getTime() - m.lembrete_minutos * 60_000 > agora.getTime()) continue;
 
-      const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
-        p_empresa: c.empresa_id,
-        p_unidade: t.unidade_id,
-        p_membro: t.responsavel_id,
-        p_texto: [
-          `*Lembrete: check-list às ${hora(t.ocorrencia_em, fuso)}*`,
-          `${m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
-          "Você é o responsável: lembre a equipe de fazer.",
-        ].join("\n"),
-        p_origem: "lembrete",
-        p_origem_id: t.id,
-        p_chave: `lembrete:${t.id}`,
-      });
-      if (id) total++;
+      // cada responsável recebe o seu lembrete (o primeiro mantém a chave antiga, para não repetir o que já saiu)
+      for (const [i, responsavel] of t.responsaveis.entries()) {
+        const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
+          p_empresa: c.empresa_id,
+          p_unidade: t.unidade_id,
+          p_membro: responsavel,
+          p_texto: [
+            `*Lembrete: check-list às ${hora(t.ocorrencia_em, fuso)}*`,
+            `${m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+            "Você é o responsável: lembre a equipe de fazer.",
+          ].join("\n"),
+          p_origem: "lembrete",
+          p_origem_id: t.id,
+          p_chave: i === 0 ? `lembrete:${t.id}` : `lembrete:${t.id}:${responsavel}`,
+        });
+        if (id) total++;
+      }
     }
   }
   return total;

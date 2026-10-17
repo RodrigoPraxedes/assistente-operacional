@@ -7,6 +7,7 @@ import { RECORRENCIAS_PRONTAS } from "@/lib/recorrencias-prontas";
 import { PRIORIDADES, type ChecklistItem, type ChecklistModelo, type Prioridade, type TipoResposta } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
 type Opcao = { id: string; nome: string };
 type ItemEditavel = Pick<
@@ -156,16 +157,16 @@ export function FormModelo({
               ))}
             </Select>
           </Campo>
-          <Campo rotulo="Responsável" dica="Recebe a tarefa e o lembrete; puxa a equipe mesmo com o check-list aberto a todos">
-            <Select name="responsavel_id" defaultValue={modelo?.responsavel_id ?? ""} required>
-              <option value="">Escolha…</option>
-              {membros.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nome}
-                </option>
-              ))}
-            </Select>
-          </Campo>
+          <div className="sm:col-span-2">
+            <SeletorResponsaveis
+              rotulo="Responsáveis"
+              name="responsaveis"
+              inicial={modelo?.responsaveis ?? []}
+              membros={membros}
+              setores={setores}
+              dica="Cada um recebe a tarefa, o lembrete e o resumo do dia; puxam a equipe mesmo com o check-list aberto a todos"
+            />
+          </div>
           <Campo rotulo="Categoria">
             <Select name="categoria_id" defaultValue={modelo?.categoria_id ?? ""}>
               <option value="">—</option>

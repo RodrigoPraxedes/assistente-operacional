@@ -118,6 +118,7 @@ export interface ChecklistModelo {
   setor_id: string | null;
   categoria_id: string | null;
   responsavel_id: string | null;
+  responsaveis: string[];
   nome: string;
   descricao: string | null;
   horario_preferencial: string;
