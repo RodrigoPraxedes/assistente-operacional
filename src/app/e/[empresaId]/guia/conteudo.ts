@@ -286,7 +286,7 @@ export const SECOES: SecaoGuia[] = [
           "Toque em Novo alerta e escreva o que vence ou acontece.",
           "Escolha a data e se ela se repete (todo ano, a cada 6 meses...).",
           "Defina o horário em que as tarefas aparecem e o responsável padrão.",
-          "Em Avisos, diga quantos dias antes cada tarefa deve ser criada e o que precisa ser feito. Dá para ter vários avisos, cada um com seus responsáveis.",
+          "Em Avisos, diga quantos dias antes cada tarefa deve ser criada e o que precisa ser feito. Dá para ter vários avisos, cada um com seus responsáveis. Avisos com o mesmo texto e o mesmo prazo geram uma tarefa só.",
           "Toque em Salvar alerta.",
         ],
       },
