@@ -6,6 +6,8 @@ import { hojeIso, horarioTurno, ordenarTurnos } from "@/lib/escala";
 import { proximaOcorrencia } from "@/lib/recorrencia";
 import { AUSENCIAS, PRIORIDADES, type Alerta, type Prioridade, type Status, type Turno } from "@/lib/types";
 import { Cartao, Etiqueta, Titulo } from "@/components/ui";
+import { provedorDe } from "@/lib/whatsapp-api";
+import type { StatusConexao } from "@/lib/whatsapp-api/tipos";
 
 const DIA = 86_400_000;
 const PENDENTES = ["aberto", "em_andamento", "adiado"];
@@ -20,6 +22,21 @@ type TarefaPainel = {
   responsaveis: string[];
   concluida_em: string | null;
 };
+
+type ConexaoPainel = { id: string; provedor: string; instancia: string; status: StatusConexao; envio_pausado: boolean; unidades: { nome: string } | null };
+
+// Consulta o provedor na hora (máx. 3 s); se falhar ou demorar, vale o último status gravado.
+async function statusWhatsApp(c: ConexaoPainel): Promise<StatusConexao> {
+  try {
+    const prov = provedorDe(c.provedor);
+    if (!prov.configurado()) return c.status;
+    const limite = new Promise<never>((_, nao) => setTimeout(() => nao(new Error("tempo")), 3000));
+    const estado = await Promise.race([prov.consultarConexao(c.instancia), limite]);
+    return estado.status;
+  } catch {
+    return c.status;
+  }
+}
 
 // Painel: o que pede atenção hoje. Mostra só o que a pessoa já pode ver
 // (a regra de acesso do banco filtra tudo, inclusive tarefas privadas).
@@ -59,6 +76,27 @@ export default async function PaginaPainel({
   const deMim = <T extends { contains: (c: string, v: string[]) => T }>(q: T) =>
     minhas ? q.contains("responsaveis", [membro.id]) : q;
   const camposTarefa = "id, titulo, origem, origem_id, status_id, prazo, responsaveis, concluida_em";
+
+  // status do WhatsApp só para quem gerencia
+  const verWhatsApp = pode("whatsapp.gerenciar");
+  const conexoesWpp = verWhatsApp
+    ? (
+        (
+          await supabase
+            .from("whatsapp_conexoes")
+            .select("id, provedor, instancia, status, envio_pausado, unidades(nome)")
+            .eq("empresa_id", empresaId)
+            .order("created_at")
+            .returns<ConexaoPainel[]>()
+        ).data ?? []
+      )
+    : [];
+  const statusWpp = await Promise.all(conexoesWpp.map(statusWhatsApp));
+  for (const [i, c] of conexoesWpp.entries()) {
+    if (statusWpp[i] !== c.status) {
+      await supabase.rpc("whatsapp_atualizar_estado", { p_conexao: c.id, p_status: statusWpp[i], p_numero: null, p_erro: null });
+    }
+  }
 
   const [
     { data: pendentes },
@@ -209,7 +247,7 @@ export default async function PaginaPainel({
     .filter((x) => x.n > 0);
   const diasAberto = (iso: string) => Math.floor((agoraMs - new Date(iso).getTime()) / DIA);
 
-  // 4. próximos 7 dias: alertas (data do evento) e etapas de planos
+  // 4. próximos 7 dias: alertas (data do evento) e etapas de projetos
   const hojeUtc = Date.UTC(h.y, h.m - 1, h.d);
   const proximosAlertas = ((alertas ?? []) as Alerta[])
     .map((a) => {
@@ -289,6 +327,28 @@ export default async function PaginaPainel({
       >
         {minhas ? "Meu painel" : "Painel"}
       </Titulo>
+
+      {conexoesWpp.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {conexoesWpp.map((c, i) => {
+            const ok = statusWpp[i] === "conectado";
+            return (
+              <Link
+                key={c.id}
+                href={`${base}/whatsapp/conexao`}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${
+                  ok ? "border-green-200 text-green-700" : "border-red-200 bg-red-50 font-medium text-red-700"
+                }`}
+              >
+                <span className={`size-2 rounded-full ${ok ? "bg-green-600" : "bg-red-600"}`} aria-hidden />
+                WhatsApp{c.unidades ? ` ${c.unidades.nome}` : ""}: {ok ? "conectado" : "desconectado"}
+                {c.envio_pausado && " (envios pausados)"}
+                {!ok && <span className="underline">Reconectar</span>}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {/* 1. hoje em números */}
       <section aria-labelledby="hoje" className="space-y-2">
@@ -396,7 +456,7 @@ export default async function PaginaPainel({
         {/* 4. próximos 7 dias */}
         <Bloco titulo="Próximos 7 dias">
           {proximosAlertas.length === 0 && (etapas?.length ?? 0) === 0 ? (
-            <Nada>Nenhuma data ou etapa de plano nos próximos 7 dias.</Nada>
+            <Nada>Nenhuma data ou etapa de projeto nos próximos 7 dias.</Nada>
           ) : (
             <ul className="divide-y divide-slate-200">
               {proximosAlertas.map(({ a, proxima, faltam }) => (
@@ -417,7 +477,7 @@ export default async function PaginaPainel({
                   <li key={t.id}>
                     <Link href={`${base}/planos/${t.origem_id}`} className="flex items-center justify-between gap-2 px-1 py-2 text-sm hover:bg-slate-100">
                       <span className="min-w-0 truncate">
-                        <Etiqueta>Plano</Etiqueta> {t.titulo}
+                        <Etiqueta>Projeto</Etiqueta> {t.titulo}
                       </span>
                       <span className={`shrink-0 text-xs ${atrasada ? "font-medium text-red-700" : "text-slate-500"}`}>
                         {atrasada ? "atrasada" : formatarData(t.prazo, fuso)}

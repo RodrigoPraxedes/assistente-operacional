@@ -17,9 +17,9 @@ export default async function NovoPlano({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Titulo voltar={{ href: `/e/${empresaId}/planos`, rotulo: "Planos" }}>Novo plano</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/planos`, rotulo: "Projetos" }}>Novo projeto</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
-      <p className="text-sm text-slate-500">Depois de criar o plano você inclui as etapas.</p>
+      <p className="text-sm text-slate-500">Depois de criar o projeto você inclui as etapas.</p>
       <FormPlano empresaId={empresaId} plano={null} podeMudarPrivado {...opcoes} />
     </div>
   );

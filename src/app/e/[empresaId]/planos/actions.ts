@@ -30,13 +30,13 @@ export async function salvarPlano(empresaId: string, planoId: string | null, for
     ...(planoId ? { situacao: txt(form, "situacao") ?? "planejamento" } : {}),
     ...(lerPrivado(form) !== undefined && { privado: lerPrivado(form) }),
   };
-  if (!dados.nome) redirect(comErro(voltar, "Dê um nome para o plano"));
+  if (!dados.nome) redirect(comErro(voltar, "Dê um nome para o projeto"));
 
   let id = planoId;
   if (planoId) {
     const { data, error } = await supabase.from("planos").update(dados).eq("id", planoId).select("id");
     if (error) redirect(comErro(voltar, error.message));
-    if (!data?.length) redirect(comErro(voltar, "Este plano é privado: só quem criou e o coordenador podem editar"));
+    if (!data?.length) redirect(comErro(voltar, "Este projeto é privado: só quem criou e o coordenador podem editar"));
   } else {
     const { data, error } = await supabase
       .from("planos")
@@ -56,7 +56,7 @@ export async function excluirPlano(empresaId: string, planoId: string) {
   const voltar = `/e/${empresaId}/planos/${planoId}/editar`;
   const { data, error } = await supabase.from("planos").delete().eq("id", planoId).select("id");
   if (error) redirect(comErro(voltar, error.message));
-  if (!data?.length) redirect(comErro(voltar, "Este plano é privado: só quem criou pode excluir"));
+  if (!data?.length) redirect(comErro(voltar, "Este projeto é privado: só quem criou pode excluir"));
   revalidatePath(`/e/${empresaId}/planos`);
   revalidatePath(`/e/${empresaId}/tarefas`);
   redirect(`/e/${empresaId}/planos`);

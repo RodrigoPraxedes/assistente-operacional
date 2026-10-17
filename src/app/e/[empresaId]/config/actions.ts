@@ -86,6 +86,18 @@ export async function salvarCategoria(empresaId: string, form: FormData) {
   revalidatePath(`/e/${empresaId}/config`);
 }
 
+// mesmo id: tudo que já estava ligado à categoria continua ligado
+export async function editarCategoria(empresaId: string, categoriaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const { error } = await supabase
+    .from("categorias")
+    .update({ nome: txt(form, "nome"), cor: txt(form, "cor") || "#64748b" })
+    .eq("id", categoriaId);
+  if (error)
+    falhar(`/e/${empresaId}/config`, error.code === "23505" ? "Já existe uma categoria com esse nome" : error.message);
+  revalidatePath(`/e/${empresaId}`);
+}
+
 export async function excluirCategoria(empresaId: string, categoriaId: string) {
   const { supabase } = await getContexto(empresaId);
   await supabase.from("categorias").delete().eq("id", categoriaId);

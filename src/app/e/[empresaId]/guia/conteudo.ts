@@ -66,6 +66,15 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Instalar como aplicativo",
+        passos: [
+          "Ao abrir o Atalaia no navegador, aparece o aviso \"Deseja instalar o app?\". Toque em Instalar.",
+          "O Atalaia ganha um ícone com o logo na tela inicial (ou na área de trabalho) e abre sem a barra do navegador.",
+          "No iPhone (Safari) o aviso mostra o caminho: Compartilhar › Adicionar à Tela de Início.",
+          "Tocou em Agora não? O aviso volta só depois de 7 dias. Quem já instalou não vê o aviso.",
+        ],
+      },
+      {
         titulo: "Menu, tema e empresas",
         passos: [
           "No computador, o botão ao lado do logo recolhe o menu para mostrar só os ícones.",
@@ -91,7 +100,7 @@ export const SECOES: SecaoGuia[] = [
           "Hoje em números: tarefas atrasadas, que vencem hoje, em andamento e concluídas hoje. Toque num número para abrir a lista dessas tarefas.",
           "Check-lists de hoje: quantos foram feitos, quantos estão pendentes e quantos não foram realizados no tempo, mais os itens respondidos \"Não\".",
           "Manutenções em aberto: total por status e por prioridade, e as abertas há mais tempo (em vermelho a partir de 7 dias).",
-          "Próximos 7 dias: alertas de datas e etapas de planos que vencem na semana.",
+          "Próximos 7 dias: alertas de datas e etapas de projetos que vencem na semana.",
           "Escalados hoje: quem trabalha em cada turno e quem está de folga, férias ou falta.",
           "Tarefas no prazo nos últimos 30 dias: a porcentagem concluída até o prazo, por pessoa e por setor.",
         ],
@@ -103,6 +112,13 @@ export const SECOES: SecaoGuia[] = [
           "Quem só tem acesso às próprias tarefas vê sempre o Meu painel.",
         ],
       },
+      {
+        titulo: "Status do WhatsApp",
+        passos: [
+          "Quem gerencia o WhatsApp vê, no alto do Painel, uma etiqueta verde quando o número está conectado e vermelha quando caiu.",
+          "Toque na etiqueta para ir a WhatsApp › Conexão e reconectar pelo QR Code. O status é conferido toda vez que o Painel abre.",
+        ],
+      },
     ],
   },
   {
@@ -112,7 +128,7 @@ export const SECOES: SecaoGuia[] = [
     resumo: "O quadro único com tudo o que precisa ser feito.",
     tela: "/tarefas",
     paraQue:
-      "Todas as tarefas da empresa ficam aqui, venham de onde vierem: avulsas, check-lists, ações recorrentes, alertas, manutenções e planos. Cada coluna é um status (Solicitado, Em andamento, Concluído, Adiado, Cancelado...).",
+      "Todas as tarefas da empresa ficam aqui, venham de onde vierem: avulsas, check-lists, ações recorrentes, alertas, manutenções e projetos. Cada coluna é um status (Solicitado, Em andamento, Concluído, Adiado, Cancelado...).",
     topicos: [
       {
         titulo: "Criar uma tarefa",
@@ -236,6 +252,14 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Procurar uma ação",
+        passos: [
+          "A lista vem separada por categoria, cada uma com seu título; as ações sem categoria ficam no fim, em Sem categoria.",
+          "Na parte de cima, digite parte do nome (ou da descrição) no campo de pesquisa: a lista filtra enquanto você digita.",
+          "Escolha um setor e/ou uma categoria: a lista muda na hora, sem botão. Limpar volta à lista completa.",
+        ],
+      },
+      {
         titulo: "Mudar ou parar",
         passos: [
           "Toque na ação para editar. As mudanças valem para as próximas ocorrências.",
@@ -276,36 +300,36 @@ export const SECOES: SecaoGuia[] = [
   },
   {
     slug: "planos",
-    titulo: "Planos",
+    titulo: "Projeto",
     icone: ChartGantt,
     resumo: "Projetos de médio e longo prazo, divididos em etapas.",
     tela: "/planos",
     paraQue:
-      "Um plano organiza um projeto maior, como uma reforma ou a troca de um equipamento, em etapas com responsável e prazo. Cada etapa vira uma tarefa no quadro.",
+      "Um projeto organiza uma iniciativa maior, como uma reforma ou a troca de um equipamento, em etapas com responsável e prazo. Cada etapa vira uma tarefa no quadro.",
     topicos: [
       {
-        titulo: "Criar um plano",
+        titulo: "Criar um projeto",
         passos: [
-          "Toque em Novo plano. Dê um nome e descreva o objetivo (o que se quer alcançar e por quê).",
+          "Toque em Novo projeto. Dê um nome e descreva o objetivo (o que se quer alcançar e por quê).",
           "Escolha o horizonte (médio prazo: 3 a 6 meses; longo prazo: 6 a 12 meses), o coordenador, o início e o término previsto.",
-          "Toque em Criar plano e escolha se ele é público ou privado.",
+          "Toque em Criar projeto e escolha se ele é público ou privado.",
         ],
       },
       {
-        titulo: "Quem vê o plano",
+        titulo: "Quem vê o projeto",
         passos: [
-          "Plano público: veem quem tem permissão de ver ou editar planos (o dono, o Gestor e o Líder de setor, se tiver essa permissão), o coordenador, quem criou e quem é responsável ou está na equipe de alguma etapa.",
-          "Plano privado: só quem criou, o coordenador e quem está nas etapas veem. Nem o dono da empresa vê. As etapas também ficam privadas no quadro de Tarefas.",
-          "Só quem criou troca entre público e privado (em Editar plano) e exclui um plano privado. O coordenador também pode editá-lo, se tiver permissão de editar planos.",
-          "Etapas de plano privado não geram aviso automático no WhatsApp, como as demais tarefas privadas.",
+          "Projeto público: veem quem tem permissão de ver ou editar projetos (o dono, o Gestor e o Líder de setor, se tiver essa permissão), o coordenador, quem criou e quem é responsável ou está na equipe de alguma etapa.",
+          "Projeto privado: só quem criou, o coordenador e quem está nas etapas veem. Nem o dono da empresa vê. As etapas também ficam privadas no quadro de Tarefas.",
+          "Só quem criou troca entre público e privado (em Editar projeto) e exclui um projeto privado. O coordenador também pode editá-lo, se tiver permissão de editar projetos.",
+          "Etapas de projeto privado não geram aviso automático no WhatsApp, como as demais tarefas privadas.",
         ],
       },
       {
         titulo: "Etapas",
         passos: [
-          "Dentro do plano, toque em Nova etapa. Defina o que precisa ser feito, o responsável, o início previsto e o prazo.",
+          "Dentro do projeto, toque em Nova etapa. Defina o que precisa ser feito, o responsável, o início previsto e o prazo.",
           "Marque de quais etapas ela depende: ela mostra \"Aguardando etapa...\" até as anteriores terminarem, e depois \"Pode começar\".",
-          "Marque a equipe da etapa (força-tarefa): essas pessoas veem o plano e atualizam a etapa no quadro.",
+          "Marque a equipe da etapa (força-tarefa): essas pessoas veem o projeto e atualizam a etapa no quadro.",
           "Use as setas para mudar a ordem das etapas.",
         ],
       },
@@ -314,7 +338,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "A barra de progresso mostra quantas etapas já foram concluídas.",
           "Com datas preenchidas, o cronograma mostra as etapas no tempo, com a marca do dia de hoje.",
-          "Mude a situação do plano (em planejamento, em andamento, pausado, concluído, cancelado) em Editar plano.",
+          "Mude a situação do projeto (em planejamento, em andamento, pausado, concluído, cancelado) em Editar projeto.",
         ],
       },
     ],
@@ -509,7 +533,7 @@ export const SECOES: SecaoGuia[] = [
           "Unidades: cada loja ou endereço. Em QR Code e detalhes você imprime o QR da unidade. Se ele vazou, Gerar novo QR faz o antigo parar de funcionar.",
           "Status do Kanban: nome, cor e tipo de cada coluna. Dá para criar status de um módulo só, como \"Aguardando peça\" nas manutenções.",
           "Prazos dos chamados: quantas horas cada prioridade tem para ser atendida.",
-          "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar).",
+          "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado).",
         ],
       },
       {
@@ -556,7 +580,7 @@ export const SECOES: SecaoGuia[] = [
           "Tarefas com filtros de pessoa, setor, unidade, módulo, situação e prazo.",
           "Check-lists de um dia, com os itens respondidos \"Não\".",
           "Manutenções abertas ou concluídas, com prestador, equipamento e há quantos dias estão abertas.",
-          "Escala de um dia ou de um período, próximos alertas de datas, planos e suas etapas.",
+          "Escala de um dia ou de um período, próximos alertas de datas, projetos e suas etapas.",
           "Equipe, prestadores e patrimônio (inclusive garantias que vão vencer).",
         ],
       },

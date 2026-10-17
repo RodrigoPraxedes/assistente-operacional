@@ -1,4 +1,4 @@
-// Andamento de um plano: etapas canceladas saem da conta
+// Andamento de um projeto: etapas canceladas saem da conta
 export function contarEtapas(tipos: (string | undefined)[]) {
   const validas = tipos.filter((t) => t !== "cancelado");
   return {

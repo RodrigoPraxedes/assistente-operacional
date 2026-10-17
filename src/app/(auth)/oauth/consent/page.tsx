@@ -30,7 +30,7 @@ export default async function PaginaAutorizar({
         <strong className="text-slate-900">{data.user.email}</strong>.
       </p>
       <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600">
-        <li>Só consulta: tarefas, check-lists, manutenções, escalas, alertas, planos, equipe, prestadores e patrimônio.</li>
+        <li>Só consulta: tarefas, check-lists, manutenções, escalas, alertas, projetos, equipe, prestadores e patrimônio.</li>
         <li>Vê apenas o que você já vê no app, com as mesmas permissões e itens privados.</li>
         <li>Não cria, altera nem apaga nada.</li>
       </ul>
