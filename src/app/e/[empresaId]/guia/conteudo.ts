@@ -308,7 +308,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Consultar o quadro",
         passos: [
           "Ao abrir, aparece o dia de hoje, agrupado por horário. Escolha outro dia da semana, ou Semana toda, para ver uma tabela com os dias marcados de cada rotina.",
-          "Filtre por setor e por função: a lista muda assim que você escolhe.",
+          "Filtre por setor e por função: os setores são botões lado a lado (toque em um para ver só aquele setor, ou em Todos os setores); a lista muda assim que você escolhe.",
           "Em cada rotina, toque em Passo a passo para ver as instruções.",
           "Exportar PDF abre a impressão só com o quadro (com o passo a passo aberto), em paisagem.",
         ],
