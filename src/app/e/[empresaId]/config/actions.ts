@@ -271,6 +271,21 @@ export async function criarAcessoMembro(empresaId: string, membroId: string, for
   redirect(`${caminho}?salvo=acesso`);
 }
 
+// Troca a senha de um login que esta empresa criou (o banco diz se pode)
+export async function trocarSenhaMembro(empresaId: string, membroId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const caminho = `/e/${empresaId}/config/membros/${membroId}`;
+  const senha = String(form.get("senha") ?? "");
+  if (senha.length < 8) falhar(caminho, "A senha precisa ter pelo menos 8 caracteres.");
+
+  const { data: usuarioId, error } = await supabase.rpc("acesso_membro_senha_liberada", { p_membro: membroId });
+  if (error) falhar(caminho, error.message);
+  if (!usuarioId) falhar(caminho, "A senha deste colaborador só pode ser trocada por ele mesmo, em Minha conta.");
+  const { error: e } = await createAdminClient().auth.admin.updateUserById(usuarioId as string, { password: senha });
+  if (e) falhar(caminho, e.code === "weak_password" ? "Senha fraca demais." : "Não foi possível trocar a senha.");
+  redirect(`${caminho}?salvo=senha`);
+}
+
 // ---------------------------------------------------------------- perfis
 export async function salvarPerfil(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);

@@ -160,18 +160,21 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
       <div className={`space-y-3 border-t border-slate-200 pt-3 ${curto ? "px-2" : "px-3"}`}>
         {!curto && <SeletorTema inicial={temaInicial} />}
         <div className={`flex items-center gap-2 ${curto ? "flex-col" : ""}`}>
-          <span
-            title={curto ? membro.nome : undefined}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600"
+          <Link
+            href={`${base}/conta`}
+            title="Minha conta"
+            className={`flex min-w-0 items-center gap-2 rounded-lg hover:bg-slate-100 ${curto ? "" : "flex-1 -ml-1 p-1"}`}
           >
-            {iniciais(membro.nome)}
-          </span>
-          {!curto && (
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-800">{membro.nome}</p>
-              {membro.cargo && <p className="truncate text-xs text-slate-500">{membro.cargo}</p>}
-            </div>
-          )}
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+              {iniciais(membro.nome)}
+            </span>
+            {!curto && (
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-slate-800">{membro.nome}</span>
+                {membro.cargo && <span className="block truncate text-xs text-slate-500">{membro.cargo}</span>}
+              </span>
+            )}
+          </Link>
           <form action="/sair" method="post">
             <button
               className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"

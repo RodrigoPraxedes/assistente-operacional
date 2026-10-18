@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import type { Membro } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Titulo } from "@/components/ui";
-import { criarAcessoMembro, salvarMembro } from "../../actions";
+import { criarAcessoMembro, salvarMembro, trocarSenhaMembro } from "../../actions";
 
 export default async function EditarMembro({
   params,
@@ -13,7 +13,7 @@ export default async function EditarMembro({
 }) {
   const { empresaId, membroId } = await params;
   const { erro, salvo } = await searchParams;
-  const { supabase } = await exigirPermissao(empresaId, "config.membros");
+  const { supabase, user } = await exigirPermissao(empresaId, "config.membros");
   const novo = membroId === "novo";
 
   const [{ data: membro }, { data: perfis }, { data: setores }, { data: funcoes }, { data: unidades }, { data: vinculos }, { data: comPin }] =
@@ -29,6 +29,10 @@ export default async function EditarMembro({
       supabase.rpc("membros_com_pin", { p_empresa: empresaId }),
     ]);
   if (!novo && !membro) notFound();
+  const { data: senhaLiberada } =
+    membro && (membro as Membro).usuario_id
+      ? await supabase.rpc("acesso_membro_senha_liberada", { p_membro: membroId })
+      : { data: null };
 
   const minhas = new Set((vinculos ?? []).map((v) => v.unidade_id));
   const temPin = ((comPin as string[] | null) ?? []).includes(membroId);
@@ -40,7 +44,11 @@ export default async function EditarMembro({
       {erro && <Aviso>{erro}</Aviso>}
       {salvo && (
         <Aviso tipo="sucesso">
-          {salvo === "acesso" ? "Acesso criado. Passe o e-mail e a senha para a pessoa entrar no app." : "Salvo."}
+          {salvo === "acesso"
+            ? "Acesso criado. Passe o e-mail e a senha para a pessoa entrar no app."
+            : salvo === "senha"
+              ? "Senha trocada. Passe a senha nova para a pessoa."
+              : "Salvo."}
         </Aviso>
       )}
 
@@ -126,6 +134,36 @@ export default async function EditarMembro({
           <Botao>Salvar</Botao>
         </form>
       </Cartao>
+
+      {m?.usuario_id && (
+        <Cartao>
+          <h2 className="mb-1 font-medium">Senha</h2>
+          {m.usuario_id === user.id ? (
+            <p className="text-sm text-slate-500">Para trocar a sua senha, toque no seu nome no fim do menu (Minha conta).</p>
+          ) : senhaLiberada ? (
+            <>
+              <p className="mb-3 text-sm text-slate-500">Este login foi criado aqui. Defina uma senha nova e passe para a pessoa.</p>
+              <form action={trocarSenhaMembro.bind(null, empresaId, m.id)} className="flex flex-wrap items-end gap-2">
+                <Input
+                  type="password"
+                  name="senha"
+                  placeholder="Senha nova (8+ caracteres)"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="min-w-48 flex-1"
+                />
+                <Botao variante="secundario">Trocar senha</Botao>
+              </form>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500">
+              A pessoa troca a própria senha em Minha conta (tocando no nome dela no fim do menu). Se ela esqueceu, fale com o administrador
+              do sistema.
+            </p>
+          )}
+        </Cartao>
+      )}
 
       {m && m.email && !m.usuario_id && (
         <Cartao>
