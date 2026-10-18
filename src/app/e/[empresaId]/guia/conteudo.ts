@@ -609,7 +609,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Toque em Novo colaborador e preencha nome, cargo, WhatsApp, perfil, setor, função (opcional) e unidades.",
           "Com e-mail, a pessoa pode entrar no app: ela cria a conta com o mesmo e-mail e já entra vinculada. Até lá aparece Convite pendente.",
-          "Se o e-mail de confirmação não chegar, o administrador do sistema pode criar a conta da pessoa já pronta, com e-mail e senha.",
+          "Para não depender do e-mail de confirmação, abra o colaborador e use Acesso ao app: defina uma senha e toque em Criar acesso. O login já nasce pronto; passe o e-mail e a senha para a pessoa. Se o e-mail já tiver conta no app, a pessoa entra com a senha dela.",
           "Com PIN de 4 dígitos, a pessoa preenche check-lists pelo QR Code sem login.",
           "Para tirar alguém sem perder o histórico, mude a situação para inativo.",
         ],

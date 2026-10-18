@@ -140,5 +140,7 @@ export async function trocarSenha(form: FormData) {
   if (error) voltar(error.message);
   if (!id) voltar(`Não existe login com o e-mail ${email}.`);
   const { error: e } = await createAdminClient().auth.admin.updateUserById(id as string, { password: senha, email_confirm: true });
-  voltar(e ? "Não foi possível trocar a senha." : undefined, `Senha de ${email} trocada.`);
+  if (e) voltar("Não foi possível trocar a senha.");
+  const { error: e2 } = await supabase.rpc("admin_senha_definida", { p_usuario: id });
+  voltar(e2?.message, `Senha de ${email} trocada.`);
 }

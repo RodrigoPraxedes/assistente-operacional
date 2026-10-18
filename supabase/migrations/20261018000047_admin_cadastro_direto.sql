@@ -51,6 +51,8 @@ begin
   end if;
 
   perform set_config('app.sistema', 'on', true);
+  -- a senha foi definida pelo Admin Master (ver logins_criados, mais abaixo)
+  delete from public.logins_criados where usuario_id = p_usuario;
 
   if p_empresa is null then
     -- cria como Admin Master (nasce ativa) e passa a posição de dono ao usuário
@@ -143,4 +145,152 @@ grant execute on function
   public.admin_usuario_por_email(text),
   public.admin_vincular_usuario(uuid, uuid, text, text, text),
   public.admin_excluir_empresa_pendente(uuid)
+to authenticated;
+
+-- =============================================================================
+-- Quem cadastra colaboradores (config.membros) cria o login do colaborador com
+-- senha, já confirmado. Só para e-mail sem conta em uso: nunca troca a senha de
+-- quem já usa o app.
+-- =============================================================================
+
+-- Logins criados por uma empresa: quem criou conhece a senha, então esse login
+-- não é vinculado sozinho a convites de outras empresas (o Admin Master pode).
+-- Sem políticas: só as funções do banco leem e escrevem.
+create table public.logins_criados (
+  usuario_id uuid primary key references public.usuarios (id) on delete cascade,
+  empresa_id uuid not null references public.empresas (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.logins_criados enable row level security;
+
+-- Confere se dá para criar o acesso e devolve o e-mail (e o login existente
+-- sem uso, se houver: e-mail nunca confirmado e sem empresa)
+create or replace function public.acesso_membro_preparar(p_membro uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_membro public.membros;
+  v_usuario uuid;
+  v_confirmado timestamptz;
+begin
+  select * into v_membro from public.membros where id = p_membro;
+  if v_membro.id is null
+     or not public.empresa_liberada(v_membro.empresa_id)
+     or not public.tem_permissao(v_membro.empresa_id, 'config.membros') then
+    raise exception 'Sem permissão para criar acesso deste colaborador';
+  end if;
+  if v_membro.usuario_id is not null then
+    raise exception 'Este colaborador já tem acesso ao app';
+  end if;
+  if coalesce(trim(v_membro.email), '') = '' then
+    raise exception 'Cadastre o e-mail do colaborador antes de criar o acesso';
+  end if;
+
+  select u.id, u.email_confirmed_at into v_usuario, v_confirmado
+  from auth.users u where lower(u.email) = lower(trim(v_membro.email))
+  limit 1;
+  if v_usuario is not null and (
+    v_confirmado is not null
+    or exists (select 1 from public.membros m where m.usuario_id = v_usuario)
+    or exists (select 1 from public.admins_master a where a.usuario_id = v_usuario)
+  ) then
+    raise exception 'Este e-mail já tem conta no app. A pessoa entra com a senha dela e é vinculada sozinha; se não for, fale com o administrador do sistema.';
+  end if;
+
+  return jsonb_build_object('email', lower(trim(v_membro.email)), 'usuario_id', v_usuario, 'nome', v_membro.nome);
+end;
+$$;
+
+-- Liga o login recém-criado ao colaborador
+create or replace function public.acesso_membro_vincular(p_membro uuid, p_usuario uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_membro public.membros;
+begin
+  select * into v_membro from public.membros where id = p_membro;
+  if v_membro.id is null
+     or not public.empresa_liberada(v_membro.empresa_id)
+     or not public.tem_permissao(v_membro.empresa_id, 'config.membros') then
+    raise exception 'Sem permissão para criar acesso deste colaborador';
+  end if;
+  if v_membro.usuario_id is not null then
+    raise exception 'Este colaborador já tem acesso ao app';
+  end if;
+  if not exists (
+    select 1 from auth.users u where u.id = p_usuario and lower(u.email) = lower(trim(v_membro.email))
+  ) then
+    raise exception 'O login não corresponde ao e-mail do colaborador';
+  end if;
+  if exists (select 1 from public.membros m where m.usuario_id = p_usuario) then
+    raise exception 'Este login já participa de uma empresa';
+  end if;
+
+  update public.membros set usuario_id = p_usuario where id = p_membro;
+  insert into public.logins_criados (usuario_id, empresa_id)
+  values (p_usuario, v_membro.empresa_id)
+  on conflict (usuario_id) do update set empresa_id = excluded.empresa_id, created_at = now();
+end;
+$$;
+
+-- Admin Master definiu a senha: a empresa que criou o login não a conhece mais
+create or replace function public.admin_senha_definida(p_usuario uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin_master() then
+    raise exception 'Acesso restrito ao Admin Master';
+  end if;
+  delete from public.logins_criados where usuario_id = p_usuario;
+end;
+$$;
+
+-- Mesma função da migration 1, mas login criado por uma empresa só é vinculado
+-- a convites dessa mesma empresa
+create or replace function public.vincular_convites()
+returns int
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_email text;
+  v_qtd int;
+begin
+  select u.email into v_email from auth.users u
+  where u.id = auth.uid() and u.email_confirmed_at is not null;
+  if v_email is null then
+    return 0;
+  end if;
+
+  update public.membros m
+     set usuario_id = auth.uid()
+   where m.usuario_id is null
+     and lower(m.email) = lower(v_email)
+     and not exists (
+       select 1 from public.membros m2
+       where m2.empresa_id = m.empresa_id and m2.usuario_id = auth.uid()
+     )
+     and not exists (
+       select 1 from public.logins_criados lc
+       where lc.usuario_id = auth.uid() and lc.empresa_id <> m.empresa_id
+     );
+  get diagnostics v_qtd = row_count;
+  return v_qtd;
+end;
+$$;
+
+grant execute on function
+  public.acesso_membro_preparar(uuid),
+  public.acesso_membro_vincular(uuid, uuid),
+  public.admin_senha_definida(uuid)
 to authenticated;

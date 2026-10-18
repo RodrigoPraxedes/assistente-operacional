@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { soDigitos } from "@/lib/formato";
 import type { Escopo } from "@/lib/types";
 
@@ -233,6 +234,41 @@ export async function salvarMembro(empresaId: string, form: FormData) {
 
   revalidatePath(`/e/${empresaId}/config/membros`);
   redirect(`/e/${empresaId}/config/membros/${membroId}?salvo=1`);
+}
+
+// Cria o login do colaborador (e-mail do cadastro + senha definida aqui), já
+// confirmado. O banco confere a permissão config.membros e recusa e-mail que já
+// tem conta em uso. A senha nunca vai para log nem para a URL.
+export async function criarAcessoMembro(empresaId: string, membroId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const caminho = `/e/${empresaId}/config/membros/${membroId}`;
+  const senha = String(form.get("senha") ?? "");
+  if (senha.length < 8) falhar(caminho, "A senha precisa ter pelo menos 8 caracteres.");
+
+  const { data, error } = await supabase.rpc("acesso_membro_preparar", { p_membro: membroId });
+  if (error) falhar(caminho, error.message);
+  const info = data as { email: string; usuario_id: string | null; nome: string };
+
+  const admin = createAdminClient();
+  let usuarioId = info.usuario_id;
+  if (usuarioId) {
+    const { error: e } = await admin.auth.admin.updateUserById(usuarioId, { password: senha, email_confirm: true });
+    if (e) falhar(caminho, "Não foi possível criar o acesso.");
+  } else {
+    const { data: criado, error: e } = await admin.auth.admin.createUser({
+      email: info.email,
+      password: senha,
+      email_confirm: true,
+      user_metadata: { nome: info.nome },
+    });
+    if (e || !criado.user) falhar(caminho, e?.code === "weak_password" ? "Senha fraca demais." : "Não foi possível criar o acesso.");
+    usuarioId = criado.user.id;
+  }
+
+  const { error: e2 } = await supabase.rpc("acesso_membro_vincular", { p_membro: membroId, p_usuario: usuarioId });
+  if (e2) falhar(caminho, e2.message);
+  revalidatePath(`/e/${empresaId}/config/membros`);
+  redirect(`${caminho}?salvo=acesso`);
 }
 
 // ---------------------------------------------------------------- perfis
