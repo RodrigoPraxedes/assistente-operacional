@@ -612,6 +612,7 @@ export const SECOES: SecaoGuia[] = [
           "Para não depender do e-mail de confirmação, abra o colaborador e use Acesso ao app: defina uma senha e toque em Criar acesso. O login já nasce pronto; passe o e-mail e a senha para a pessoa. Se o e-mail já tiver conta no app, a pessoa entra com a senha dela.",
           "Senha: cada pessoa troca a própria senha tocando no nome dela no fim do menu (Minha conta). Para quem teve o acesso criado aqui e ainda não trocou a senha, o card Senha do colaborador permite definir uma nova.",
           "Com PIN de 4 dígitos, a pessoa preenche check-lists pelo QR Code sem login.",
+          "E-mail de login: abra o colaborador e use o card E-mail de login para trocar o e-mail com que ele entra. A senha continua a mesma e não precisa confirmar e-mail. Não vale para o dono, para quem também participa de outra empresa nem para administradores do sistema; nesses casos fale com o administrador do sistema.",
           "Para tirar alguém sem perder o histórico, mude a situação para inativo.",
         ],
       },
@@ -630,7 +631,7 @@ export const SECOES: SecaoGuia[] = [
     slug: "admin-master",
     titulo: "Admin Master",
     icone: ShieldCheck,
-    resumo: "Só para o administrador do sistema: empresas, contas e senhas.",
+    resumo: "Só para o administrador do sistema: empresas, contas, senhas e e-mails.",
     paraQue:
       "Painel de quem administra o Atalaia (aparece no menu só para o Admin Master). Mostra todas as empresas, aprova ou rejeita cadastros, suspende, define o limite de unidades e cria contas já prontas.",
     topicos: [
@@ -657,6 +658,13 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Em Usuários › Trocar senha, informe o e-mail do login e a senha nova (8 caracteres ou mais).",
           "Serve também para destravar quem se cadastrou e nunca recebeu o e-mail de confirmação.",
+        ],
+      },
+      {
+        titulo: "Trocar e-mail",
+        passos: [
+          "Em Usuários › Trocar e-mail, informe o e-mail atual do login e o e-mail novo.",
+          "O e-mail novo já fica confirmado, a senha continua a mesma e o e-mail muda também no cadastro da pessoa em todas as empresas dela.",
         ],
       },
     ],
