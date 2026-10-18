@@ -16,7 +16,7 @@ export function ImportarPlanilha({
 }: {
   ler: (estado: EstadoLeitura, form: FormData) => Promise<EstadoLeitura>;
   importar: (estado: EstadoImportacao, form: FormData) => Promise<EstadoImportacao>;
-  modeloHref: string;
+  modeloHref?: string;
   voltarHref: string;
   instrucoes: React.ReactNode;
 }) {
@@ -40,9 +40,11 @@ export function ImportarPlanilha({
     <div className="space-y-4">
       <Cartao className="space-y-3">
         <div className="space-y-2 text-sm text-slate-600">{instrucoes}</div>
-        <a href={modeloHref} className="inline-flex items-center gap-1 text-sm font-medium text-blue-600">
-          <Download size={16} /> Baixar planilha-modelo
-        </a>
+        {modeloHref && (
+          <a href={modeloHref} className="inline-flex items-center gap-1 text-sm font-medium text-blue-600">
+            <Download size={16} /> Baixar planilha-modelo
+          </a>
+        )}
         <form action={acaoLer} className="flex flex-wrap items-center gap-3">
           <input
             type="file"

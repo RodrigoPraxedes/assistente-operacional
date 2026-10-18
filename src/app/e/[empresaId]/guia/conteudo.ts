@@ -320,6 +320,7 @@ export const SECOES: SecaoGuia[] = [
           "Em Instrução e passo a passo, escreva um passo por linha: eles aparecem numerados.",
           "Escolha a função, o setor e, se a empresa tiver mais de uma unidade, a unidade (vazio = todas).",
           "Para tirar do quadro sem apagar, mude a situação para Inativa.",
+          "Para adiantar o cadastro, use Importar planilha: envie a planilha de respostas do levantamento (uma coluna por horário, como \"8:00h > atividade chave 1\"). Cada atividade vira uma rotina todos os dias, sem função; setores novos são criados e rotinas repetidas não duplicam.",
         ],
       },
       {

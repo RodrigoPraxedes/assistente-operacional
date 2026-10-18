@@ -54,7 +54,18 @@ export default async function PaginaRotinas({
   return (
     <div className="space-y-4">
       <div className="print:hidden">
-        <Titulo acoes={podeEditar && <LinkBotao href={`/e/${empresaId}/rotinas/novo`}>Nova rotina</LinkBotao>}>
+        <Titulo
+          acoes={
+            podeEditar && (
+              <>
+                <LinkBotao variante="secundario" href={`/e/${empresaId}/rotinas/importar`}>
+                  Importar planilha
+                </LinkBotao>
+                <LinkBotao href={`/e/${empresaId}/rotinas/novo`}>Nova rotina</LinkBotao>
+              </>
+            )
+          }
+        >
           Rotinas
         </Titulo>
         <p className="text-sm text-slate-500">
