@@ -16,6 +16,7 @@ import {
   promoverAdmin,
   removerAdmin,
   sairEmpresa,
+  trocarEmail,
   trocarSenha,
 } from "./actions";
 
@@ -232,6 +233,18 @@ export default async function PainelAdmin({ searchParams }: { searchParams: Prom
               className="min-w-48 flex-1"
             />
             <Botao variante="secundario">Trocar senha</Botao>
+          </form>
+        </Cartao>
+
+        <Cartao>
+          <h3 className="mb-1 font-medium">Trocar e-mail</h3>
+          <p className="mb-4 text-sm text-slate-500">
+            Troca o e-mail de login de qualquer pessoa, já confirmado. A senha continua a mesma e o e-mail muda também nas empresas dela.
+          </p>
+          <form action={trocarEmail} className="flex flex-wrap items-end gap-2">
+            <Input type="email" name="email" placeholder="E-mail atual" required autoComplete="off" className="min-w-48 flex-1" />
+            <Input type="email" name="email_novo" placeholder="E-mail novo" required autoComplete="off" className="min-w-48 flex-1" />
+            <Botao variante="secundario">Trocar e-mail</Botao>
           </form>
         </Cartao>
       </section>

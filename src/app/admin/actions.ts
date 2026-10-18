@@ -144,3 +144,18 @@ export async function trocarSenha(form: FormData) {
   const { error: e2 } = await supabase.rpc("admin_senha_definida", { p_usuario: id });
   voltar(e2?.message, `Senha de ${email} trocada.`);
 }
+
+export async function trocarEmail(form: FormData) {
+  const atual = txt(form, "email").toLowerCase();
+  const novo = txt(form, "email_novo").toLowerCase();
+  if (!EMAIL.test(atual) || !EMAIL.test(novo)) voltar("Informe os dois e-mails.");
+
+  const supabase = await cliente();
+  const { data: id, error } = await supabase.rpc("admin_usuario_por_email", { p_email: atual });
+  if (error) voltar(error.message);
+  if (!id) voltar(`Não existe login com o e-mail ${atual}.`);
+  const { data: outro } = await supabase.rpc("admin_usuario_por_email", { p_email: novo });
+  if (outro && outro !== id) voltar(`O e-mail ${novo} já é usado por outro login.`);
+  const { error: e } = await createAdminClient().auth.admin.updateUserById(id as string, { email: novo, email_confirm: true });
+  voltar(e ? "Não foi possível trocar o e-mail." : undefined, `E-mail ${atual} trocado para ${novo}.`);
+}

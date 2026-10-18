@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import type { Membro } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Titulo } from "@/components/ui";
-import { criarAcessoMembro, salvarMembro, trocarSenhaMembro } from "../../actions";
+import { criarAcessoMembro, salvarMembro, trocarEmailMembro, trocarSenhaMembro } from "../../actions";
 
 export default async function EditarMembro({
   params,
@@ -29,10 +29,13 @@ export default async function EditarMembro({
       supabase.rpc("membros_com_pin", { p_empresa: empresaId }),
     ]);
   if (!novo && !membro) notFound();
-  const { data: senhaLiberada } =
+  const [{ data: senhaLiberada }, { data: emailLiberado }] =
     membro && (membro as Membro).usuario_id
-      ? await supabase.rpc("acesso_membro_senha_liberada", { p_membro: membroId })
-      : { data: null };
+      ? await Promise.all([
+          supabase.rpc("acesso_membro_senha_liberada", { p_membro: membroId }),
+          supabase.rpc("acesso_membro_email_liberado", { p_membro: membroId }),
+        ])
+      : [{ data: null }, { data: null }];
 
   const minhas = new Set((vinculos ?? []).map((v) => v.unidade_id));
   const temPin = ((comPin as string[] | null) ?? []).includes(membroId);
@@ -48,7 +51,9 @@ export default async function EditarMembro({
             ? "Acesso criado. Passe o e-mail e a senha para a pessoa entrar no app."
             : salvo === "senha"
               ? "Senha trocada. Passe a senha nova para a pessoa."
-              : "Salvo."}
+              : salvo === "email"
+                ? "E-mail de login trocado. A pessoa passa a entrar com o e-mail novo e a mesma senha."
+                : "Salvo."}
         </Aviso>
       )}
 
@@ -65,7 +70,7 @@ export default async function EditarMembro({
             <Campo rotulo="WhatsApp" dica="Com DDD. Usado nos links de aviso.">
               <Input name="telefone" defaultValue={m?.telefone ?? ""} inputMode="tel" />
             </Campo>
-            <Campo rotulo="E-mail" dica={m?.usuario_id ? "Já entrou no app." : "Opcional. Com e-mail a pessoa pode entrar no app."}>
+            <Campo rotulo="E-mail" dica={m?.usuario_id ? "É o login dela. Para trocar, use o card E-mail de login." : "Opcional. Com e-mail a pessoa pode entrar no app."}>
               <Input name="email" type="email" defaultValue={m?.email ?? ""} disabled={!!m?.usuario_id} />
             </Campo>
             <Campo rotulo="Perfil de acesso">
@@ -134,6 +139,30 @@ export default async function EditarMembro({
           <Botao>Salvar</Botao>
         </form>
       </Cartao>
+
+      {m?.usuario_id && (
+        <Cartao>
+          <h2 className="mb-1 font-medium">E-mail de login</h2>
+          {m.usuario_id === user.id ? (
+            <p className="text-sm text-slate-500">Para trocar o seu e-mail de login, fale com o administrador do sistema.</p>
+          ) : emailLiberado ? (
+            <>
+              <p className="mb-3 text-sm text-slate-500">
+                A pessoa entra hoje com {m.email}. Informe o e-mail novo: a senha continua a mesma e não precisa confirmar e-mail.
+              </p>
+              <form action={trocarEmailMembro.bind(null, empresaId, m.id)} className="flex flex-wrap items-end gap-2">
+                <Input type="email" name="email" placeholder="E-mail novo" required autoComplete="off" className="min-w-48 flex-1" />
+                <Botao variante="secundario">Trocar e-mail</Botao>
+              </form>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500">
+              O e-mail de login do dono, de quem também participa de outra empresa ou de administradores do sistema só pode ser trocado
+              pelo administrador do sistema.
+            </p>
+          )}
+        </Cartao>
+      )}
 
       {m?.usuario_id && (
         <Cartao>
