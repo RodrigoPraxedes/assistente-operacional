@@ -286,6 +286,23 @@ export async function trocarSenhaMembro(empresaId: string, membroId: string, for
   redirect(`${caminho}?salvo=senha`);
 }
 
+// Troca o e-mail de login de um colaborador desta empresa (o banco diz se pode)
+export async function trocarEmailMembro(empresaId: string, membroId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const caminho = `/e/${empresaId}/config/membros/${membroId}`;
+  const email = txt(form, "email").toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) falhar(caminho, "Informe um e-mail válido.");
+
+  const { data: usuarioId, error } = await supabase.rpc("acesso_membro_email_preparar", { p_membro: membroId, p_email: email });
+  if (error) falhar(caminho, error.message);
+  const { error: e } = await createAdminClient().auth.admin.updateUserById(usuarioId as string, { email, email_confirm: true });
+  if (e) falhar(caminho, e.code === "email_exists" ? "Este e-mail já é usado por outro login do app." : "Não foi possível trocar o e-mail.");
+  const { error: e2 } = await supabase.rpc("acesso_membro_email_trocado", { p_membro: membroId });
+  if (e2) falhar(caminho, e2.message);
+  revalidatePath(`/e/${empresaId}/config/membros`);
+  redirect(`${caminho}?salvo=email`);
+}
+
 // ---------------------------------------------------------------- perfis
 export async function salvarPerfil(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
