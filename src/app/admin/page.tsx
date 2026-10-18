@@ -6,8 +6,18 @@ import { ehAdminMaster } from "@/lib/contexto";
 import { formatarData } from "@/lib/formato";
 import type { SituacaoEmpresa } from "@/lib/types";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
-import { Aviso, Botao, Cartao, Etiqueta, Input, LinkBotao, Titulo, Vazio, estilos } from "@/components/ui";
-import { definirLimite, definirSituacao, entrarEmpresa, promoverAdmin, removerAdmin, sairEmpresa } from "./actions";
+import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, LinkBotao, Select, Titulo, Vazio, estilos } from "@/components/ui";
+import {
+  cadastrarUsuario,
+  definirLimite,
+  definirSituacao,
+  entrarEmpresa,
+  excluirEmpresaPendente,
+  promoverAdmin,
+  removerAdmin,
+  sairEmpresa,
+  trocarSenha,
+} from "./actions";
 
 interface EmpresaAdmin {
   id: string;
@@ -36,8 +46,8 @@ const SITUACOES: Record<SituacaoEmpresa, { rotulo: string; cor: string }> = {
   suspensa: { rotulo: "Suspensa", cor: "#dc2626" },
 };
 
-export default async function PainelAdmin({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
-  const { erro } = await searchParams;
+export default async function PainelAdmin({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
+  const { erro, ok } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -57,6 +67,7 @@ export default async function PainelAdmin({ searchParams }: { searchParams: Prom
       </Link>
       <Titulo>Admin Master</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
+      {ok && <Aviso tipo="sucesso">{ok}</Aviso>}
       {pendentes > 0 && (
         <Aviso tipo="info">
           {pendentes === 1 ? "1 empresa aguarda" : `${pendentes} empresas aguardam`} aprovação.
@@ -118,9 +129,19 @@ export default async function PainelAdmin({ searchParams }: { searchParams: Prom
                   </form>
                 )}
                 {x.situacao === "pendente" && (
-                  <form action={definirSituacao.bind(null, x.id, "ativa")}>
-                    <Botao>Aprovar</Botao>
-                  </form>
+                  <>
+                    <form action={excluirEmpresaPendente.bind(null, x.id)}>
+                      <BotaoConfirmar
+                        mensagem={`Rejeitar e excluir a empresa ${x.nome}?\n\nA empresa, as unidades e tudo o que foi cadastrado nela são apagados e não dá para desfazer. O login de quem cadastrou continua existindo.`}
+                        className={estilos.botaoPerigo}
+                      >
+                        Rejeitar e excluir
+                      </BotaoConfirmar>
+                    </form>
+                    <form action={definirSituacao.bind(null, x.id, "ativa")}>
+                      <Botao>Aprovar</Botao>
+                    </form>
+                  </>
                 )}
                 {x.situacao === "suspensa" && (
                   <form action={definirSituacao.bind(null, x.id, "ativa")}>
@@ -143,6 +164,76 @@ export default async function PainelAdmin({ searchParams }: { searchParams: Prom
             )}
           </Cartao>
         ))}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-medium">Usuários</h2>
+        <Cartao>
+          <h3 className="mb-1 font-medium">Cadastrar usuário</h3>
+          <p className="mb-4 text-sm text-slate-500">
+            A conta já nasce com o e-mail confirmado e vinculada à empresa: é só passar o e-mail e a senha para a pessoa entrar. Se o e-mail
+            já tiver login, ele é confirmado, recebe esta senha e é vinculado.
+          </p>
+          <form action={cadastrarUsuario} className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Campo rotulo="Nome">
+                <Input name="nome" required autoComplete="off" />
+              </Campo>
+              <Campo rotulo="E-mail">
+                <Input type="email" name="email" required autoComplete="off" />
+              </Campo>
+              <Campo rotulo="Senha" dica="Pelo menos 8 caracteres">
+                <Input type="password" name="senha" required minLength={8} autoComplete="new-password" />
+              </Campo>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Campo rotulo="Empresa">
+                <Select name="empresa" required defaultValue="">
+                  <option value="" disabled>
+                    Escolha...
+                  </option>
+                  <option value="nova">Empresa nova (a pessoa é a dona)</option>
+                  {empresas.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.nome}
+                    </option>
+                  ))}
+                </Select>
+              </Campo>
+              <Campo rotulo="Acesso na empresa existente" dica="Ajuste o perfil depois em Configurações › Colaboradores">
+                <Select name="acesso" defaultValue="colaborador">
+                  <option value="colaborador">Colaborador</option>
+                  <option value="completo">Acesso completo (Gestor)</option>
+                </Select>
+              </Campo>
+              <Campo rotulo="Nome da empresa nova" dica="Só para empresa nova; ela já nasce ativa">
+                <Input name="nova_empresa" autoComplete="off" />
+              </Campo>
+              <Campo rotulo="Primeira unidade" dica="Só para empresa nova; em branco vira Matriz">
+                <Input name="unidade" autoComplete="off" />
+              </Campo>
+            </div>
+            <Botao>Cadastrar</Botao>
+          </form>
+        </Cartao>
+
+        <Cartao>
+          <h3 className="mb-1 font-medium">Trocar senha</h3>
+          <p className="mb-4 text-sm text-slate-500">Define uma senha nova para qualquer login e confirma o e-mail, se ainda não estava confirmado.</p>
+          <form action={trocarSenha} className="flex flex-wrap items-end gap-2">
+            <Input type="email" name="email" placeholder="E-mail do login" required autoComplete="off" className="min-w-48 flex-1" />
+            <Input
+              type="password"
+              name="senha"
+              placeholder="Senha nova (8+ caracteres)"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              className="min-w-48 flex-1"
+            />
+            <Botao variante="secundario">Trocar senha</Botao>
+          </form>
+        </Cartao>
       </section>
 
       <section className="space-y-3">
