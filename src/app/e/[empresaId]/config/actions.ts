@@ -271,7 +271,7 @@ export async function criarAcessoMembro(empresaId: string, membroId: string, for
   redirect(`${caminho}?salvo=acesso`);
 }
 
-// Troca a senha de um login que esta empresa criou (o banco diz se pode)
+// Redefine a senha de um colaborador desta empresa (o banco diz se pode)
 export async function trocarSenhaMembro(empresaId: string, membroId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const caminho = `/e/${empresaId}/config/membros/${membroId}`;
@@ -283,6 +283,8 @@ export async function trocarSenhaMembro(empresaId: string, membroId: string, for
   if (!usuarioId) falhar(caminho, "A senha deste colaborador só pode ser trocada por ele mesmo, em Minha conta.");
   const { error: e } = await createAdminClient().auth.admin.updateUserById(usuarioId as string, { password: senha });
   if (e) falhar(caminho, e.code === "weak_password" ? "Senha fraca demais." : "Não foi possível trocar a senha.");
+  const { error: e2 } = await supabase.rpc("acesso_membro_senha_redefinida", { p_membro: membroId });
+  if (e2) falhar(caminho, e2.message);
   redirect(`${caminho}?salvo=senha`);
 }
 

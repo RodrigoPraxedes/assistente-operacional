@@ -21,6 +21,7 @@ export function FormEntrar({ voltar }: { voltar?: string }) {
       <BotaoEnviar className="w-full" pendente="Entrando...">
         Entrar
       </BotaoEnviar>
+      <p className="text-center text-sm text-slate-500">Esqueceu a senha? Peça ao gestor da sua empresa para definir uma nova.</p>
       <p className="text-center text-sm text-slate-600">
         Não tem conta?{" "}
         <Link href="/cadastrar" className="font-medium text-blue-600">

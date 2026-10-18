@@ -142,7 +142,9 @@ export default async function EditarMembro({
             <p className="text-sm text-slate-500">Para trocar a sua senha, toque no seu nome no fim do menu (Minha conta).</p>
           ) : senhaLiberada ? (
             <>
-              <p className="mb-3 text-sm text-slate-500">Este login foi criado aqui. Defina uma senha nova e passe para a pessoa.</p>
+              <p className="mb-3 text-sm text-slate-500">
+                Se a pessoa esqueceu a senha, defina uma nova aqui e passe para ela. Depois ela pode trocar em Minha conta.
+              </p>
               <form action={trocarSenhaMembro.bind(null, empresaId, m.id)} className="flex flex-wrap items-end gap-2">
                 <Input
                   type="password"
@@ -158,8 +160,9 @@ export default async function EditarMembro({
             </>
           ) : (
             <p className="text-sm text-slate-500">
-              A pessoa troca a própria senha em Minha conta (tocando no nome dela no fim do menu). Se ela esqueceu, fale com o administrador
-              do sistema.
+              {m.dono
+                ? "A senha do dono só é trocada por ele, em Minha conta, ou pelo administrador do sistema."
+                : "Esta pessoa também participa de outra empresa, então só ela troca a senha (em Minha conta) ou o administrador do sistema."}
             </p>
           )}
         </Cartao>
