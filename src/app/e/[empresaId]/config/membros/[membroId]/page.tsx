@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import type { Membro } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Titulo } from "@/components/ui";
-import { salvarMembro } from "../../actions";
+import { criarAcessoMembro, salvarMembro } from "../../actions";
 
 export default async function EditarMembro({
   params,
@@ -38,7 +38,11 @@ export default async function EditarMembro({
     <div className="mx-auto max-w-2xl space-y-4">
       <Titulo voltar={{ href: `/e/${empresaId}/config/membros`, rotulo: "Colaboradores" }}>{novo ? "Novo colaborador" : m!.nome}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
-      {salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
+      {salvo && (
+        <Aviso tipo="sucesso">
+          {salvo === "acesso" ? "Acesso criado. Passe o e-mail e a senha para a pessoa entrar no app." : "Salvo."}
+        </Aviso>
+      )}
 
       <Cartao>
         <form action={salvarMembro.bind(null, empresaId)} className="space-y-4">
@@ -122,6 +126,28 @@ export default async function EditarMembro({
           <Botao>Salvar</Botao>
         </form>
       </Cartao>
+
+      {m && m.email && !m.usuario_id && (
+        <Cartao>
+          <h2 className="mb-1 font-medium">Acesso ao app</h2>
+          <p className="mb-3 text-sm text-slate-500">
+            Cria o login com o e-mail {m.email} e a senha que você definir, sem precisar confirmar e-mail. Depois é só passar o e-mail e a
+            senha para a pessoa.
+          </p>
+          <form action={criarAcessoMembro.bind(null, empresaId, m.id)} className="flex flex-wrap items-end gap-2">
+            <Input
+              type="password"
+              name="senha"
+              placeholder="Senha (8+ caracteres)"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              className="min-w-48 flex-1"
+            />
+            <Botao variante="secundario">Criar acesso</Botao>
+          </form>
+        </Cartao>
+      )}
     </div>
   );
 }

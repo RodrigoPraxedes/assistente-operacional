@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Repeat,
   Settings,
+  ShieldCheck,
   SquareKanban,
   Wrench,
   type LucideIcon,
@@ -608,6 +609,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Toque em Novo colaborador e preencha nome, cargo, WhatsApp, perfil, setor, função (opcional) e unidades.",
           "Com e-mail, a pessoa pode entrar no app: ela cria a conta com o mesmo e-mail e já entra vinculada. Até lá aparece Convite pendente.",
+          "Para não depender do e-mail de confirmação, abra o colaborador e use Acesso ao app: defina uma senha e toque em Criar acesso. O login já nasce pronto; passe o e-mail e a senha para a pessoa. Se o e-mail já tiver conta no app, a pessoa entra com a senha dela.",
           "Com PIN de 4 dígitos, a pessoa preenche check-lists pelo QR Code sem login.",
           "Para tirar alguém sem perder o histórico, mude a situação para inativo.",
         ],
@@ -619,6 +621,41 @@ export const SECOES: SecaoGuia[] = [
           "Em várias permissões você escolhe o alcance: só as minhas, do meu setor, da minha unidade ou da empresa toda.",
           "Já vêm prontos Gestor, Líder de setor e Colaborador. Crie outros em Novo perfil.",
           "O dono da empresa sempre tem acesso total.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "admin-master",
+    titulo: "Admin Master",
+    icone: ShieldCheck,
+    resumo: "Só para o administrador do sistema: empresas, contas e senhas.",
+    paraQue:
+      "Painel de quem administra o Atalaia (aparece no menu só para o Admin Master). Mostra todas as empresas, aprova ou rejeita cadastros, suspende, define o limite de unidades e cria contas já prontas.",
+    topicos: [
+      {
+        titulo: "Empresas",
+        passos: [
+          "Empresa cadastrada por alguém de fora fica Aguardando aprovação. Toque em Aprovar para liberar.",
+          "Rejeitar e excluir apaga a empresa pendente e tudo que foi cadastrado nela, depois de confirmar. Não dá para desfazer; o login de quem cadastrou continua existindo.",
+          "Suspender bloqueia o acesso da empresa (ex.: mensalidade em atraso) até você reativar. Salvar limite define quantas unidades ela pode ter.",
+          "Entrar coloca você como membro com acesso total; Sair tira.",
+        ],
+      },
+      {
+        titulo: "Cadastrar usuário",
+        passos: [
+          "Em Usuários › Cadastrar usuário, preencha nome, e-mail e senha e escolha a empresa.",
+          "Empresa nova: informe o nome (e a primeira unidade, se quiser). Ela já nasce ativa, com a pessoa como dona.",
+          "Empresa existente: a pessoa entra como Colaborador ou com Acesso completo. Se já havia um convite com o mesmo e-mail, ele é usado.",
+          "A conta nasce com o e-mail confirmado: é só passar o e-mail e a senha para a pessoa entrar. Se o e-mail já tinha login, ele é confirmado e recebe a senha informada.",
+        ],
+      },
+      {
+        titulo: "Trocar senha",
+        passos: [
+          "Em Usuários › Trocar senha, informe o e-mail do login e a senha nova (8 caracteres ou mais).",
+          "Serve também para destravar quem se cadastrou e nunca recebeu o e-mail de confirmação.",
         ],
       },
     ],
