@@ -6,6 +6,13 @@ import { DIAS_SEMANA } from "@/lib/rotinas";
 
 type Opcao = { id: string; nome: string };
 
+const botaoSetor = (ativo: boolean) =>
+  `h-8 rounded-full border px-3 text-xs font-medium transition-colors ${
+    ativo
+      ? "border-blue-600 bg-blue-600 text-white"
+      : "border-slate-200 bg-superficie text-slate-700 hover:border-slate-300"
+  }`;
+
 const seletor =
   "h-8 w-auto max-w-44 rounded-lg border border-slate-200 bg-superficie px-2 text-xs text-slate-700 outline-none focus:border-blue-500";
 
@@ -45,16 +52,6 @@ export function FiltrosRotinas({
         ))}
         <option value="semana">Semana toda</option>
       </select>
-      {setores.length > 0 && (
-        <select value={setor} onChange={(e) => aplicar({ setor: e.target.value })} aria-label="Setor" className={seletor}>
-          <option value="">Todos os setores</option>
-          {setores.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.nome}
-            </option>
-          ))}
-        </select>
-      )}
       {funcoes.length > 0 && (
         <select value={funcao} onChange={(e) => aplicar({ funcao: e.target.value })} aria-label="Função" className={seletor}>
           <option value="">Todas as funções</option>
@@ -64,6 +61,24 @@ export function FiltrosRotinas({
             </option>
           ))}
         </select>
+      )}
+      {setores.length > 0 && (
+        <div role="group" aria-label="Setor" className="order-last flex w-full flex-wrap gap-2">
+          <button type="button" aria-pressed={setor === ""} onClick={() => aplicar({ setor: "" })} className={botaoSetor(setor === "")}>
+            Todos os setores
+          </button>
+          {setores.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              aria-pressed={setor === s.id}
+              onClick={() => aplicar({ setor: s.id })}
+              className={botaoSetor(setor === s.id)}
+            >
+              {s.nome}
+            </button>
+          ))}
+        </div>
       )}
     </>
   );
