@@ -391,7 +391,7 @@ export default async function PaginaPainel({
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* 2. check-lists do dia */}
         <Bloco titulo="Check-lists de hoje" link={{ href: `${base}/checklists`, rotulo: "Ver check-lists" }}>
           {cls.length === 0 ? (
@@ -420,13 +420,13 @@ export default async function PaginaPainel({
                   <li key={e.id}>
                     <Link href={`${base}/checklists/execucoes/${e.id}`} className="block rounded-lg px-2 py-1.5 hover:bg-slate-100">
                       <span className="flex items-center justify-between gap-2 text-sm">
-                        <span className="font-medium text-slate-900">{e.modelo_nome}</span>
+                        <span className="min-w-0 break-words font-medium text-slate-900">{e.modelo_nome}</span>
                         <Etiqueta cor="#dc2626">{e.qtd_nao} {e.qtd_nao === 1 ? "problema" : "problemas"}</Etiqueta>
                       </span>
-                      <span className="block text-xs text-slate-500">
+                      <span className="block break-words text-xs text-slate-500">
                         {e.executor_nome} · {formatarDataHora(e.enviado_em, fuso)}
                       </span>
-                      <span className="block text-xs text-red-700">
+                      <span className="block break-words text-xs text-red-700">
                         {[...(e.checklist_respostas ?? [])]
                           .sort((a, b) => a.ordem - b.ordem)
                           .map((r) => r.item_texto)
@@ -529,12 +529,12 @@ export default async function PaginaPainel({
             <div className="space-y-3">
               {turnosHoje.map(({ turno, pessoas }) => (
                 <div key={turno.id}>
-                  <p className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: turno.cor }} aria-hidden />
+                  <p className="flex flex-wrap items-center gap-x-2 text-sm font-medium text-slate-700">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: turno.cor }} aria-hidden />
                     {turno.nome}
                     <span className="font-normal text-slate-500">{horarioTurno(turno)}</span>
                   </p>
-                  <p className="mt-0.5 text-sm text-slate-600">
+                  <p className="mt-0.5 break-words text-sm text-slate-600">
                     {pessoas.map((p) => (variasUnidades && p.unidade ? `${p.nome} (${p.unidade})` : p.nome)).join(", ")}
                   </p>
                 </div>
@@ -595,9 +595,9 @@ function Numero({ href, valor, rotulo, cor }: { href: string; valor: number; rot
 
 function Bloco({ titulo, link, children }: { titulo: string; link?: { href: string; rotulo: string }; children: ReactNode }) {
   return (
-    <Cartao>
+    <Cartao className="min-w-0 overflow-hidden">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="font-semibold text-slate-900">{titulo}</h2>
+        <h2 className="min-w-0 font-semibold text-slate-900">{titulo}</h2>
         {link && (
           <Link href={link.href} className="text-sm text-blue-600 hover:underline">
             {link.rotulo}

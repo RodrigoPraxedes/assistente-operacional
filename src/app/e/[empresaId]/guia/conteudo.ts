@@ -98,7 +98,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "O que aparece",
         passos: [
-          "Semana das ações: logo no topo, o quadro de segunda a domingo com as ações recorrentes previstas para cada dia, na cor da categoria. Toque em Exportar PDF para abrir a tela com a impressão.",
+          "Semana das ações: logo no topo, o quadro de segunda a domingo com as ações recorrentes previstas para cada dia, na cor da categoria. No computador é uma grade de 7 colunas; no celular cada dia é uma linha que abre ao tocar, e o dia de hoje já vem aberto. Toque em Exportar PDF para abrir a tela com a impressão.",
           "Hoje em números: tarefas atrasadas, que vencem hoje, em andamento e concluídas hoje. Toque num número para abrir a lista dessas tarefas.",
           "Check-lists de hoje: quantos foram feitos, quantos estão pendentes e quantos não foram realizados no tempo, mais os itens respondidos \"Não\".",
           "Manutenções em aberto: total por status e por prioridade, e as abertas há mais tempo (em vermelho a partir de 7 dias).",
