@@ -694,6 +694,9 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Resumo do dia: atrasadas, vencem hoje, check-lists, manutenções abertas e quem está escalado.",
           "Tarefas com filtros de pessoa, setor, unidade, módulo, situação e prazo.",
+          "Ações recorrentes cadastradas, mesmo as que ainda não geraram tarefa: responsáveis, repetição, horário, setor, próxima ocorrência e se estão ativas ou pausadas.",
+          "Rotinas por horário, dia da semana, setor ou função, e os modelos de check-list com seus itens.",
+          "Carga de tarefas por pessoa (pendentes, atrasadas, concluídas) e taxa de cumprimento dos check-lists num período, com os itens que mais deram problema.",
           "Check-lists de um dia, com os itens respondidos \"Não\".",
           "Manutenções abertas ou concluídas, com prestador, equipamento e há quantos dias estão abertas.",
           "Escala de um dia ou de um período, próximos alertas de datas, projetos e suas etapas.",
