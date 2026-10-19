@@ -69,6 +69,8 @@ export default async function PaginaTarefas({
     .or(`origem.neq.checklist,ocorrencia_em.lte.${daquiUmaHora}`)
     .order("prazo", { ascending: true, nullsFirst: false })
     .limit(500);
+  // check-list se repete várias vezes ao dia: concluído sai do quadro e da lista (fica na Central de Check-lists)
+  if (recorte !== "concluidas_hoje") consulta = consulta.or("origem.neq.checklist,concluida_em.is.null");
   if (filtros.origem) consulta = consulta.eq("origem", filtros.origem);
   if (filtros.unidade) consulta = consulta.eq("unidade_id", filtros.unidade);
   if (filtros.minhas) consulta = consulta.contains("responsaveis", [membro.id]);
