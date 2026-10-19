@@ -1146,6 +1146,160 @@ const modelos_de_checklist: Ferramenta = {
   },
 };
 
+const carga_por_pessoa: Ferramenta = {
+  nome: "carga_por_pessoa",
+  titulo: "Carga de tarefas por pessoa",
+  descricao:
+    "Quanto cada pessoa tem na mão: tarefas pendentes, atrasadas, que vencem hoje, em andamento e concluídas nos últimos N dias. Tarefa com vários responsáveis conta para cada um. Ordenado por quem tem mais atrasadas.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      setor: { type: "string", description: "Só tarefas deste setor." },
+      origem: { type: "string", enum: Object.keys(ORIGENS), description: "Só tarefas deste módulo." },
+      dias_concluidas: { type: "number", description: "Janela das concluídas, em dias (padrão 7, máximo 90)." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const agora = Date.now();
+    const { fim } = janelaDoDia(e.fuso);
+    const dias = numero(args.dias_concluidas, 7, 90);
+    const desde = new Date(agora - dias * DIA).toISOString();
+    const setor = texto(args.setor) ? acharId(n.setores, texto(args.setor)!, "Setor") : undefined;
+    const origem = texto(args.origem) && texto(args.origem)! in ORIGENS ? texto(args.origem)! : undefined;
+    const filtros = <T extends { eq: (c: string, v: string) => T }>(q: T) => {
+      if (setor) q = q.eq("setor_id", setor);
+      if (origem) q = q.eq("origem", origem);
+      return q;
+    };
+    const [{ data: abertas }, { data: feitas }] = await Promise.all([
+      filtros(
+        ctx.supabase
+          .from("tarefas")
+          .select(CAMPOS_TAREFA)
+          .eq("empresa_id", e.empresaId)
+          .in("status_id", n.idsPorTipo(PENDENTES))
+          .or(`ocorrencia_em.is.null,ocorrencia_em.lte.${fim}`)
+          .limit(3000),
+      ).returns<TarefaLinha[]>(),
+      filtros(
+        ctx.supabase.from("tarefas").select("responsaveis").eq("empresa_id", e.empresaId).gte("concluida_em", desde).limit(3000),
+      ).returns<{ responsaveis: string[] }[]>(),
+    ]);
+    const fimMs = new Date(fim).getTime();
+    const linhas = new Map<string, { pendentes: number; atrasadas: number; vencem_hoje: number; em_andamento: number; concluidas: number }>();
+    const linha = (id: string) => {
+      if (!linhas.has(id)) linhas.set(id, { pendentes: 0, atrasadas: 0, vencem_hoje: 0, em_andamento: 0, concluidas: 0 });
+      return linhas.get(id)!;
+    };
+    let semResponsavel = 0;
+    for (const t of abertas ?? []) {
+      const prazo = t.prazo ? new Date(t.prazo).getTime() : null;
+      if (t.responsaveis.length === 0) semResponsavel++;
+      for (const id of t.responsaveis) {
+        const l = linha(id);
+        l.pendentes++;
+        if (prazo !== null && prazo < agora) l.atrasadas++;
+        else if (prazo !== null && prazo <= fimMs) l.vencem_hoje++;
+        if (n.tipoStatus(t.status_id) === "em_andamento") l.em_andamento++;
+      }
+    }
+    for (const t of feitas ?? []) for (const id of t.responsaveis) linha(id).concluidas++;
+    return {
+      empresa: e.empresa,
+      concluidas_nos_ultimos_dias: dias,
+      pendentes_sem_responsavel: semResponsavel,
+      pessoas: [...linhas.entries()]
+        .map(([id, l]) => ({ pessoa: n.membro(id), ...l }))
+        .sort((a, b) => b.atrasadas - a.atrasadas || b.pendentes - a.pendentes),
+    };
+  },
+};
+
+const taxa_de_checklists: Ferramenta = {
+  nome: "taxa_de_checklists",
+  titulo: "Taxa de check-lists",
+  descricao:
+    "Cumprimento dos check-lists num período: por check-list, quantos foram marcados, feitos, não realizados no tempo e ainda pendentes (com a % de feitos), mais os itens que mais deram problema.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      de: { type: "string", description: "Primeiro dia (AAAA-MM-DD). Padrão: 7 dias atrás." },
+      ate: { type: "string", description: "Último dia (AAAA-MM-DD). Padrão: hoje." },
+      unidade: { type: "string", description: "Nome da unidade." },
+      setor: { type: "string", description: "Nome do setor." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const hoje = hojeIso(e.fuso);
+    const de = dataIso(args.de) ?? somarDias(hoje, -7);
+    const ate = dataIso(args.ate) ?? hoje;
+    const inicio = janelaDoDia(e.fuso, de).inicio;
+    const fim = janelaDoDia(e.fuso, ate).fim;
+    const unidade = texto(args.unidade) ? acharId(n.unidades, texto(args.unidade)!, "Unidade") : undefined;
+    const setor = texto(args.setor) ? acharId(n.setores, texto(args.setor)!, "Setor") : undefined;
+    let qt = ctx.supabase
+      .from("tarefas")
+      .select(CAMPOS_TAREFA)
+      .eq("empresa_id", e.empresaId)
+      .eq("origem", "checklist")
+      .gte("ocorrencia_em", inicio)
+      .lte("ocorrencia_em", fim)
+      .limit(5000);
+    let qe = ctx.supabase
+      .from("checklist_execucoes")
+      .select("checklist_respostas(item_texto, problema)")
+      .eq("empresa_id", e.empresaId)
+      .gte("enviado_em", inicio)
+      .lte("enviado_em", fim)
+      .limit(2000);
+    if (unidade) {
+      qt = qt.eq("unidade_id", unidade);
+      qe = qe.eq("unidade_id", unidade);
+    }
+    if (setor) {
+      qt = qt.eq("setor_id", setor);
+      qe = qe.eq("setor_id", setor);
+    }
+    const [{ data: tarefas }, { data: execucoes }] = await Promise.all([
+      qt.returns<TarefaLinha[]>(),
+      qe.returns<{ checklist_respostas: { item_texto: string; problema: boolean }[] }[]>(),
+    ]);
+    const porNome = new Map<string, { marcados: number; feitos: number; nao_realizados: number; pendentes: number }>();
+    for (const t of tarefas ?? []) {
+      const l = porNome.get(t.titulo) ?? { marcados: 0, feitos: 0, nao_realizados: 0, pendentes: 0 };
+      l.marcados++;
+      const tipo = n.tipoStatus(t.status_id);
+      if (tipo === "concluido") l.feitos++;
+      else if (tipo === "cancelado") l.nao_realizados++;
+      else l.pendentes++;
+      porNome.set(t.titulo, l);
+    }
+    const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : null);
+    const lista = [...porNome.entries()].map(([checklist, l]) => ({ checklist, ...l, percentual_feitos: pct(l.feitos, l.marcados) }));
+    const total = lista.reduce((s, l) => ({ marcados: s.marcados + l.marcados, feitos: s.feitos + l.feitos }), { marcados: 0, feitos: 0 });
+    const problemas = new Map<string, number>();
+    for (const x of execucoes ?? []) for (const r of x.checklist_respostas) if (r.problema) problemas.set(r.item_texto, (problemas.get(r.item_texto) ?? 0) + 1);
+    return {
+      empresa: e.empresa,
+      periodo: `${formatarDia(de)} a ${formatarDia(ate)}`,
+      geral: { ...total, percentual_feitos: pct(total.feitos, total.marcados) },
+      por_checklist: lista.sort((a, b) => (a.percentual_feitos ?? 101) - (b.percentual_feitos ?? 101)),
+      itens_que_mais_deram_problema: [...problemas.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([item, vezes]) => ({ item, vezes })),
+    };
+  },
+};
+
 export const FERRAMENTAS: Ferramenta[] = [
   minhas_empresas,
   resumo_do_dia,
@@ -1161,4 +1315,6 @@ export const FERRAMENTAS: Ferramenta[] = [
   acoes_recorrentes,
   rotinas,
   modelos_de_checklist,
+  carga_por_pessoa,
+  taxa_de_checklists,
 ];
