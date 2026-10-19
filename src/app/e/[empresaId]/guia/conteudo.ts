@@ -254,7 +254,7 @@ export const SECOES: SecaoGuia[] = [
           "Escolha a repetição (uma vez só, todos os dias, a cada 2, 3, 4, 10 ou 15 dias, um dia fixo da semana como às segundas ou aos sábados, toda semana, todo mês, a cada 3, 4, 5 ou 6 meses, todo ano...), o horário e a data inicial. \"A cada N dias\" conta a partir da data inicial; os dias da semana valem independente dela.",
           "Para algo fora da lista, escolha Personalizar...: informe \"a cada N dias, semanas, meses ou anos\"; na repetição semanal marque os dias da semana; na mensal escolha entre o mesmo dia do mês ou um dia da semana do mês (por exemplo, na 2ª terça-feira ou na última sexta-feira).",
           "Se quiser, defina uma data final. Vazio = repete sem fim.",
-          "Em Prazo, diga quantas horas depois do horário a tarefa passa a contar como atrasada.",
+          "Em Prazo, escolha a hora em que cada ocorrência vence (como na tarefa avulsa) e, se passar da meia-noite, quantos dias depois. A tela mostra o resultado, por exemplo \"Cada ocorrência vence às 18:00\". Depois desse momento a tarefa aparece como atrasada.",
           "Escolha os responsáveis, a unidade, o setor, a categoria e a visibilidade. Com Todas as unidades, cada unidade recebe a sua tarefa.",
           "Toque em Salvar ação.",
         ],

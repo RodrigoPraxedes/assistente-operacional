@@ -212,6 +212,7 @@ export interface Acao {
   data_final: string | null;
   horario: string;
   prazo_horas: number;
+  prazo_minutos: number;
   recorrencia: string | null;
   ativo: boolean;
   privado: boolean;

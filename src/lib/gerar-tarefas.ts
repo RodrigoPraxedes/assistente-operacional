@@ -108,7 +108,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
   let q = admin
     .from("acoes")
     .select(
-      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, nome, descricao, data_inicial, data_final, horario, prazo_horas, recorrencia, privado, criado_por, empresas(fuso_horario)",
+      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, nome, descricao, data_inicial, data_final, horario, prazo_minutos, recorrencia, privado, criado_por, empresas(fuso_horario)",
     )
     .eq("ativo", true);
   if (acaoId) q = q.eq("id", acaoId);
@@ -126,7 +126,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
       data_inicial: string;
       data_final: string | null;
       horario: string;
-      prazo_horas: number;
+      prazo_minutos: number;
       recorrencia: string | null;
       privado: boolean;
       criado_por: string | null;
@@ -153,7 +153,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
         fim: a.data_final,
         fuso: a.empresas?.fuso_horario ?? "America/Sao_Paulo",
       },
-      a.prazo_horas * 60,
+      a.prazo_minutos,
     ),
   }));
 }

@@ -1013,7 +1013,7 @@ const acoes_recorrentes: Ferramenta = {
         responsaveis: n.pessoas(a.responsaveis),
         repete: a.recorrencia ? descreverRecorrencia(a.recorrencia) : "não repete (uma vez só)",
         horario: a.horario.slice(0, 5),
-        prazo_em_horas: a.prazo_horas,
+        prazo_em_horas: Math.round((a.prazo_minutos / 60) * 100) / 100,
         proxima_ocorrencia: proxima ? formatarDataHora(proxima.toISOString(), e.fuso) : undefined,
         sem_proxima_ocorrencia: (a.ativo && !proxima) || undefined,
         inicio: formatarDia(a.data_inicial),
