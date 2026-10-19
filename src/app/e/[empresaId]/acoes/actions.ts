@@ -28,6 +28,8 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
     setor_id: txt("setor_id"),
     categoria_id: txt("categoria_id"),
     responsaveis: form.getAll("responsaveis").map(String).filter(Boolean),
+    cientes: form.getAll("cientes").map(String).filter(Boolean),
+    todos_concluem: form.get("todos_concluem") === "on",
     data_inicial: dataInicial,
     data_final: dataFinal,
     horario: txt("horario") ?? "09:00",

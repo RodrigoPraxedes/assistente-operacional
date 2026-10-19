@@ -23,6 +23,10 @@ interface Fonte {
   categoria_id: string | null;
   // uma ou mais pessoas (força-tarefa): a tarefa é uma só para todas
   responsaveis: string[];
+  // só ficam cientes (WhatsApp e visibilidade), sem ser responsáveis
+  cientes?: string[];
+  // 2+ responsáveis: todos marcam a parte (check-list mantém assim)
+  todos_concluem?: boolean;
   // ação/alerta privado: as tarefas nascem privadas, de quem criou
   privado?: boolean;
   criado_por?: string | null;
@@ -108,7 +112,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
   let q = admin
     .from("acoes")
     .select(
-      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, nome, descricao, data_inicial, data_final, horario, prazo_minutos, recorrencia, privado, criado_por, empresas(fuso_horario)",
+      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, cientes, todos_concluem, nome, descricao, data_inicial, data_final, horario, prazo_minutos, recorrencia, privado, criado_por, empresas(fuso_horario)",
     )
     .eq("ativo", true);
   if (acaoId) q = q.eq("id", acaoId);
@@ -121,6 +125,8 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
       setor_id: string | null;
       categoria_id: string | null;
       responsaveis: string[];
+      cientes: string[];
+      todos_concluem: boolean;
       nome: string;
       descricao: string | null;
       data_inicial: string;
@@ -141,6 +147,8 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
     setor_id: a.setor_id,
     categoria_id: a.categoria_id,
     responsaveis: a.responsaveis,
+    cientes: a.cientes,
+    todos_concluem: a.todos_concluem,
     privado: a.privado,
     criado_por: a.criado_por,
     titulo: a.nome,
@@ -164,7 +172,7 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
   let q = admin
     .from("alerta_avisos")
     .select(
-      "id, dias_antes, titulo, responsaveis, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, privado, criado_por, empresas(fuso_horario))",
+      "id, dias_antes, titulo, responsaveis, cientes, todos_concluem, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, privado, criado_por, empresas(fuso_horario))",
     )
     .eq("alertas.ativo", true);
   if (alertaId) q = q.eq("alerta_id", alertaId);
@@ -175,6 +183,8 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
       dias_antes: number;
       titulo: string;
       responsaveis: string[];
+      cientes: string[];
+      todos_concluem: boolean;
       alertas: {
         id: string;
         empresa_id: string;
@@ -213,6 +223,8 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
       categoria_id: a.categoria_id,
       // aviso sem ninguém: responsável padrão do alerta
       responsaveis: v.responsaveis.length ? v.responsaveis : a.responsavel_id ? [a.responsavel_id] : [],
+      cientes: v.cientes,
+      todos_concluem: v.todos_concluem,
       privado: a.privado,
       criado_por: a.criado_por,
       titulo: v.titulo,
@@ -298,6 +310,8 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           setor_id: f.setor_id,
           categoria_id: f.categoria_id,
           responsaveis: f.responsaveis,
+          cientes: f.cientes ?? [],
+          todos_concluem: f.todos_concluem ?? true,
           privado: f.privado ?? false,
           criado_por: f.criado_por ?? null,
           titulo: f.titulo,

@@ -9,9 +9,10 @@ import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
 import { CampoFotoCamera } from "@/components/campo-foto-camera";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { comentarTarefa, enviarFotoTarefa, marcarMinhaParte, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
+import { comentarTarefa, enviarFotoTarefa, marcarMinhaParte, mudarCientes, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
+import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
 
 const ACOES: Record<string, string> = {
   criada: "criou a tarefa",
@@ -75,7 +76,7 @@ export default async function DetalheTarefa({
   const responsaveis = tarefa.responsaveis.map((id) => mb.get(id)).filter((m) => !!m);
   // WhatsApp direto para a pessoa só quando é uma; com várias, escolhe o contato ou o grupo
   const responsavel = responsaveis.length === 1 ? responsaveis[0] : null;
-  const emConjunto = responsaveis.length > 1;
+  const emConjunto = responsaveis.length > 1 && tarefa.todos_concluem;
   const encerrada = !!tarefa.concluida_em || !!tarefa.cancelada_em;
   const souResponsavel = tarefa.responsaveis.includes(membro.id);
   const minhaParteFeita = tarefa.partes_feitas.includes(membro.id);
@@ -115,6 +116,12 @@ export default async function DetalheTarefa({
         <dl className="grid grid-cols-2 gap-2 text-sm">
           <dt className="text-slate-500">{responsaveis.length > 1 ? "Responsáveis" : "Responsável"}</dt>
           <dd>{responsaveis.map((m) => m.nome).join(", ") || "—"}</dd>
+          {tarefa.cientes.length > 0 && (
+            <>
+              <dt className="text-slate-500">Cientes</dt>
+              <dd>{tarefa.cientes.map((id) => mb.get(id)?.nome ?? "Pessoa removida").join(", ")}</dd>
+            </>
+          )}
           {plano && (
             <>
               <dt className="text-slate-500">Projeto</dt>
@@ -258,6 +265,24 @@ export default async function DetalheTarefa({
               dica="Quem entrar recebe o aviso no WhatsApp (se a automação estiver ligada)."
             />
             <Botao variante="secundario">Salvar responsáveis</Botao>
+          </form>
+        </Cartao>
+      )}
+
+      {pode("tarefas.criar") && !encerrada && (
+        <Cartao>
+          <form action={mudarCientes.bind(null, empresaId, tarefa.id)} className="space-y-3">
+            <SeletorResponsaveis
+              rotulo="Avisar também (ciente)"
+              name="cientes"
+              inicial={tarefa.cientes}
+              membros={(membros ?? []).filter((m) => m.ativo || tarefa.cientes.includes(m.id))}
+              setores={setores ?? []}
+              vazio="Ninguém além dos responsáveis"
+              dica="Quem entrar recebe o aviso no WhatsApp e enxerga a tarefa, sem precisar concluir."
+            />
+            <CampoTodosConcluem padrao={tarefa.todos_concluem} />
+            <Botao variante="secundario">Salvar cientes</Botao>
           </form>
         </Cartao>
       )}

@@ -6,6 +6,7 @@ import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
+import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
 
 type Opcao = { id: string; nome: string };
 
@@ -36,6 +37,15 @@ export function FormTarefa({
         membros={membros}
         setores={setores}
         dica="Uma ou mais pessoas: todas cuidam da mesma tarefa (um cartão só no Kanban)"
+      />
+      <CampoTodosConcluem />
+      <SeletorResponsaveis
+        rotulo="Avisar também (ciente)"
+        name="cientes"
+        membros={membros}
+        setores={setores}
+        vazio="Ninguém além dos responsáveis"
+        dica="Recebem o aviso no WhatsApp e enxergam a tarefa, mas não são responsáveis nem precisam concluir"
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Campo rotulo="Prazo">

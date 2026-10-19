@@ -8,6 +8,7 @@ import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/componen
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
+import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
 
 type Opcao = { id: string; nome: string };
 
@@ -111,6 +112,20 @@ export function FormAcao({
               membros={membros}
               setores={setores}
               dica="Com várias pessoas, cada ocorrência vira uma tarefa só para todas"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <CampoTodosConcluem padrao={base?.todos_concluem ?? false} />
+          </div>
+          <div className="sm:col-span-2">
+            <SeletorResponsaveis
+              rotulo="Avisar também (ciente)"
+              name="cientes"
+              inicial={base?.cientes ?? []}
+              membros={membros}
+              setores={setores}
+              vazio="Ninguém além dos responsáveis"
+              dica="Recebem o aviso no WhatsApp e enxergam a tarefa, mas não precisam concluir"
             />
           </div>
           <Campo rotulo="Unidade" dica="Todas = uma tarefa para cada unidade">
