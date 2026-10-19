@@ -349,6 +349,8 @@ const buscar_tarefas: Ferramenta = {
       so_minhas: { type: "boolean", description: "Só as tarefas da pessoa logada." },
       setor: { type: "string", description: "Nome do setor." },
       unidade: { type: "string", description: "Nome da unidade." },
+      criada_por: { type: "string", description: "Nome (ou parte) de quem criou a tarefa." },
+      categoria: { type: "string", description: "Nome da categoria." },
       texto: { type: "string", description: "Palavra no título ou na descrição." },
       prazo_de: { type: "string", description: "Prazo a partir deste dia (AAAA-MM-DD)." },
       prazo_ate: { type: "string", description: "Prazo até este dia (AAAA-MM-DD)." },
@@ -393,6 +395,13 @@ const buscar_tarefas: Ferramenta = {
     if (setor) q = q.eq("setor_id", acharId(n.setores, setor, "Setor"));
     const unidade = texto(args.unidade);
     if (unidade) q = q.eq("unidade_id", acharId(n.unidades, unidade, "Unidade"));
+    const criador = texto(args.criada_por);
+    if (criador) q = q.in("criado_por", acharPessoas(n, criador));
+    const nomeCategoria = texto(args.categoria);
+    if (nomeCategoria) {
+      const { data: categorias } = await ctx.supabase.from("categorias").select("id, nome").eq("empresa_id", e.empresaId);
+      q = q.eq("categoria_id", acharId(categorias ?? [], nomeCategoria, "Categoria"));
+    }
     const busca = texto(args.texto)?.replace(/[%,()]/g, " ");
     if (busca) q = q.or(`titulo.ilike.%${busca}%,descricao.ilike.%${busca}%`);
     q =
@@ -765,6 +774,7 @@ const equipe: Ferramenta = {
       texto: { type: "string", description: "Parte do nome ou do cargo." },
       setor: { type: "string", description: "Nome do setor." },
       incluir_inativos: { type: "boolean" },
+      sem_whatsapp: { type: "boolean", description: "true = só quem não tem WhatsApp cadastrado." },
     },
     additionalProperties: false,
   },
@@ -798,6 +808,7 @@ const equipe: Ferramenta = {
       empresa: e.empresa,
       colaboradores: (data ?? [])
         .filter((m) => !busca || contem(m.nome, busca) || contem(m.cargo, busca))
+        .filter((m) => args.sem_whatsapp !== true || !m.telefone)
         .map((m) => ({
           nome: m.nome,
           cargo: m.cargo ?? undefined,
@@ -1463,6 +1474,275 @@ const cobertura_da_escala: Ferramenta = {
   },
 };
 
+const historico_da_tarefa: Ferramenta = {
+  nome: "historico_da_tarefa",
+  titulo: "Histórico e comentários de tarefa",
+  descricao:
+    "Para as tarefas que combinam com a busca (até 5): o que aconteceu com cada uma (criada, status, prazo adiado, quem mexeu e quando) e os comentários. Use texto, número do chamado ou origem para achar a tarefa.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      texto: { type: "string", description: "Palavra no título da tarefa." },
+      chamado: { type: "number", description: "Número do chamado de manutenção." },
+      origem: { type: "string", enum: Object.keys(ORIGENS) },
+      incluir_concluidas: { type: "boolean", description: "Padrão: também busca as concluídas." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    let ids: string[] | undefined;
+    if (args.chamado !== undefined) {
+      const { data } = await ctx.supabase.from("chamados").select("tarefa_id").eq("empresa_id", e.empresaId).eq("numero", Number(args.chamado));
+      ids = (data ?? []).map((c) => c.tarefa_id as string);
+    }
+    const busca = texto(args.texto)?.replace(/[%,()]/g, " ");
+    if (!busca && !ids) throw new Error("Informe o texto do título ou o número do chamado.");
+    let q = ctx.supabase.from("tarefas").select(CAMPOS_TAREFA).eq("empresa_id", e.empresaId);
+    if (ids) q = q.in("id", ids);
+    if (busca) q = q.ilike("titulo", `%${busca}%`);
+    if (texto(args.origem) && texto(args.origem)! in ORIGENS) q = q.eq("origem", texto(args.origem)!);
+    if (args.incluir_concluidas === false) q = q.in("status_id", n.idsPorTipo(PENDENTES));
+    const { data: tarefas, error } = await q.order("created_at", { ascending: false }).limit(5).returns<(TarefaLinha & { id: string })[]>();
+    if (error) throw new Error("Não consegui buscar as tarefas.");
+    const lista = tarefas ?? [];
+    const tids = lista.map((t) => t.id);
+    const [{ data: hist }, { data: coms }] = tids.length
+      ? await Promise.all([
+          ctx.supabase
+            .from("tarefa_historico")
+            .select("tarefa_id, membro_id, acao, status_de, status_para, prazo_de, prazo_para, comentario, created_at")
+            .in("tarefa_id", tids)
+            .order("created_at")
+            .limit(500)
+            .returns<
+              { tarefa_id: string; membro_id: string | null; acao: string; status_de: string | null; status_para: string | null; prazo_de: string | null; prazo_para: string | null; comentario: string | null; created_at: string }[]
+            >(),
+          ctx.supabase
+            .from("tarefa_comentarios")
+            .select("tarefa_id, membro_id, texto, created_at")
+            .in("tarefa_id", tids)
+            .order("created_at")
+            .limit(500)
+            .returns<{ tarefa_id: string; membro_id: string | null; texto: string; created_at: string }[]>(),
+        ])
+      : [{ data: [] }, { data: [] }];
+    return {
+      empresa: e.empresa,
+      tarefas: lista.map((t) => ({
+        ...descreverTarefa(t, n, e.fuso),
+        historico: (hist ?? [])
+          .filter((h) => h.tarefa_id === t.id)
+          .map((h) => ({
+            quando: formatarDataHora(h.created_at, e.fuso),
+            quem: n.membro(h.membro_id) ?? undefined,
+            acao: h.acao,
+            status: h.status_para ? `${h.status_de ? n.statusNome(h.status_de) + " → " : ""}${n.statusNome(h.status_para)}` : undefined,
+            prazo: h.prazo_para ? `${h.prazo_de ? formatarDataHora(h.prazo_de, e.fuso) + " → " : ""}${formatarDataHora(h.prazo_para, e.fuso)}` : undefined,
+            motivo: h.comentario || undefined,
+          })),
+        comentarios: (coms ?? [])
+          .filter((c) => c.tarefa_id === t.id)
+          .map((c) => ({ quando: formatarDataHora(c.created_at, e.fuso), quem: n.membro(c.membro_id) ?? undefined, texto: c.texto })),
+      })),
+    };
+  },
+};
+
+const alertas_cadastrados: Ferramenta = {
+  nome: "alertas_cadastrados",
+  titulo: "Alertas cadastrados",
+  descricao:
+    "Todos os alertas de datas (ativos e pausados) com avisos, responsáveis e próxima data, apontando problemas: alerta sem avisos, aviso sem ninguém responsável, e quantas tarefas cada aviso já gerou (histórico dos avisos disparados).",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      texto: { type: "string", description: "Palavra no nome do alerta." },
+      situacao: { type: "string", enum: [...SITUACOES_ATIVIDADE], description: "Padrão: ativas." },
+      so_com_problema: { type: "boolean", description: "true = só alertas sem avisos ou com aviso sem responsável." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const sit = situacaoAtividade(args.situacao);
+    let q = ctx.supabase
+      .from("alertas")
+      .select("*, alerta_avisos(id, dias_antes, titulo, responsaveis)")
+      .eq("empresa_id", e.empresaId)
+      .order("nome");
+    if (sit === "ativas") q = q.eq("ativo", true);
+    if (sit === "pausadas") q = q.eq("ativo", false);
+    const { data, error } = await q.returns<(Alerta & { alerta_avisos: { id: string; dias_antes: number; titulo: string; responsaveis: string[] }[] })[]>();
+    if (error) throw new Error("Não consegui consultar os alertas.");
+    const avisoIds = (data ?? []).flatMap((a) => a.alerta_avisos.map((v) => v.id));
+    const { data: geradas } = avisoIds.length
+      ? await ctx.supabase.from("tarefas").select("origem_id, prazo").eq("empresa_id", e.empresaId).eq("origem", "alerta").in("origem_id", avisoIds).limit(5000).returns<{ origem_id: string; prazo: string | null }[]>()
+      : { data: [] };
+    const busca = texto(args.texto);
+    const lista = (data ?? [])
+      .filter((a) => !busca || contem(a.nome, busca))
+      .map((a) => {
+        const avisos = a.alerta_avisos.sort((x, y) => y.dias_antes - x.dias_antes).map((v) => {
+          const donos = v.responsaveis.length ? v.responsaveis : a.responsavel_id ? [a.responsavel_id] : [];
+          const minhas = (geradas ?? []).filter((t) => t.origem_id === v.id);
+          return {
+            quando: `${v.dias_antes} dia(s) antes`,
+            acao: v.titulo,
+            responsaveis: n.pessoas(donos),
+            sem_responsavel: donos.length === 0 || undefined,
+            tarefas_ja_geradas: minhas.length,
+          };
+        });
+        return {
+          alerta: a.nome,
+          descricao: a.descricao || undefined,
+          situacao: a.ativo ? "ativo" : "pausado",
+          proxima_data: a.ativo
+            ? (() => {
+                const p = proximaOcorrencia({ regra: a.recorrencia, horario: a.horario, inicio: a.data_evento, fuso: e.fuso });
+                return p ? formatarData(p.toISOString(), e.fuso) : undefined;
+              })()
+            : undefined,
+          repete: a.recorrencia ? descreverRecorrencia(a.recorrencia) : "não repete",
+          responsavel_padrao: n.membro(a.responsavel_id) ?? undefined,
+          setor: n.setor(a.setor_id) ?? undefined,
+          sem_avisos: avisos.length === 0 || undefined,
+          avisos,
+          privado: a.privado || undefined,
+        };
+      })
+      .filter((a) => args.so_com_problema !== true || a.sem_avisos || a.avisos.some((v) => v.sem_responsavel));
+    return { empresa: e.empresa, situacao: sit, alertas: lista };
+  },
+};
+
+const chamados_do_prestador: Ferramenta = {
+  nome: "chamados_do_prestador",
+  titulo: "Chamados por prestador",
+  descricao: "Histórico de um prestador de serviço: os chamados de manutenção em que atuou, com equipamento, situação, datas e custo.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      prestador: { type: "string", description: "Parte do nome do prestador." },
+      limite: { type: "number", description: "Padrão 50, máximo 200." },
+    },
+    required: ["prestador"],
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const busca = texto(args.prestador);
+    if (!busca) throw new Error("Informe o nome do prestador.");
+    const { data: fornecedores } = await ctx.supabase.from("fornecedores").select("id, nome").eq("empresa_id", e.empresaId);
+    const achados = (fornecedores ?? []).filter((f) => contem(f.nome, busca));
+    if (achados.length === 0) throw new Error(`Prestador "${busca}" não encontrado.`);
+    const { data, error } = await ctx.supabase
+      .from("chamados")
+      .select("numero, prioridade, custo, created_at, fornecedor_id, equipamentos(nome, codigo), tarefas!inner(titulo, status_id, concluida_em)")
+      .eq("empresa_id", e.empresaId)
+      .in("fornecedor_id", achados.map((f) => f.id))
+      .order("created_at", { ascending: false })
+      .limit(numero(args.limite, 50, 200))
+      .returns<
+        {
+          numero: number;
+          prioridade: Prioridade;
+          custo: number | null;
+          created_at: string;
+          fornecedor_id: string;
+          equipamentos: { nome: string; codigo: string | null } | null;
+          tarefas: { titulo: string; status_id: string; concluida_em: string | null };
+        }[]
+      >();
+    if (error) throw new Error("Não consegui consultar os chamados.");
+    return {
+      empresa: e.empresa,
+      prestadores: achados.map((f) => f.nome),
+      chamados: (data ?? []).map((c) => ({
+        numero: c.numero,
+        prestador: achados.find((f) => f.id === c.fornecedor_id)?.nome,
+        titulo: c.tarefas.titulo,
+        prioridade: PRIORIDADES[c.prioridade]?.rotulo ?? c.prioridade,
+        situacao: n.statusNome(c.tarefas.status_id),
+        equipamento: c.equipamentos ? [c.equipamentos.nome, c.equipamentos.codigo].filter(Boolean).join(" · ") : undefined,
+        aberto_em: formatarDataHora(c.created_at, e.fuso),
+        concluido_em: c.tarefas.concluida_em ? formatarDataHora(c.tarefas.concluida_em, e.fuso) : undefined,
+        custo: c.custo ?? undefined,
+      })),
+    };
+  },
+};
+
+const whatsapp_status: Ferramenta = {
+  nome: "whatsapp_status",
+  titulo: "Status do WhatsApp",
+  descricao:
+    "Conexões de WhatsApp (conectada ou não, envio pausado, último erro) e a fila de mensagens dos últimos dias: quantas por situação e as que falharam. Só aparece para quem tem acesso ao WhatsApp no app.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      dias: { type: "number", description: "Janela das mensagens, em dias (padrão 2, máximo 30)." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const dias = numero(args.dias, 2, 30);
+    const desde = new Date(Date.now() - dias * DIA).toISOString();
+    const [{ data: conexoes }, { data: mensagens }] = await Promise.all([
+      ctx.supabase
+        .from("whatsapp_conexoes")
+        .select("provedor, status, numero_mascarado, unidade_id, envio_pausado, ultimo_contato_em, ultimo_erro")
+        .eq("empresa_id", e.empresaId)
+        .returns<
+          { provedor: string; status: string; numero_mascarado: string | null; unidade_id: string | null; envio_pausado: boolean; ultimo_contato_em: string | null; ultimo_erro: string | null }[]
+        >(),
+      ctx.supabase
+        .from("whatsapp_mensagens")
+        .select("situacao, origem, erro, tentativas, created_at, whatsapp_contatos(nome)")
+        .eq("empresa_id", e.empresaId)
+        .gte("created_at", desde)
+        .order("created_at", { ascending: false })
+        .limit(2000)
+        .returns<{ situacao: string; origem: string; erro: string | null; tentativas: number; created_at: string; whatsapp_contatos: { nome: string } | null }[]>(),
+    ]);
+    const msgs = mensagens ?? [];
+    const porSituacao: Record<string, number> = {};
+    for (const m of msgs) porSituacao[m.situacao] = (porSituacao[m.situacao] ?? 0) + 1;
+    return {
+      empresa: e.empresa,
+      conexoes: (conexoes ?? []).map((c) => ({
+        provedor: c.provedor,
+        unidade: n.unidade(c.unidade_id) ?? "empresa toda",
+        numero: c.numero_mascarado ?? undefined,
+        situacao: c.status,
+        envio_pausado: c.envio_pausado || undefined,
+        ultimo_contato: c.ultimo_contato_em ? formatarDataHora(c.ultimo_contato_em, e.fuso) : undefined,
+        ultimo_erro: c.ultimo_erro ?? undefined,
+      })),
+      mensagens: {
+        ultimos_dias: dias,
+        total: msgs.length,
+        por_situacao: porSituacao,
+        falhas_recentes: msgs
+          .filter((m) => m.situacao === "falhou")
+          .slice(0, 10)
+          .map((m) => ({ para: m.whatsapp_contatos?.nome, quando: formatarDataHora(m.created_at, e.fuso), motivo: m.erro ?? undefined, tentativas: m.tentativas })),
+      },
+      observacao: (conexoes ?? []).length === 0 ? "Nenhuma conexão de WhatsApp visível para você." : undefined,
+    };
+  },
+};
+
 export const FERRAMENTAS: Ferramenta[] = [
   minhas_empresas,
   resumo_do_dia,
@@ -1482,4 +1762,8 @@ export const FERRAMENTAS: Ferramenta[] = [
   taxa_de_checklists,
   indicadores_manutencao,
   cobertura_da_escala,
+  historico_da_tarefa,
+  alertas_cadastrados,
+  chamados_do_prestador,
+  whatsapp_status,
 ];
