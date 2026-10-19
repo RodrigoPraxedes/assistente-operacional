@@ -698,6 +698,8 @@ export const SECOES: SecaoGuia[] = [
           "Rotinas por horário, dia da semana, setor ou função, e os modelos de check-list com seus itens.",
           "Carga de tarefas por pessoa (pendentes, atrasadas, concluídas) e taxa de cumprimento dos check-lists num período, com os itens que mais deram problema.",
           "Indicadores de manutenção (tempo médio para resolver, prestadores, equipamentos com defeito repetido) e cobertura da escala (dias com setor sem ninguém, folgas e faltas por pessoa).",
+          "Histórico e comentários de uma tarefa ou chamado, alertas cadastrados (sem avisos, sem responsável, avisos já gerados), chamados de um prestador e situação do WhatsApp (conexão e mensagens com falha).",
+          "Na equipe, quem está sem WhatsApp cadastrado; nas tarefas, filtros por quem criou e por categoria.",
           "Check-lists de um dia, com os itens respondidos \"Não\".",
           "Manutenções abertas ou concluídas, com prestador, equipamento e há quantos dias estão abertas.",
           "Escala de um dia ou de um período, próximos alertas de datas, projetos e suas etapas.",
