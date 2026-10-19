@@ -342,7 +342,7 @@ export async function gerarLembretesAcoes(agora = new Date()) {
     const [{ data: tarefas }, { data: abertos }] = await Promise.all([
       admin
         .from("tarefas")
-        .select("id, unidade_id, responsaveis, status_id, titulo, ocorrencia_em, unidades(nome)")
+        .select("id, unidade_id, responsaveis, cientes, status_id, titulo, ocorrencia_em, unidades(nome)")
         .eq("empresa_id", c.empresa_id)
         .eq("origem", "acao")
         .eq("privado", false)
@@ -354,6 +354,7 @@ export async function gerarLembretesAcoes(agora = new Date()) {
             id: string;
             unidade_id: string | null;
             responsaveis: string[];
+            cientes: string[];
             status_id: string;
             titulo: string;
             ocorrencia_em: string;
@@ -365,13 +366,15 @@ export async function gerarLembretesAcoes(agora = new Date()) {
     const statusAberto = new Set((abertos ?? []).map((s) => s.id));
 
     for (const t of (tarefas ?? []).filter((x) => statusAberto.has(x.status_id))) {
-      for (const membroId of t.responsaveis) {
+      // quem só está ciente recebe o mesmo lembrete, com o título trocado
+      for (const membroId of [...t.responsaveis, ...t.cientes]) {
+        const ciente = !t.responsaveis.includes(membroId);
         const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
           p_empresa: c.empresa_id,
           p_unidade: t.unidade_id,
           p_membro: membroId,
           p_texto: [
-            `*Lembrete: ação às ${hora(t.ocorrencia_em, fuso)}*`,
+            `*${ciente ? "Para seu conhecimento" : "Lembrete"}: ação às ${hora(t.ocorrencia_em, fuso)}*`,
             `${t.titulo}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
           ].join("\n"),
           p_origem: "lembrete",

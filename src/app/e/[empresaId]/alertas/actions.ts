@@ -12,6 +12,7 @@ interface AvisoForm {
   dias_antes: number;
   titulo: string;
   responsaveis: string[];
+  cientes: string[];
 }
 
 export async function salvarAlerta(empresaId: string, _: { erro?: string } | undefined, form: FormData) {
@@ -32,6 +33,7 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
         dias_antes: Math.round(Number(a.dias_antes)),
         titulo: String(a.titulo ?? "").trim(),
         responsaveis: (Array.isArray(a.responsaveis) ? a.responsaveis : []).map(String).filter(Boolean),
+        cientes: (Array.isArray(a.cientes) ? a.cientes : []).map(String).filter(Boolean),
       }))
       .filter((a) => a.titulo);
     // avisos idênticos (mesma antecedência e mesmo texto) viram um só, somando os responsáveis
@@ -40,7 +42,10 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
       const k = `${a.dias_antes}|${a.titulo.toLowerCase()}`;
       const ja = unicos.get(k);
       if (!ja) unicos.set(k, a);
-      else ja.responsaveis = [...new Set([...ja.responsaveis, ...a.responsaveis])];
+      else {
+        ja.responsaveis = [...new Set([...ja.responsaveis, ...a.responsaveis])];
+        ja.cientes = [...new Set([...ja.cientes, ...a.cientes])];
+      }
     }
     avisos = [...unicos.values()];
   } catch {
@@ -106,7 +111,7 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
 
   const novos = avisos
     .filter((a) => !a.id)
-    .map((a) => ({ dias_antes: a.dias_antes, titulo: a.titulo, responsaveis: a.responsaveis, empresa_id: empresaId, alerta_id: alertaId }));
+    .map((a) => ({ dias_antes: a.dias_antes, titulo: a.titulo, responsaveis: a.responsaveis, cientes: a.cientes, empresa_id: empresaId, alerta_id: alertaId }));
   if (novos.length) {
     const { error: e } = await supabase.from("alerta_avisos").insert(novos);
     if (e) return { erro: e.message };

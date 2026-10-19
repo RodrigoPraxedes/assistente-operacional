@@ -97,6 +97,10 @@ export interface Tarefa {
   responsaveis: string[];
   // tarefa em conjunto: quem já marcou "minha parte feita"
   partes_feitas: string[];
+  // só ficam cientes (recebem os avisos e enxergam a tarefa), sem ser responsáveis
+  cientes: string[];
+  // 2+ responsáveis: true = todos marcam a parte; false = qualquer um conclui
+  todos_concluem: boolean;
   // só conclui com foto tirada na hora (tarefa_fotos)
   exige_foto: boolean;
   criado_por: string | null;
@@ -206,6 +210,8 @@ export interface Acao {
   categoria_id: string | null;
   responsavel_id: string | null;
   responsaveis: string[];
+  cientes: string[];
+  todos_concluem: boolean;
   nome: string;
   descricao: string | null;
   data_inicial: string;
@@ -247,6 +253,8 @@ export interface AlertaAviso {
   responsavel_id: string | null;
   // vazio = usa o responsável padrão do alerta
   responsaveis: string[];
+  cientes: string[];
+  todos_concluem: boolean;
 }
 
 export type Prioridade = "baixa" | "media" | "alta" | "urgente";

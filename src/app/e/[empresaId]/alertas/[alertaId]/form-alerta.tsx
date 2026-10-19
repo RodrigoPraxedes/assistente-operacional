@@ -14,6 +14,7 @@ type LinhaAviso = {
   dias_antes: number;
   titulo: string;
   responsaveis: string[];
+  cientes: string[];
 };
 
 // datas importantes costumam ser anuais ou únicas; mensal cobre contas e taxas
@@ -54,8 +55,9 @@ export function FormAlerta({
           dias_antes: a.dias_antes,
           titulo: a.titulo,
           responsaveis: a.responsaveis,
+          cientes: a.cientes,
         }))
-      : [{ dias_antes: 30, titulo: "", responsaveis: [] }],
+      : [{ dias_antes: 30, titulo: "", responsaveis: [], cientes: [] }],
   );
   const regraAtual = alerta?.recorrencia ?? "";
   const repeticoes = REPETICOES.some((r) => r.regra === regraAtual)
@@ -200,12 +202,20 @@ export function FormAlerta({
               onChange={(ids) => mudar(i, { responsaveis: ids })}
               vazio="Responsável padrão do alerta"
             />
+            <SeletorResponsaveis
+              rotulo="Avisar também (ciente)"
+              membros={membros}
+              setores={setores}
+              valor={a.cientes}
+              onChange={(ids) => mudar(i, { cientes: ids })}
+              vazio="Ninguém além dos responsáveis"
+            />
           </div>
         ))}
         <Botao
           type="button"
           variante="secundario"
-          onClick={() => setAvisos((xs) => [...xs, { dias_antes: 7, titulo: "", responsaveis: [] }])}
+          onClick={() => setAvisos((xs) => [...xs, { dias_antes: 7, titulo: "", responsaveis: [], cientes: [] }])}
         >
           + Aviso
         </Botao>
