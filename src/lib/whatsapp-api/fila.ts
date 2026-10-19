@@ -189,7 +189,7 @@ const INTERVALO_MAX_MS = 7_000;
 // Avisos que podem esperar (tarefa atribuída e conclusão); lembretes e resumos têm hora própria
 const ORIGENS_SEM_MADRUGADA = new Set(["tarefa", "conclusao"]);
 const SILENCIO_INICIO_H = 22;
-const SILENCIO_FIM_H = 7;
+const SILENCIO_FIM_H = 8;
 
 function ehMadrugada(fuso = "America/Sao_Paulo", agoraDate = new Date()) {
   const h = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: fuso }).format(agoraDate));
@@ -216,7 +216,7 @@ export async function processarFila(limite = 20, prazoMs = 40_000) {
     .order("proxima_tentativa_em")
     .limit(limite * 10)
     .returns<{ id: string; empresa_id: string; origem: string; empresas: { fuso_horario: string } | null }[]>();
-  // avisos de tarefa não saem de madrugada: ficam na fila até as 07h da empresa
+  // avisos de tarefa não saem de madrugada: ficam na fila até as 8h da empresa
   const aEnviar = (fila ?? []).filter((m) => !(ORIGENS_SEM_MADRUGADA.has(m.origem) && ehMadrugada(m.empresas?.fuso_horario))).slice(0, limite);
   let enviadas = 0;
   for (const m of aEnviar) {

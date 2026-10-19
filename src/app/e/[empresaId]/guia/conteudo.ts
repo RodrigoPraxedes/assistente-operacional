@@ -575,7 +575,7 @@ export const SECOES: SecaoGuia[] = [
           "Reenviar o resumo de hoje: botão no fim da tela, para quando o resumo não chegou (ex.: WhatsApp desconectado). Manda de novo a todos, inclusive a quem já recebeu, com a marca \"Reenvio do resumo do dia\" no início; pede confirmação antes. Se nada for enviado, a mensagem na tela diz o motivo de cada pessoa. Os avisos automáticos usam sempre o número real quando existe um número de ensaio (simulação).",
           "Incluir link do app: abaixo de cada aviso, escolha se a mensagem leva o link para abrir no app. Já vem ligado na tarefa atribuída e no lembrete de check-list, e desligado nos demais.",
           "Contato para dúvidas: o aviso termina com o nome e o celular de quem atribuiu, concluiu ou preencheu (no lembrete, de quem recebe o resultado). A pessoa toca no número e conversa direto.",
-          "Sem avisos de madrugada: os avisos de tarefa atribuída e de tarefa concluída não saem entre 22h e 7h (horário da empresa). Ficam na fila e são enviados a partir das 7h. Lembretes, resumo do dia e envios manuais não são afetados.",
+          "Sem avisos de madrugada: os avisos de tarefa atribuída e de tarefa concluída não saem entre 22h e 8h (horário da empresa). Ficam na fila e são enviados a partir das 8h. Lembretes, resumo do dia e envios manuais não são afetados.",
           "O limite diário evita excesso: passou dele, a mensagem vira rascunho em Avisos.",
         ],
       },
