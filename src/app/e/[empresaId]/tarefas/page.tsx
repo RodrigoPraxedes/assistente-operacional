@@ -4,7 +4,7 @@ import { getContexto } from "@/lib/contexto";
 import { hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
 import { ORIGENS, type Origem, type Status, type Tarefa } from "@/lib/types";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
-import { LinkBotao, Select, Titulo } from "@/components/ui";
+import { Input, LinkBotao, Select, Titulo } from "@/components/ui";
 import { Kanban } from "./kanban";
 import { TrocarVisao, type Visao } from "./trocar-visao";
 
@@ -25,7 +25,7 @@ export default async function PaginaTarefas({
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string }>;
+  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string; q?: string }>;
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
@@ -58,6 +58,8 @@ export default async function PaginaTarefas({
   const recorte = filtros.recorte && filtros.recorte in RECORTES ? (filtros.recorte as Recorte) : null;
   const idsPendentes = todosStatus.filter((s) => PENDENTES.includes(s.tipo)).map((s) => s.id);
   const agora = new Date().toISOString();
+  // busca por título ou descrição (tira os caracteres que quebram o filtro do PostgREST)
+  const busca = (filtros.q ?? "").replace(/[,()%*\\]/g, " ").trim().slice(0, 80);
 
   let consulta = supabase
     .from("tarefas")
@@ -71,6 +73,7 @@ export default async function PaginaTarefas({
     .limit(500);
   // check-list se repete várias vezes ao dia: concluído sai do quadro e da lista (fica na Central de Check-lists)
   if (recorte !== "concluidas_hoje") consulta = consulta.or("origem.neq.checklist,concluida_em.is.null");
+  if (busca) consulta = consulta.or(`titulo.ilike.%${busca}%,descricao.ilike.%${busca}%`);
   if (filtros.origem) consulta = consulta.eq("origem", filtros.origem);
   if (filtros.unidade) consulta = consulta.eq("unidade_id", filtros.unidade);
   if (filtros.minhas) consulta = consulta.contains("responsaveis", [membro.id]);
@@ -141,8 +144,16 @@ export default async function PaginaTarefas({
         Tarefas
       </Titulo>
 
-      <form className="mb-4 flex flex-wrap items-end gap-2">
-        <Select name="origem" defaultValue={filtros.origem ?? ""} className="w-auto">
+      <form className="mb-4 flex flex-wrap items-center gap-2">
+        <Input
+          type="search"
+          name="q"
+          defaultValue={busca}
+          placeholder="Pesquisar tarefas"
+          aria-label="Pesquisar tarefas"
+          className="!w-full !py-1.5 text-sm"
+        />
+        <Select name="origem" defaultValue={filtros.origem ?? ""} className="!w-auto min-w-0 flex-1 !py-1.5 text-sm">
           <option value="">Todos os módulos</option>
           {(Object.keys(ORIGENS) as Origem[]).map((o) => (
             <option key={o} value={o}>
@@ -151,7 +162,7 @@ export default async function PaginaTarefas({
           ))}
         </Select>
         {(unidades?.length ?? 0) > 1 && (
-          <Select name="unidade" defaultValue={filtros.unidade ?? ""} className="w-auto">
+          <Select name="unidade" defaultValue={filtros.unidade ?? ""} className="!w-auto min-w-0 flex-1 !py-1.5 text-sm">
             <option value="">Todas as unidades</option>
             {unidades!.map((u) => (
               <option key={u.id} value={u.id}>
@@ -160,7 +171,7 @@ export default async function PaginaTarefas({
             ))}
           </Select>
         )}
-        <Select name="status" defaultValue={filtros.status ?? ""} className="w-auto">
+        <Select name="status" defaultValue={filtros.status ?? ""} className="!w-auto min-w-0 flex-1 !py-1.5 text-sm">
           <option value="">Todos os status</option>
           <option value="pendentes">Pendentes (não concluídas)</option>
           {todosStatus.map((s) => (
@@ -174,7 +185,7 @@ export default async function PaginaTarefas({
           href={`/e/${empresaId}/tarefas?${new URLSearchParams(
             Object.entries({ ...filtros, minhas: filtros.minhas ? undefined : "1" }).filter((e): e is [string, string] => !!e[1]),
           )}`}
-          className={`rounded-lg border px-3 py-2 text-sm ${
+          className={`rounded-lg border px-3 py-1.5 text-sm ${
             filtros.minhas ? "border-blue-600 bg-blue-50 font-medium text-blue-700" : "border-slate-300 bg-superficie"
           }`}
         >
@@ -189,16 +200,16 @@ export default async function PaginaTarefas({
               href={`/e/${empresaId}/tarefas?${new URLSearchParams(
                 Object.entries({ ...filtros, recorte: undefined }).filter((e): e is [string, string] => !!e[1]),
               )}`}
-              className="rounded-lg border border-blue-600 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+              className="rounded-lg border border-blue-600 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700"
               title="Tirar este filtro"
             >
               {RECORTES[recorte]} ✕
             </Link>
           </>
         )}
-        <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
-        {(filtros.origem || filtros.unidade || filtros.minhas || filtros.status || recorte) && (
-          <Link href={`/e/${empresaId}/tarefas`} className="px-2 py-2 text-sm text-slate-500">
+        <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-1.5 text-sm">Filtrar</button>
+        {(busca || filtros.origem || filtros.unidade || filtros.minhas || filtros.status || recorte) && (
+          <Link href={`/e/${empresaId}/tarefas`} className="px-2 py-1.5 text-sm text-slate-500">
             Limpar
           </Link>
         )}
