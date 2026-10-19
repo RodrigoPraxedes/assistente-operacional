@@ -9,6 +9,7 @@ import {
   PRIORIDADES,
   SITUACOES_PATRIMONIO,
   SITUACOES_PLANO,
+  type Acao,
   type Alerta,
   type Horizonte,
   type Origem,
@@ -930,6 +931,221 @@ const patrimonio: Ferramenta = {
   },
 };
 
+const SITUACOES_ATIVIDADE = ["ativas", "pausadas", "todas"] as const;
+const situacaoAtividade = (v: unknown) => ((SITUACOES_ATIVIDADE as readonly string[]).includes(String(v)) ? String(v) : "ativas");
+
+const acoes_recorrentes: Ferramenta = {
+  nome: "acoes_recorrentes",
+  titulo: "Ações recorrentes",
+  descricao:
+    "Varre a seção Ações recorrentes (os cadastros, não as tarefas geradas): inclui as que ainda não geraram tarefa. Mostra título, descrição, responsáveis, repetição, horário, prazo, setor, unidade, categoria, início/fim, próxima ocorrência e se está ativa ou pausada. Itens privados só aparecem para quem pode vê-los.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      texto: { type: "string", description: "Palavra no nome ou na descrição (sem acento, sem diferenciar maiúsculas)." },
+      situacao: { type: "string", enum: [...SITUACOES_ATIVIDADE], description: "Padrão: ativas." },
+      responsavel: { type: "string", description: "Nome (ou parte) de um dos responsáveis." },
+      so_minhas: { type: "boolean", description: "Só as ações em que a pessoa logada é responsável." },
+      setor: { type: "string", description: "Nome do setor." },
+      unidade: { type: "string", description: "Nome da unidade." },
+      categoria: { type: "string", description: "Nome da categoria." },
+      proximos_dias: { type: "number", description: "Só as que têm próxima ocorrência nos próximos N dias (máximo 730)." },
+      limite: { type: "number", description: "Padrão 100, máximo 500." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const sit = situacaoAtividade(args.situacao);
+    let q = ctx.supabase.from("acoes").select("*").eq("empresa_id", e.empresaId).order("nome");
+    if (sit === "ativas") q = q.eq("ativo", true);
+    if (sit === "pausadas") q = q.eq("ativo", false);
+    if (args.so_minhas === true) q = q.contains("responsaveis", [e.membroId]);
+    const resp = texto(args.responsavel);
+    if (resp) q = q.overlaps("responsaveis", acharPessoas(n, resp));
+    const setor = texto(args.setor);
+    if (setor) q = q.eq("setor_id", acharId(n.setores, setor, "Setor"));
+    const unidade = texto(args.unidade);
+    if (unidade) q = q.eq("unidade_id", acharId(n.unidades, unidade, "Unidade"));
+    const nomeCategoria = texto(args.categoria);
+    const { data: categorias } = await ctx.supabase.from("categorias").select("id, nome").eq("empresa_id", e.empresaId);
+    if (nomeCategoria) q = q.eq("categoria_id", acharId(categorias ?? [], nomeCategoria, "Categoria"));
+    const { data, error } = await q.returns<Acao[]>();
+    if (error) throw new Error("Não consegui consultar as ações recorrentes.");
+
+    const busca = texto(args.texto);
+    const dias = args.proximos_dias !== undefined ? numero(args.proximos_dias, 30, 730) : undefined;
+    const limiteData = dias ? new Date(Date.now() + dias * DIA) : undefined;
+    const categoria = (id: string | null) => (id ? ((categorias ?? []).find((c) => c.id === id)?.nome ?? null) : null);
+    const lista = (data ?? [])
+      .filter((a) => !busca || contem(a.nome, busca) || contem(a.descricao, busca))
+      .map((a) => ({
+        a,
+        proxima: a.ativo
+          ? proximaOcorrencia({ regra: a.recorrencia, horario: a.horario, inicio: a.data_inicial, fim: a.data_final, fuso: e.fuso })
+          : null,
+      }))
+      .filter((x) => !limiteData || (x.proxima && x.proxima <= limiteData))
+      .sort((x, y) => (x.proxima?.getTime() ?? Infinity) - (y.proxima?.getTime() ?? Infinity));
+    const mostradas = lista.slice(0, numero(args.limite, 100, 500));
+    return {
+      empresa: e.empresa,
+      situacao: sit,
+      encontradas: lista.length,
+      mostrando: mostradas.length,
+      acoes: mostradas.map(({ a, proxima }) => ({
+        acao: a.nome,
+        descricao: a.descricao || undefined,
+        situacao: a.ativo ? "ativa" : "pausada",
+        responsaveis: n.pessoas(a.responsaveis),
+        repete: a.recorrencia ? descreverRecorrencia(a.recorrencia) : "não repete (uma vez só)",
+        horario: a.horario.slice(0, 5),
+        prazo_em_horas: a.prazo_horas,
+        proxima_ocorrencia: proxima ? formatarDataHora(proxima.toISOString(), e.fuso) : undefined,
+        sem_proxima_ocorrencia: (a.ativo && !proxima) || undefined,
+        inicio: formatarDia(a.data_inicial),
+        fim: a.data_final ? formatarDia(a.data_final) : undefined,
+        setor: n.setor(a.setor_id) ?? undefined,
+        unidade: n.unidade(a.unidade_id) ?? undefined,
+        categoria: categoria(a.categoria_id) ?? undefined,
+        privada: a.privado || undefined,
+      })),
+    };
+  },
+};
+
+const DIAS_SEMANA = ["", "seg", "ter", "qua", "qui", "sex", "sáb", "dom"];
+
+const rotinas: Ferramenta = {
+  nome: "rotinas",
+  titulo: "Rotinas",
+  descricao:
+    "Rotinas do dia a dia (cronograma de referência, não geram tarefas): horário, dias da semana, passo a passo, setor, função e unidade. Dá para ver só as de um dia da semana ou de um setor.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      texto: { type: "string", description: "Palavra no nome ou no passo a passo." },
+      setor: { type: "string", description: "Nome do setor." },
+      funcao: { type: "string", description: "Nome da função (cargo)." },
+      unidade: { type: "string", description: "Nome da unidade (inclui as que valem para todas)." },
+      dia: { type: "string", enum: DIAS_SEMANA.slice(1), description: "Só as que valem neste dia da semana." },
+      incluir_inativas: { type: "boolean" },
+      limite: { type: "number", description: "Padrão 100, máximo 500." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const { data: funcoes } = await ctx.supabase.from("funcoes").select("id, nome").eq("empresa_id", e.empresaId);
+    let q = ctx.supabase
+      .from("rotinas")
+      .select("nome, descricao, horario, dias, setor_id, funcao_id, unidade_id, ativo")
+      .eq("empresa_id", e.empresaId)
+      .order("horario");
+    if (args.incluir_inativas !== true) q = q.eq("ativo", true);
+    const setor = texto(args.setor);
+    if (setor) q = q.eq("setor_id", acharId(n.setores, setor, "Setor"));
+    const funcao = texto(args.funcao);
+    if (funcao) q = q.eq("funcao_id", acharId(funcoes ?? [], funcao, "Função"));
+    const unidade = texto(args.unidade);
+    if (unidade) q = q.or(`unidade_id.is.null,unidade_id.eq.${acharId(n.unidades, unidade, "Unidade")}`);
+    const dia = DIAS_SEMANA.indexOf(texto(args.dia) ?? "");
+    if (dia > 0) q = q.contains("dias", [dia]);
+    const { data, error } = await q.returns<
+      { nome: string; descricao: string | null; horario: string; dias: number[]; setor_id: string | null; funcao_id: string | null; unidade_id: string | null; ativo: boolean }[]
+    >();
+    if (error) throw new Error("Não consegui consultar as rotinas.");
+    const busca = texto(args.texto);
+    const lista = (data ?? []).filter((r) => !busca || contem(r.nome, busca) || contem(r.descricao, busca));
+    const mostradas = lista.slice(0, numero(args.limite, 100, 500));
+    return {
+      empresa: e.empresa,
+      encontradas: lista.length,
+      mostrando: mostradas.length,
+      rotinas: mostradas.map((r) => ({
+        rotina: r.nome,
+        horario: r.horario.slice(0, 5),
+        dias: r.dias.length === 7 ? "todos os dias" : [...r.dias].sort().map((d) => DIAS_SEMANA[d]).join(", "),
+        passo_a_passo: r.descricao || undefined,
+        setor: n.setor(r.setor_id) ?? undefined,
+        funcao: (funcoes ?? []).find((f) => f.id === r.funcao_id)?.nome,
+        unidade: n.unidade(r.unidade_id) ?? "todas as unidades",
+        inativa: !r.ativo || undefined,
+      })),
+    };
+  },
+};
+
+const modelos_de_checklist: Ferramenta = {
+  nome: "modelos_de_checklist",
+  titulo: "Modelos de check-list",
+  descricao:
+    "Os modelos de check-list cadastrados (inclusive os que ainda não geraram tarefa): horário, repetição, tolerância, setor, unidade, responsável e os itens de cada um.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      texto: { type: "string", description: "Parte do nome do modelo." },
+      setor: { type: "string", description: "Nome do setor." },
+      unidade: { type: "string", description: "Nome da unidade." },
+      incluir_inativos: { type: "boolean" },
+      com_itens: { type: "boolean", description: "true = lista os itens de cada modelo (padrão: só a quantidade)." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    let q = ctx.supabase
+      .from("checklist_modelos")
+      .select("id, nome, descricao, horario_preferencial, tolerancia_minutos, recorrencia, setor_id, unidade_id, responsavel_id, ativo, checklist_itens(texto, ordem)")
+      .eq("empresa_id", e.empresaId)
+      .order("nome");
+    if (args.incluir_inativos !== true) q = q.eq("ativo", true);
+    const setor = texto(args.setor);
+    if (setor) q = q.eq("setor_id", acharId(n.setores, setor, "Setor"));
+    const unidade = texto(args.unidade);
+    if (unidade) q = q.eq("unidade_id", acharId(n.unidades, unidade, "Unidade"));
+    const { data, error } = await q.returns<
+      {
+        nome: string;
+        descricao: string | null;
+        horario_preferencial: string;
+        tolerancia_minutos: number;
+        recorrencia: string;
+        setor_id: string | null;
+        unidade_id: string | null;
+        responsavel_id: string | null;
+        ativo: boolean;
+        checklist_itens: { texto: string; ordem: number }[];
+      }[]
+    >();
+    if (error) throw new Error("Não consegui consultar os modelos de check-list.");
+    const busca = texto(args.texto);
+    return {
+      empresa: e.empresa,
+      modelos: (data ?? [])
+        .filter((m) => !busca || contem(m.nome, busca))
+        .map((m) => ({
+          modelo: m.nome,
+          descricao: m.descricao || undefined,
+          horario: m.horario_preferencial.slice(0, 5),
+          repete: descreverRecorrencia(m.recorrencia),
+          tolerancia_minutos: m.tolerancia_minutos,
+          setor: n.setor(m.setor_id) ?? undefined,
+          unidade: n.unidade(m.unidade_id) ?? "todas as unidades",
+          responsavel: n.membro(m.responsavel_id) ?? undefined,
+          itens: args.com_itens === true ? [...m.checklist_itens].sort((a, b) => a.ordem - b.ordem).map((i) => i.texto) : m.checklist_itens.length,
+          inativo: !m.ativo || undefined,
+        })),
+    };
+  },
+};
+
 export const FERRAMENTAS: Ferramenta[] = [
   minhas_empresas,
   resumo_do_dia,
@@ -942,4 +1158,7 @@ export const FERRAMENTAS: Ferramenta[] = [
   equipe,
   prestadores,
   patrimonio,
+  acoes_recorrentes,
+  rotinas,
+  modelos_de_checklist,
 ];
