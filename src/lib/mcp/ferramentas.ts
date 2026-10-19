@@ -1300,6 +1300,169 @@ const taxa_de_checklists: Ferramenta = {
   },
 };
 
+const indicadores_manutencao: Ferramenta = {
+  nome: "indicadores_manutencao",
+  titulo: "Indicadores de manutenção",
+  descricao:
+    "Panorama dos chamados de manutenção num período (padrão: 30 dias): abertos e concluídos, tempo médio para resolver (por prioridade), custo, desempenho por prestador e equipamentos com defeito repetido (2 ou mais chamados).",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      dias: { type: "number", description: "Chamados abertos nos últimos N dias (padrão 30, máximo 365)." },
+      equipamento: { type: "string", description: "Parte do nome ou código do equipamento." },
+      prestador: { type: "string", description: "Parte do nome do prestador." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const dias = numero(args.dias, 30, 365);
+    const desde = new Date(Date.now() - dias * DIA).toISOString();
+    const { data, error } = await ctx.supabase
+      .from("chamados")
+      .select("numero, prioridade, custo, created_at, equipamento_id, fornecedor_id, fornecedores(nome), equipamentos(nome, codigo), tarefas!inner(status_id, concluida_em)")
+      .eq("empresa_id", e.empresaId)
+      .gte("created_at", desde)
+      .limit(2000)
+      .returns<
+        {
+          numero: number;
+          prioridade: Prioridade;
+          custo: number | null;
+          created_at: string;
+          equipamento_id: string | null;
+          fornecedor_id: string | null;
+          fornecedores: { nome: string } | null;
+          equipamentos: { nome: string; codigo: string | null } | null;
+          tarefas: { status_id: string; concluida_em: string | null };
+        }[]
+      >();
+    if (error) throw new Error("Não consegui consultar as manutenções.");
+    const filtroEq = texto(args.equipamento);
+    const filtroPr = texto(args.prestador);
+    const lista = (data ?? []).filter(
+      (c) =>
+        (!filtroEq || contem(c.equipamentos?.nome, filtroEq) || contem(c.equipamentos?.codigo, filtroEq)) &&
+        (!filtroPr || contem(c.fornecedores?.nome, filtroPr)),
+    );
+    const diasAteResolver = (c: (typeof lista)[number]) =>
+      c.tarefas.concluida_em && n.tipoStatus(c.tarefas.status_id) === "concluido"
+        ? (new Date(c.tarefas.concluida_em).getTime() - new Date(c.created_at).getTime()) / DIA
+        : null;
+    const media = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
+    const resolvidos = (xs: typeof lista) => xs.map(diasAteResolver).filter((x): x is number => x !== null);
+    const custo = (xs: typeof lista) => xs.reduce((t, c) => t + (c.custo ?? 0), 0);
+    const abertos = lista.filter((c) => PENDENTES.includes(n.tipoStatus(c.tarefas.status_id) ?? ""));
+
+    const porPrestador = new Map<string, typeof lista>();
+    const porEquipamento = new Map<string, typeof lista>();
+    for (const c of lista) {
+      if (c.fornecedor_id) porPrestador.set(c.fornecedor_id, [...(porPrestador.get(c.fornecedor_id) ?? []), c]);
+      if (c.equipamento_id) porEquipamento.set(c.equipamento_id, [...(porEquipamento.get(c.equipamento_id) ?? []), c]);
+    }
+    return {
+      empresa: e.empresa,
+      ultimos_dias: dias,
+      chamados: lista.length,
+      ainda_abertos: abertos.length,
+      concluidos: resolvidos(lista).length,
+      tempo_medio_para_resolver_dias: media(resolvidos(lista)),
+      custo_total: custo(lista) || undefined,
+      por_prioridade: (Object.keys(PRIORIDADES) as Prioridade[])
+        .map((p) => {
+          const xs = lista.filter((c) => c.prioridade === p);
+          return { prioridade: PRIORIDADES[p].rotulo, chamados: xs.length, abertos: xs.filter((c) => abertos.includes(c)).length, tempo_medio_dias: media(resolvidos(xs)) };
+        })
+        .filter((x) => x.chamados),
+      por_prestador: [...porPrestador.values()]
+        .map((xs) => ({ prestador: xs[0].fornecedores?.nome ?? "—", chamados: xs.length, concluidos: resolvidos(xs).length, tempo_medio_dias: media(resolvidos(xs)), custo: custo(xs) || undefined }))
+        .sort((a, b) => b.chamados - a.chamados),
+      chamados_sem_prestador: lista.filter((c) => !c.fornecedor_id).length,
+      equipamentos_com_defeito_repetido: [...porEquipamento.values()]
+        .filter((xs) => xs.length >= 2)
+        .map((xs) => ({
+          equipamento: [xs[0].equipamentos?.nome, xs[0].equipamentos?.codigo].filter(Boolean).join(" · "),
+          chamados: xs.length,
+          numeros: xs.map((c) => c.numero),
+          custo: custo(xs) || undefined,
+        }))
+        .sort((a, b) => b.chamados - a.chamados),
+    };
+  },
+};
+
+const cobertura_da_escala: Ferramenta = {
+  nome: "cobertura_da_escala",
+  titulo: "Cobertura da escala",
+  descricao:
+    "Mostra dias e setores sem ninguém escalado (nenhum colaborador do setor em turno) e o resumo por pessoa no período: dias trabalhados, folgas, férias e faltas. Até 31 dias.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      de: { type: "string", description: "Primeiro dia (AAAA-MM-DD). Padrão: hoje." },
+      ate: { type: "string", description: "Último dia (AAAA-MM-DD). Padrão: 6 dias depois do primeiro." },
+      unidade: { type: "string", description: "Nome da unidade." },
+      setor: { type: "string", description: "Nome do setor." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const de = dataIso(args.de) ?? hojeIso(e.fuso);
+    let ate = dataIso(args.ate) ?? somarDias(de, 6);
+    if (ate < de) throw new Error("O dia final vem antes do inicial.");
+    if (ate > somarDias(de, 30)) ate = somarDias(de, 30);
+    const unidade = texto(args.unidade) ? acharId(n.unidades, texto(args.unidade)!, "Unidade") : undefined;
+    const setorFiltro = texto(args.setor) ? acharId(n.setores, texto(args.setor)!, "Setor") : undefined;
+    let q = ctx.supabase
+      .from("escalas")
+      .select("data, membro_id, tipo, setor_id")
+      .eq("empresa_id", e.empresaId)
+      .gte("data", de)
+      .lte("data", ate);
+    if (unidade) q = q.eq("unidade_id", unidade);
+    const [{ data, error }, { data: ativos }] = await Promise.all([
+      q.limit(5000).returns<{ data: string; membro_id: string; tipo: TipoEscala; setor_id: string | null }[]>(),
+      ctx.supabase.from("setores").select("id").eq("empresa_id", e.empresaId).eq("ativo", true),
+    ]);
+    if (error) throw new Error("Não consegui consultar a escala.");
+    const setorDe = (membroId: string, setorId: string | null) => setorId ?? n.membros.find((m) => m.id === membroId)?.setor_id ?? null;
+    const lancamentos = (data ?? []).map((x) => ({ ...x, setor: setorDe(x.membro_id, x.setor_id) }));
+    // só setores que têm gente cadastrada contam como "descobertos"
+    const comGente = new Set(n.membros.map((m) => m.setor_id as string | null).filter(Boolean));
+    const setores = (ativos ?? []).map((s) => s.id as string).filter((id) => comGente.has(id) && (!setorFiltro || id === setorFiltro));
+
+    const descobertos: { dia: string; setores: string[] }[] = [];
+    for (let d = de; d <= ate; d = somarDias(d, 1)) {
+      const faltando = setores.filter((sid) => !lancamentos.some((x) => x.data === d && x.tipo === "turno" && x.setor === sid));
+      if (faltando.length) descobertos.push({ dia: formatarDia(d), setores: faltando.map((sid) => n.setor(sid) ?? "—") });
+    }
+    const porPessoa = new Map<string, { trabalhou: number; folgas: number; ferias: number; faltas: number }>();
+    for (const x of lancamentos) {
+      if (setorFiltro && x.setor !== setorFiltro) continue;
+      const l = porPessoa.get(x.membro_id) ?? { trabalhou: 0, folgas: 0, ferias: 0, faltas: 0 };
+      if (x.tipo === "turno") l.trabalhou++;
+      else if (x.tipo === "folga") l.folgas++;
+      else if (x.tipo === "ferias") l.ferias++;
+      else l.faltas++;
+      porPessoa.set(x.membro_id, l);
+    }
+    return {
+      empresa: e.empresa,
+      periodo: `${formatarDia(de)} a ${formatarDia(ate)}`,
+      dias_com_setor_sem_ninguem: descobertos,
+      por_pessoa: [...porPessoa.entries()]
+        .map(([id, l]) => ({ pessoa: n.membro(id), dias_trabalhados: l.trabalhou, folgas: l.folgas, ferias: l.ferias, faltas: l.faltas }))
+        .sort((a, b) => b.faltas - a.faltas || b.dias_trabalhados - a.dias_trabalhados),
+      observacao: lancamentos.length === 0 ? "Nada lançado na escala nesse período." : undefined,
+    };
+  },
+};
+
 export const FERRAMENTAS: Ferramenta[] = [
   minhas_empresas,
   resumo_do_dia,
@@ -1317,4 +1480,6 @@ export const FERRAMENTAS: Ferramenta[] = [
   modelos_de_checklist,
   carga_por_pessoa,
   taxa_de_checklists,
+  indicadores_manutencao,
+  cobertura_da_escala,
 ];
