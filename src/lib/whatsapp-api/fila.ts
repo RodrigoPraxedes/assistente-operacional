@@ -186,6 +186,16 @@ export async function processarEvento(eventoId: string) {
 const INTERVALO_MIN_MS = 3_000;
 const INTERVALO_MAX_MS = 7_000;
 
+// Avisos que podem esperar (tarefa atribuída e conclusão); lembretes e resumos têm hora própria
+const ORIGENS_SEM_MADRUGADA = new Set(["tarefa", "conclusao"]);
+const SILENCIO_INICIO_H = 22;
+const SILENCIO_FIM_H = 8;
+
+function ehMadrugada(fuso = "America/Sao_Paulo", agoraDate = new Date()) {
+  const h = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: fuso }).format(agoraDate));
+  return h >= SILENCIO_INICIO_H || h < SILENCIO_FIM_H;
+}
+
 // Varredura: chamada pelos crons e pelo botão "Processar fila" da tela.
 // prazoMs: para de enviar quando o tempo acaba (o resto fica para a próxima)
 export async function processarFila(limite = 20, prazoMs = 40_000) {
@@ -200,13 +210,16 @@ export async function processarFila(limite = 20, prazoMs = 40_000) {
 
   const { data: fila } = await admin
     .from("whatsapp_mensagens")
-    .select("id")
+    .select("id, empresa_id, origem, empresas(fuso_horario)")
     .eq("situacao", "na_fila")
     .lte("proxima_tentativa_em", agora())
     .order("proxima_tentativa_em")
-    .limit(limite);
+    .limit(limite * 10)
+    .returns<{ id: string; empresa_id: string; origem: string; empresas: { fuso_horario: string } | null }[]>();
+  // avisos de tarefa não saem de madrugada: ficam na fila até as 8h da empresa
+  const aEnviar = (fila ?? []).filter((m) => !(ORIGENS_SEM_MADRUGADA.has(m.origem) && ehMadrugada(m.empresas?.fuso_horario))).slice(0, limite);
   let enviadas = 0;
-  for (const m of fila ?? []) {
+  for (const m of aEnviar) {
     if (enviadas > 0) {
       if (Date.now() - inicio > prazoMs) break;
       await esperar(INTERVALO_MIN_MS + Math.random() * (INTERVALO_MAX_MS - INTERVALO_MIN_MS));
