@@ -19,6 +19,8 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
   if (!dataInicial) return { erro: "Informe a data inicial" };
   if (dataFinal && dataFinal < dataInicial) return { erro: "A data final precisa ser depois da inicial" };
 
+  const prazo_minutos = Math.max(0, Math.round(Number(form.get("prazo_minutos") ?? 480)) || 0);
+
   const dados = {
     nome: txt("nome")!,
     descricao: txt("descricao"),
@@ -29,7 +31,8 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
     data_inicial: dataInicial,
     data_final: dataFinal,
     horario: txt("horario") ?? "09:00",
-    prazo_horas: Math.max(0, Number(form.get("prazo_horas") ?? 8) || 0),
+    prazo_minutos,
+    prazo_horas: Math.floor(prazo_minutos / 60),
     recorrencia,
     ativo: form.get("ativo") !== "false",
     ...(lerPrivado(form) !== undefined && { privado: lerPrivado(form) }),
