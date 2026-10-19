@@ -34,9 +34,14 @@ export default async function PaginaRotinas({
   const dia = semana ? 0 : DIAS_SEMANA.some((d) => String(d.n) === filtros.dia) ? Number(filtros.dia) : hoje;
   const valorDia = semana ? "semana" : String(dia);
 
+  const selecionados = (filtros.setor ?? "").split(",").filter((id) => nomeSetor.has(id));
+  // 2 ou mais setores marcados: uma coluna por setor, lado a lado em cada horário
+  const grade = !semana && selecionados.length >= 2;
+  const colunas = (setores ?? []).filter((s) => selecionados.includes(s.id));
+
   const lista = ((rotinas ?? []) as Rotina[]).filter(
     (r) =>
-      (!filtros.setor || r.setor_id === filtros.setor) &&
+      (selecionados.length === 0 || (r.setor_id !== null && selecionados.includes(r.setor_id))) &&
       (!filtros.funcao || r.funcao_id === filtros.funcao) &&
       (semana || r.dias.includes(dia)),
   );
@@ -80,7 +85,7 @@ export default async function PaginaRotinas({
       <div className="flex flex-wrap items-center gap-2 print:hidden">
         <FiltrosRotinas
           dia={valorDia}
-          setor={filtros.setor ?? ""}
+          setor={selecionados.join(",")}
           funcao={filtros.funcao ?? ""}
           setores={setores ?? []}
           funcoes={funcoes ?? []}
@@ -133,6 +138,62 @@ export default async function PaginaRotinas({
                   {DIAS_SEMANA.map((d) => (
                     <td key={d.n} className="px-2 py-2 text-center text-blue-600">
                       {r.dias.includes(d.n) ? "●" : ""}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : grade ? (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-superficie">
+          <table className="w-full min-w-max table-fixed border-collapse text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <tr>
+                <th className="sticky left-0 w-16 bg-slate-50 px-3 py-2">Hora</th>
+                {colunas.map((c) => (
+                  <th key={c.id} className="w-64 px-3 py-2">
+                    {c.nome}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {[...porHorario.entries()].map(([hora, itens]) => (
+                <tr key={hora} className="align-top print:break-inside-avoid">
+                  <td className="sticky left-0 bg-superficie px-3 py-3 text-sm font-semibold text-slate-700">{hora}</td>
+                  {colunas.map((c) => (
+                    <td key={c.id} className="space-y-2 px-2 py-2">
+                      {itens
+                        .filter((r) => r.setor_id === c.id)
+                        .map((r) => {
+                          const passos = passosDe(r.descricao);
+                          const [funcao] = quem(r);
+                          return (
+                            <div key={r.id} className="rounded-lg border border-slate-200 p-2">
+                              <span className="font-medium text-slate-900">{r.nome}</span>
+                              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                {funcao && <Etiqueta cor="#2563eb">{funcao}</Etiqueta>}
+                                {r.dias.length < 7 && <span className="text-xs text-slate-500">{rotuloDias(r.dias)}</span>}
+                                {podeEditar && (
+                                  <Link href={`/e/${empresaId}/rotinas/${r.id}`} className="ml-auto text-xs text-blue-600 print:hidden">
+                                    Editar
+                                  </Link>
+                                )}
+                              </div>
+                              {passos.length > 0 && (
+                                <details className="mt-1 print:hidden">
+                                  <summary className="cursor-pointer text-xs text-blue-600">Passo a passo ({passos.length})</summary>
+                                  <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-slate-700">
+                                    {passos.map((p, i) => (
+                                      <li key={i}>{p}</li>
+                                    ))}
+                                  </ol>
+                                </details>
+                              )}
+                            </div>
+                          );
+                        })}
                     </td>
                   ))}
                 </tr>
