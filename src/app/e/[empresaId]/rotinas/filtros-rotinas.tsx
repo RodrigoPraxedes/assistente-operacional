@@ -16,7 +16,7 @@ const botaoSetor = (ativo: boolean) =>
 const seletor =
   "h-8 w-auto max-w-44 rounded-lg border border-slate-200 bg-superficie px-2 text-xs text-slate-700 outline-none focus:border-blue-500";
 
-// Dia, setor e função aplicam assim que escolhidos (ficam na URL).
+// Dia, setores e função aplicam assim que escolhidos (ficam na URL). Os setores são vários: ids separados por vírgula.
 export function FiltrosRotinas({
   dia,
   setor,
@@ -42,6 +42,10 @@ export function FiltrosRotinas({
     startTransition(() => router.replace(`${caminho}?${p}`, { scroll: false }));
   }
 
+  const marcados = setor ? setor.split(",") : [];
+  const alternar = (id: string) =>
+    aplicar({ setor: (marcados.includes(id) ? marcados.filter((m) => m !== id) : [...marcados, id]).join(",") });
+
   return (
     <>
       <select value={dia} onChange={(e) => aplicar({ dia: e.target.value })} aria-label="Dia" className={seletor}>
@@ -63,21 +67,22 @@ export function FiltrosRotinas({
         </select>
       )}
       {setores.length > 0 && (
-        <div role="group" aria-label="Setor" className="order-last flex w-full flex-wrap gap-2">
-          <button type="button" aria-pressed={setor === ""} onClick={() => aplicar({ setor: "" })} className={botaoSetor(setor === "")}>
+        <div role="group" aria-label="Setores" className="order-last flex w-full flex-wrap gap-2">
+          <button type="button" aria-pressed={marcados.length === 0} onClick={() => aplicar({ setor: "" })} className={botaoSetor(marcados.length === 0)}>
             Todos os setores
           </button>
           {setores.map((s) => (
             <button
               key={s.id}
               type="button"
-              aria-pressed={setor === s.id}
-              onClick={() => aplicar({ setor: s.id })}
-              className={botaoSetor(setor === s.id)}
+              aria-pressed={marcados.includes(s.id)}
+              onClick={() => alternar(s.id)}
+              className={botaoSetor(marcados.includes(s.id))}
             >
               {s.nome}
             </button>
           ))}
+          {marcados.length === 1 && <span className="self-center text-xs text-slate-500">Marque mais setores para ver lado a lado</span>}
         </div>
       )}
     </>
