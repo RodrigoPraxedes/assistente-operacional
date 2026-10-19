@@ -161,7 +161,7 @@ export const SECOES: SecaoGuia[] = [
           "Tarefas com prazo vencido ganham a etiqueta vermelha Atrasada.",
           "Em check-list pendente, o botão azul de lista no cartão abre o formulário para preencher na hora. Ao salvar, a tarefa vai sozinha para Concluído.",
           "Troque entre Quadro e Lista no alto da tela. A escolha fica salva.",
-          "Filtre por módulo, unidade e status, ou toque em Minhas tarefas para ver só as suas.",
+          "Use a barra Pesquisar tarefas para achar pelo título ou pela descrição (vale no Quadro e na Lista). Filtre por módulo, unidade e status, ou toque em Minhas tarefas para ver só as suas.",
         ],
       },
       {
