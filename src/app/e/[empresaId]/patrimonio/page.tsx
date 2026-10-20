@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { SITUACOES_PATRIMONIO, TIPOS_PATRIMONIO, type Equipamento, type SituacaoPatrimonio } from "@/lib/types";
-import { Etiqueta, Input, LinkBotao, Select, Titulo, Vazio } from "@/components/ui";
+import { Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
+import { FiltrosPatrimonio } from "./filtros-patrimonio";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -64,42 +65,13 @@ export default async function PaginaPatrimonio({
         Patrimônio
       </Titulo>
 
-      <form className="flex flex-wrap items-end gap-2">
-        <Input name="busca" defaultValue={filtros.busca ?? ""} placeholder="Buscar nome, código, marca..." className="w-56 flex-1 sm:flex-none" />
-        <Select name="tipo" defaultValue={filtros.tipo ?? ""} className="w-auto">
-          <option value="">Todos os tipos</option>
-          {Object.entries(TIPOS_PATRIMONIO).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </Select>
-        <Select name="situacao" defaultValue={filtros.situacao ?? ""} className="w-auto">
-          <option value="">Em atividade</option>
-          {Object.entries(SITUACOES_PATRIMONIO).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v.rotulo}
-            </option>
-          ))}
-          <option value="todos">Todas as situações</option>
-        </Select>
-        {(unidades?.length ?? 0) > 1 && (
-          <Select name="unidade" defaultValue={filtros.unidade ?? ""} className="w-auto">
-            <option value="">Todas as unidades</option>
-            {unidades!.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.nome}
-              </option>
-            ))}
-          </Select>
-        )}
-        <button className="min-h-11 rounded-lg border border-slate-200 bg-superficie px-3 py-2 text-sm sm:min-h-10">Filtrar</button>
-        {filtrando && (
-          <Link href={`/e/${empresaId}/patrimonio`} className="px-2 py-2 text-sm text-slate-500">
-            Limpar
-          </Link>
-        )}
-      </form>
+      <FiltrosPatrimonio
+        busca={filtros.busca ?? ""}
+        tipo={filtros.tipo ?? ""}
+        situacao={filtros.situacao ?? ""}
+        unidade={filtros.unidade ?? ""}
+        unidades={unidades ?? []}
+      />
 
       {lista.length === 0 ? (
         <Vazio>
