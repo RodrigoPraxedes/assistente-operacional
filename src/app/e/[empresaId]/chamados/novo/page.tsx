@@ -50,6 +50,7 @@ export default async function NovoChamado({
         unidadeInicial={doItem?.unidade_id ?? undefined}
         membros={(membros ?? []) as { id: string; nome: string }[]}
         fornecedores={(fornecedores ?? []).map((f) => ({ id: f.id, nome: rotuloPrestador(f) }))}
+        podeCadastrarPrestador={pode("prestadores.gerenciar")}
       />
     </div>
   );

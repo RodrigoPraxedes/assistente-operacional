@@ -7,6 +7,7 @@ import { PRIORIDADES, type Chamado, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Textarea, Titulo } from "@/components/ui";
 import { comentarTarefa } from "../../tarefas/actions";
 import { adicionarFotos, atualizarChamado } from "../actions";
+import { SeletorPrestador } from "@/components/seletor-prestador";
 import { CampoFotos } from "./campo-fotos";
 import { MudarStatus } from "../../tarefas/[tarefaId]/mudar-status";
 import { BotaoExcluir } from "../../tarefas/[tarefaId]/botao-excluir";
@@ -237,14 +238,14 @@ export default async function DetalheChamado({
               </Select>
             </Campo>
             <Campo rotulo="Prestador que atendeu">
-              <Select name="fornecedor_id" defaultValue={chamado.fornecedor_id ?? ""}>
-                <option value="">—</option>
-                {(fornecedores ?? []).filter((f) => f.ativo || f.id === chamado.fornecedor_id).map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {rotuloPrestador(f)}
-                  </option>
-                ))}
-              </Select>
+              <SeletorPrestador
+                empresaId={empresaId}
+                opcoes={(fornecedores ?? [])
+                  .filter((f) => f.ativo || f.id === chamado.fornecedor_id)
+                  .map((f) => ({ id: f.id, nome: rotuloPrestador(f) }))}
+                inicial={chamado.fornecedor_id ?? ""}
+                podeCadastrar={pode("prestadores.gerenciar")}
+              />
             </Campo>
             <Campo rotulo="Equipamento">
               <Select name="equipamento_id" defaultValue={chamado.equipamento_id ?? ""}>

@@ -48,6 +48,27 @@ export async function salvarPrestador(empresaId: string, form: FormData) {
   redirect(`${base}?salvo=1`);
 }
 
+// Cadastro rápido (nome e telefone) a partir do chamado; devolve o prestador para já ficar escolhido
+export async function criarPrestadorRapido(
+  empresaId: string,
+  nome: string,
+  telefone: string,
+): Promise<{ id: string; nome: string } | { erro: string }> {
+  const { supabase } = await getContexto(empresaId);
+  const n = nome.trim();
+  const tel = soDigitos(telefone);
+  if (!n) return { erro: "Informe o nome" };
+  if (!tel) return { erro: "Informe o telefone" };
+  const { data, error } = await supabase
+    .from("fornecedores")
+    .insert({ empresa_id: empresaId, nome: n, telefone: tel })
+    .select("id, nome")
+    .single();
+  if (error) return { erro: error.message };
+  revalidatePath(`/e/${empresaId}/prestadores`);
+  return { id: data.id as string, nome: data.nome as string };
+}
+
 type Supabase = Awaited<ReturnType<typeof getContexto>>["supabase"];
 
 // Cria o tipo ou reaproveita um com o mesmo nome (reativando se estava fora de uso)
