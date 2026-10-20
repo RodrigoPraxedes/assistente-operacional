@@ -20,7 +20,7 @@ const MARGEM = 40;
 const LARGURA = 595;
 const ALTURA = 842;
 
-export async function GET(req: Request, { params }: { params: Promise<{ empresaId: string; itemId: string }> }) {
+async function gerar(req: Request, { params }: { params: Promise<{ empresaId: string; itemId: string }> }) {
   const { empresaId, itemId } = await params;
   const comValores = new URL(req.url).searchParams.get("valores") === "1";
   const { supabase, empresa } = await getContexto(empresaId);
@@ -159,4 +159,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ empresaI
   return new Response(Buffer.from(bytes), {
     headers: { "Content-Type": "application/pdf", "Cache-Control": "private, no-store" },
   });
+}
+
+export async function GET(req: Request, ctx: { params: Promise<{ empresaId: string; itemId: string }> }) {
+  try {
+    return await gerar(req, ctx);
+  } catch (e) {
+    // redirect/notFound do Next precisam seguir adiante
+    if (e instanceof Error && /NEXT_/.test((e as { digest?: string }).digest ?? e.message)) throw e;
+    console.error("pdf patrimonio", e);
+    return new Response(`Erro ao gerar o PDF: ${e instanceof Error ? e.message : "desconhecido"}`, { status: 500 });
+  }
 }
