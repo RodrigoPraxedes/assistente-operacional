@@ -5,6 +5,7 @@ import { abrirChamado } from "../actions";
 import { trocarPorReduzidas } from "@/lib/foto";
 import { PRIORIDADES } from "@/lib/types";
 import { Aviso, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
+import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { BotaoEnviar } from "@/components/botao-enviar";
 
 type Opcao = { id: string; nome: string };
@@ -70,11 +71,11 @@ export function FormChamado({
               {opcoes(unidades, "Escolha...")}
             </Select>
           </Campo>
-          <Campo rotulo="Equipamento ou móvel" dica="Do patrimônio; o chamado entra no histórico do item">
-            <Select name="equipamento_id" defaultValue={equipamentoInicial ?? ""}>
-              {opcoes(equipamentos)}
-            </Select>
-          </Campo>
+          <div className="space-y-1">
+            <span className="text-sm font-medium text-slate-700">Equipamento ou móvel</span>
+            <SeletorComBusca name="equipamento_id" opcoes={equipamentos} inicial={equipamentoInicial ?? ""} />
+            <span className="block text-xs text-slate-500">Do patrimônio; o chamado entra no histórico do item</span>
+          </div>
           <Campo rotulo="Local" dica="Ex.: cozinha, banheiro dos clientes">
             <Input name="local" />
           </Campo>

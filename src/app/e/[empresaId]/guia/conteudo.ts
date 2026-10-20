@@ -427,7 +427,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Toque em Abrir chamado e descreva o problema.",
           "Escolha a prioridade (urgente, alta, média, baixa). Ela define o prazo de atendimento, configurado em Configurações › Geral.",
-          "Indique a unidade, o equipamento do patrimônio e o local, e anexe fotos.",
+          "Indique a unidade, o equipamento do patrimônio e o local, e anexe fotos. A lista de equipamentos tem um campo de pesquisa: digite parte do nome para filtrar.",
           "Se já souber, escolha o responsável interno ou o prestador de serviço.",
           "Quem não tem login abre chamado pelo QR Code da unidade, em Solicitar manutenção.",
           "Um item de check-list respondido \"Não\" também pode abrir chamado sozinho.",
