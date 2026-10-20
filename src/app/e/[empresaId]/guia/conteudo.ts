@@ -439,7 +439,8 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Os chamados aparecem num quadro como o de Tarefas, que pode ser filtrado por prioridade, unidade e equipamento.",
           "Quando o chamado tem um equipamento do patrimônio, o nome dele aparece no cartão do quadro, no Painel, na lista de Tarefas e no aviso de WhatsApp, para você saber qual é o equipamento sem abrir o chamado.",
-          "Dentro do chamado, em Andamento, mude o status com um comentário. Para adiar, informe a nova data.",
+          "Dentro do chamado, na caixa azul Mudar status (a mesma da tarefa), escolha o novo status. A data e hora do ato já vêm preenchidas com agora, mas dá para trocar quando o registro é de algo que já aconteceu. Para adiar, informe a nova data; para cancelar, o motivo.",
+          "Ao concluir o chamado, informe o valor gasto e a solução do caso. Se faltar algum, o sistema pergunta se quer salvar assim mesmo ou voltar e preencher. A solução fica visível no chamado e no histórico.",
           "Em Gestão (quem tem permissão) dá para corrigir o título e a descrição do chamado, além de prioridade, prazo, responsável, equipamento e custo.",
           "Registre o prestador que atendeu, o custo, novas fotos e comentários. Tudo fica no histórico.",
         ],

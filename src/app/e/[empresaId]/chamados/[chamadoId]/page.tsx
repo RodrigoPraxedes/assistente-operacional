@@ -5,9 +5,10 @@ import { formatarDataHora, rotuloPrestador, utcParaLocalInput } from "@/lib/form
 import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
 import { PRIORIDADES, type Chamado, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Textarea, Titulo } from "@/components/ui";
-import { comentarTarefa, moverPorFormulario, retornarTarefa } from "../../tarefas/actions";
+import { comentarTarefa } from "../../tarefas/actions";
 import { adicionarFotos, atualizarChamado } from "../actions";
 import { CampoFotos } from "./campo-fotos";
+import { MudarStatus } from "../../tarefas/[tarefaId]/mudar-status";
 import { BotaoExcluir } from "../../tarefas/[tarefaId]/botao-excluir";
 
 export default async function DetalheChamado({
@@ -90,6 +91,12 @@ export default async function DetalheChamado({
           {t.prazo && t.concluida_em === null && new Date(t.prazo) < new Date() && <Etiqueta cor="#dc2626">Atrasado</Etiqueta>}
         </div>
         {t.descricao && <p className="whitespace-pre-wrap text-sm text-slate-700">{t.descricao}</p>}
+        {chamado.solucao && (
+          <div className="rounded-lg bg-green-50 p-2 text-sm text-slate-700">
+            <p className="text-xs font-medium text-green-700">Solução</p>
+            <p className="whitespace-pre-wrap">{chamado.solucao}</p>
+          </div>
+        )}
         <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
           <div>
             <dt className="text-slate-500">Aberto por</dt>
@@ -180,31 +187,16 @@ export default async function DetalheChamado({
         </div>
       </Cartao>
 
-      {pode("tarefas.mudar_status") && (
+      {pode("tarefas.mudar_status") && statusDisponiveis.length > 0 && (
         <Cartao>
-          <h2 className="mb-2 font-medium">Andamento</h2>
-          <form action={moverPorFormulario.bind(null, empresaId, t.id, caminho)} className="grid gap-3 sm:grid-cols-3">
-            <Select name="status_id" defaultValue={t.status_id}>
-              {statusDisponiveis.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nome}
-                </option>
-              ))}
-            </Select>
-            <Input type="datetime-local" name="prazo" title="Nova data (obrigatória para adiar)" />
-            <Input name="comentario" placeholder="Comentário (opcional)" />
-            <div className="flex gap-2 sm:col-span-3">
-              <Botao>Atualizar</Botao>
-              {atual?.tipo === "adiado" && t.status_anterior_id && (
-                <Botao variante="secundario" formAction={async () => {
-                  "use server";
-                  await retornarTarefa(empresaId, t.id);
-                }}>
-                  Retornar a {st.get(t.status_anterior_id)?.nome}
-                </Botao>
-              )}
-            </div>
-          </form>
+          <MudarStatus
+            empresaId={empresaId}
+            tarefaId={t.id}
+            statusAtualId={t.status_id}
+            anteriorNome={atual?.tipo === "adiado" && t.status_anterior_id ? (st.get(t.status_anterior_id)?.nome ?? null) : null}
+            opcoes={statusDisponiveis.filter((s) => s.id !== t.status_id).map((s) => ({ id: s.id, nome: s.nome, tipo: s.tipo }))}
+            chamado={{ fuso, custo: chamado.custo, solucao: chamado.solucao }}
+          />
         </Cartao>
       )}
 
