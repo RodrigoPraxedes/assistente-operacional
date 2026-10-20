@@ -15,28 +15,34 @@ export function CompartilharPdf({ empresaId, itemId, nome }: { empresaId: string
     setErro("");
     try {
       const res = await fetch(`/e/${empresaId}/patrimonio/${itemId}/pdf?valores=${valores ? 1 : 0}`);
-      if (!res.ok) throw new Error();
+      if (!res.ok || !res.headers.get("content-type")?.includes("pdf")) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const arquivo = new File([blob], `${nome.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") || "equipamento"}.pdf`, {
         type: "application/pdf",
       });
+      let compartilhou = false;
       if (navigator.canShare?.({ files: [arquivo] })) {
         try {
           await navigator.share({ files: [arquivo], title: nome });
-        } catch {
-          // compartilhamento cancelado: nada a fazer
+          compartilhou = true;
+        } catch (e) {
+          // cancelado pela pessoa: nada a fazer; se o aparelho recusou, baixa o arquivo
+          compartilhou = e instanceof DOMException && e.name === "AbortError";
         }
-      } else {
+      }
+      if (!compartilhou) {
         const url = URL.createObjectURL(arquivo);
         const a = document.createElement("a");
         a.href = url;
         a.download = arquivo.name;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
       }
       setAberto(false);
-    } catch {
-      setErro("Não foi possível gerar o PDF. Tente de novo.");
+    } catch (e) {
+      setErro(`Não foi possível gerar o PDF (${e instanceof Error ? e.message : "erro"}). Tente de novo.`);
     } finally {
       setGerando(false);
     }
