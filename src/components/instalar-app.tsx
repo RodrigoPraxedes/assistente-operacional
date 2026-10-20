@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import { Download, Share, X } from "lucide-react";
 
 const CHAVE = "atalaia-instalar-adiado";
-const DIAS_ADIADO = 7;
+const DIAS_ADIADO = 3;
 
 interface EventoInstalacao extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+// Convite só no celular/tablet (no computador o navegador já tem o próprio botão de instalar)
+function ehCelular() {
+  const ua = navigator.userAgent;
+  return /android|iphone|ipad|ipod|mobile/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
 }
 
 function adiado() {
@@ -30,7 +36,7 @@ export function InstalarApp() {
     const instalado =
       window.matchMedia("(display-mode: standalone)").matches ||
       (navigator as unknown as { standalone?: boolean }).standalone === true;
-    if (instalado || adiado()) return;
+    if (!ehCelular() || instalado || adiado()) return;
 
     const ehIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !/crios|fxios|edgios/i.test(navigator.userAgent);
     if (ehIos) setIos(true);
