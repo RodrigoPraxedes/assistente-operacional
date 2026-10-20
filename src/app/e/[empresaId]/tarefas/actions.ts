@@ -12,15 +12,26 @@ export async function moverTarefa(
   statusId: string,
   prazoLocal?: string,
   comentario?: string,
+  quandoLocal?: string,
+  solucao?: { descricao: string; custo: number | null },
 ) {
   const { supabase, empresa } = await getContexto(empresaId);
   const { error } = await supabase.rpc("mover_tarefa", {
     p_tarefa: tarefaId,
     p_status: statusId,
     p_prazo: prazoLocal ? localParaUtc(prazoLocal, empresa.fuso_horario) : null,
-    p_comentario: comentario || null,
+    p_comentario: comentario || solucao?.descricao || null,
+    p_quando: quandoLocal ? localParaUtc(quandoLocal, empresa.fuso_horario) : null,
   });
   if (error) return { erro: error.message };
+  if (solucao && (solucao.descricao || solucao.custo != null)) {
+    const { error: e2 } = await supabase.rpc("registrar_solucao_chamado", {
+      p_tarefa: tarefaId,
+      p_solucao: solucao.descricao,
+      p_custo: solucao.custo,
+    });
+    if (e2) return { erro: e2.message };
+  }
   revalidatePath(`/e/${empresaId}/tarefas`);
   revalidatePath(`/e/${empresaId}/chamados`);
   return { ok: true };

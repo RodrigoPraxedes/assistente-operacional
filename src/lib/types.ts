@@ -275,6 +275,7 @@ export interface Chamado {
   local: string | null;
   fornecedor_id: string | null;
   custo: number | null;
+  solucao: string | null;
   aberto_por_nome: string | null;
   execucao_id: string | null;
   created_at: string;
