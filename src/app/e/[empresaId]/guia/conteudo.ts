@@ -322,7 +322,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Quem tem permissão vê o botão Nova rotina. Informe a atividade, o horário e o dia da semana em que vale (vêm todos marcados).",
           "Em Instrução e passo a passo, escreva um passo por linha: eles aparecem numerados.",
-          "Escolha a função, o setor e, se a empresa tiver mais de uma unidade, a unidade (vazio = todas).",
+          "Escolha a função e os setores (botões: marque quantos precisar, ou Todos os setores para uma rotina da empresa inteira; ela aparece em cada setor marcado) e, se a empresa tiver mais de uma unidade, a unidade (vazio = todas).",
           "Para tirar do quadro sem apagar, mude a situação para Inativa.",
           "Para adiantar o cadastro, use Importar planilha: envie a planilha de respostas do levantamento (uma coluna por horário, como \"8:00h > atividade chave 1\"). Cada atividade vira uma rotina todos os dias, sem função; setores novos são criados e rotinas repetidas não duplicam.",
         ],

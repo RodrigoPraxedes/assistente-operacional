@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { exigirPermissao } from "@/lib/contexto";
 import { DIAS_SEMANA } from "@/lib/rotinas";
 import type { Rotina } from "@/lib/types";
+import { SeletorSetores } from "@/components/seletor-setores";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea, Titulo } from "@/components/ui";
 import { excluirRotina, salvarRotina } from "../actions";
@@ -55,6 +56,8 @@ export default async function EditarRotina({
             />
           </Campo>
 
+          <SeletorSetores name="setor_ids" setores={setores ?? []} inicial={r?.setor_ids ?? []} />
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo rotulo="Função" dica="Quem responde pela atividade (cadastre em Configurações › Geral).">
               <Select name="funcao_id" defaultValue={r?.funcao_id ?? ""}>
@@ -62,16 +65,6 @@ export default async function EditarRotina({
                 {(funcoes ?? []).map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.nome}
-                  </option>
-                ))}
-              </Select>
-            </Campo>
-            <Campo rotulo="Setor">
-              <Select name="setor_id" defaultValue={r?.setor_id ?? ""}>
-                <option value="">—</option>
-                {(setores ?? []).map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nome}
                   </option>
                 ))}
               </Select>

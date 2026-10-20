@@ -41,7 +41,7 @@ export default async function PaginaRotinas({
 
   const lista = ((rotinas ?? []) as Rotina[]).filter(
     (r) =>
-      (selecionados.length === 0 || (r.setor_id !== null && selecionados.includes(r.setor_id))) &&
+      (selecionados.length === 0 || r.setor_ids.some((id) => selecionados.includes(id))) &&
       (!filtros.funcao || r.funcao_id === filtros.funcao) &&
       (semana || r.dias.includes(dia)),
   );
@@ -53,7 +53,7 @@ export default async function PaginaRotinas({
     porHorario.set(h, [...(porHorario.get(h) ?? []), r]);
   }
 
-  const quem = (r: Rotina) => [r.funcao_id ? nomeFuncao.get(r.funcao_id) : null, r.setor_id ? nomeSetor.get(r.setor_id) : null];
+  const quem = (r: Rotina) => [r.funcao_id ? nomeFuncao.get(r.funcao_id) : null, r.setor_ids.map((id) => nomeSetor.get(id)).filter(Boolean) as string[]];
   const tituloImpressao = semana ? "Rotinas da semana" : `Rotinas de ${DIAS_SEMANA[dia - 1].longo.toLowerCase()}`;
 
   return (
@@ -165,7 +165,7 @@ export default async function PaginaRotinas({
                   {colunas.map((c) => (
                     <td key={c.id} className="space-y-2 px-2 py-2">
                       {itens
-                        .filter((r) => r.setor_id === c.id)
+                        .filter((r) => r.setor_ids.includes(c.id))
                         .map((r) => {
                           const passos = passosDe(r.descricao);
                           const [funcao] = quem(r);
@@ -209,13 +209,15 @@ export default async function PaginaRotinas({
               <ul className="min-w-0 flex-1 space-y-2">
                 {itens.map((r) => {
                   const passos = passosDe(r.descricao);
-                  const [funcao, setor] = quem(r);
+                  const [funcao, setoresDaRotina] = quem(r);
                   return (
                     <li key={r.id} className="rounded-xl border border-slate-200 bg-superficie p-3">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="font-medium text-slate-900">{r.nome}</span>
                         {funcao && <Etiqueta cor="#2563eb">{funcao}</Etiqueta>}
-                        {setor && <Etiqueta>{setor}</Etiqueta>}
+                        {(setoresDaRotina as string[]).map((nome) => (
+                          <Etiqueta key={nome}>{nome}</Etiqueta>
+                        ))}
                         {varias && r.unidade_id && <Etiqueta>{nomeUnidade.get(r.unidade_id) ?? ""}</Etiqueta>}
                         {r.dias.length < 7 && <span className="text-xs text-slate-500">{rotuloDias(r.dias)}</span>}
                         {podeEditar && (
