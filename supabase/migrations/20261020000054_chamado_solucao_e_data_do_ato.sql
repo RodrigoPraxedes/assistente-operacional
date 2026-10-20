@@ -1,5 +1,5 @@
 -- Chamado: descrição da solução e data/hora do ato (registro pode ser retroativo).
-alter table public.chamados add column solucao text;
+alter table public.chamados add column if not exists solucao text;
 
 -- app.quando (definido por mover_tarefa) vale para concluida_em e para o histórico
 create or replace function public.tg_tarefas_regras()
@@ -88,8 +88,8 @@ end;
 $$;
 
 -- mover_tarefa ganha a data/hora do ato (p_quando, opcional, nunca no futuro)
-drop function public.mover_tarefa(uuid, uuid, timestamptz, text);
-create function public.mover_tarefa(
+drop function if exists public.mover_tarefa(uuid, uuid, timestamptz, text);
+create or replace function public.mover_tarefa(
   p_tarefa uuid,
   p_status uuid,
   p_prazo timestamptz default null,
@@ -122,7 +122,7 @@ grant execute on function public.mover_tarefa(uuid, uuid, timestamptz, text, tim
 
 -- Solução e custo gravados junto com a mudança de status por quem pode mudar status
 -- (chamados.gerenciar não é exigido; chamar depois de mover_tarefa, que confere o acesso pelo RLS)
-create function public.registrar_solucao_chamado(p_tarefa uuid, p_solucao text, p_custo numeric)
+create or replace function public.registrar_solucao_chamado(p_tarefa uuid, p_solucao text, p_custo numeric)
 returns void
 language plpgsql
 security definer
