@@ -296,7 +296,7 @@ export function Kanban({
                 return (
                   <li
                     key={t.id}
-                    className={`flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:gap-4 ${atrasada(t) ? "bg-red-50" : ""}`}
+                    className={`flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:gap-4 ${atrasada(t) ? "border-l-4 border-red-500 bg-red-50" : ""}`}
                   >
                     <span
                       className="hidden h-2.5 w-2.5 shrink-0 rounded-full sm:block"
@@ -358,7 +358,7 @@ export function Kanban({
                         onDragStart={() => setArrastando(t.id)}
                         onTouchStart={(e) => segurar(e, t.id)}
                         onContextMenu={(e) => toque?.id === t.id && e.preventDefault()}
-                        className={`select-none rounded-lg border bg-superficie p-3 text-sm shadow-sm [-webkit-touch-callout:none] ${atrasada(t) ? "border-red-300" : "border-slate-200"} ${podeMover ? "cursor-grab" : ""} ${toque?.id === t.id ? "opacity-40" : ""}`}
+                        className={`select-none rounded-lg border p-3 text-sm shadow-sm [-webkit-touch-callout:none] ${atrasada(t) ? "border-2 border-l-[6px] border-red-500 bg-red-50" : "border-slate-200 bg-superficie"} ${podeMover ? "cursor-grab" : ""} ${toque?.id === t.id ? "opacity-40" : ""}`}
                       >
                         <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
                           {t.titulo}
