@@ -11,6 +11,7 @@ import { CampoFotoCamera } from "@/components/campo-foto-camera";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { comentarTarefa, enviarFotoTarefa, marcarMinhaParte, mudarCientes, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
+import { MudarStatus } from "./mudar-status";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
 
@@ -46,7 +47,7 @@ export default async function DetalheTarefa({
     { data: setores },
     { data: fotos },
   ] = await Promise.all([
-      supabase.from("status").select("id, nome, cor, tipo").eq("empresa_id", empresaId),
+      supabase.from("status").select("id, nome, cor, tipo, modulo, ordem, ativo").eq("empresa_id", empresaId).order("ordem"),
       supabase.from("membros").select("id, nome, telefone, setor_id, ativo").eq("empresa_id", empresaId).order("nome"),
       supabase.from("tarefa_historico").select("*").eq("tarefa_id", tarefaId).order("created_at"),
       tarefa.unidade_id
@@ -87,6 +88,16 @@ export default async function DetalheTarefa({
     !execucao &&
     ["aberto", "em_andamento", "adiado"].includes(atual?.tipo ?? "") &&
     pode("checklist.executar");
+  // status que dá para escolher aqui: os do módulo da tarefa; check-list só conclui; em conjunto e com foto,
+  // a conclusão vem de "marcar minha parte" / "enviar foto"
+  const opcoesStatus = (status ?? []).filter(
+    (s) =>
+      s.ativo &&
+      s.id !== tarefa.status_id &&
+      (!s.modulo || s.modulo === tarefa.origem) &&
+      (tarefa.origem !== "checklist" || s.tipo === "concluido") &&
+      !(s.tipo === "concluido" && (emConjunto || tarefa.exige_foto)),
+  );
   const podeExcluir = pode("tarefas.excluir") || (tarefa.origem === "avulsa" && tarefa.criado_por === membro.id);
 
   const texto = mensagemTarefa(tarefa, {
@@ -149,6 +160,15 @@ export default async function DetalheTarefa({
             </>
           )}
         </dl>
+        {pode("tarefas.mudar_status") && opcoesStatus.length > 0 && (
+          <MudarStatus
+            empresaId={empresaId}
+            tarefaId={tarefa.id}
+            statusAtualId={tarefa.status_id}
+            anteriorNome={atual?.tipo === "adiado" && tarefa.status_anterior_id ? (st.get(tarefa.status_anterior_id)?.nome ?? null) : null}
+            opcoes={opcoesStatus.map((s) => ({ id: s.id, nome: s.nome, tipo: s.tipo }))}
+          />
+        )}
         <div className="flex flex-wrap gap-2 pt-2">
           {podePreencher && (
             <Link
