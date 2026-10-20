@@ -59,7 +59,7 @@ export function MudarStatus({
   }
 
   return (
-    <form onSubmit={enviar} className="space-y-2 border-t border-slate-200 pt-3" data-atual={statusAtualId}>
+    <form onSubmit={enviar} className="space-y-2 rounded-lg border-2 border-l-[6px] border-blue-500 bg-blue-50 p-3" data-atual={statusAtualId}>
       <label className="block text-sm font-medium text-slate-700" htmlFor="novo-status">
         Mudar status
       </label>

@@ -170,7 +170,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Dentro da tarefa",
         passos: [
           "Toque no título para abrir: lá ficam os detalhes, comentários e o histórico de cada mudança.",
-          "No cartão de cima, a caixa Mudar status troca o status sem voltar ao Quadro. Adiado pede a nova data e Cancelado pede o motivo; em Adiado aparece o botão Retornar. Em check-list só aparece Concluído; em tarefa conjunta ou que pede foto, a conclusão vem de Marcar minha parte ou Enviar foto.",
+          "No cartão de cima, a caixa azul Mudar status troca o status sem voltar ao Quadro. Adiado pede a nova data e Cancelado pede o motivo; em Adiado aparece o botão Retornar. Em check-list só aparece Concluído; em tarefa conjunta ou que pede foto, a conclusão vem de Marcar minha parte ou Enviar foto.",
           "O botão do WhatsApp abre uma mensagem pronta para o responsável.",
           "Quem tem permissão troca os responsáveis e torna a tarefa pública ou privada.",
           "Quem criou uma tarefa avulsa pode excluí-la.",
