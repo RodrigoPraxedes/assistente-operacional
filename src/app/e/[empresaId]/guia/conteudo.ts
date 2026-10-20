@@ -457,6 +457,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Em Manutenções › Patrimônio, cadastre móveis e equipamentos com código, marca, modelo, compra, nota fiscal, garantia e foto.",
           "Na trajetória de cada item, registre manutenções, mudança de unidade ou de situação, venda e baixa.",
+          "Use a busca no alto da lista: ela filtra enquanto você digita (nome, código, marca ou modelo), junto com os filtros de tipo, situação e unidade.",
           "O item mostra o gasto total com manutenção e o aviso de garantia vencida.",
           "O botão Abrir chamado no item já abre o chamado com o equipamento escolhido.",
           "Também dá para importar o patrimônio por planilha, com o histórico de manutenções.",
