@@ -460,6 +460,7 @@ export const SECOES: SecaoGuia[] = [
           "Use a busca no alto da lista: ela filtra enquanto você digita (nome, código, marca ou modelo), junto com os filtros de tipo, situação e unidade.",
           "O item mostra o gasto total com manutenção e o aviso de garantia vencida.",
           "O botão Abrir chamado no item já abre o chamado com o equipamento escolhido.",
+          "Na lista, cada item mostra uma miniatura da foto à esquerda para facilitar a identificação; itens sem foto mostram um ícone de caixa.",
           "Também dá para importar o patrimônio por planilha, com o histórico de manutenções.",
         ],
       },

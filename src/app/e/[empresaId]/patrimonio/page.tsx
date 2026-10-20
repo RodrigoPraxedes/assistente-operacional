@@ -40,6 +40,12 @@ export default async function PaginaPatrimonio({
       .not("equipamento_id", "is", null)
       .is("tarefas.concluida_em", null),
   ]);
+  // miniaturas: uma única chamada para assinar todas as fotos da lista
+  const caminhos = (itens ?? []).map((i) => i.foto_path).filter((c): c is string => Boolean(c));
+  const { data: assinadas } = caminhos.length
+    ? await supabase.storage.from("anexos").createSignedUrls(caminhos, 3600)
+    : { data: [] };
+  const miniatura = new Map((assinadas ?? []).flatMap((a) => (a.path && a.signedUrl ? [[a.path, a.signedUrl] as const] : [])));
   const unidade = new Map((unidades ?? []).map((u) => [u.id, u.nome]));
   const abertos = new Map<string, number>();
   for (const c of chamados ?? []) abertos.set(c.equipamento_id!, (abertos.get(c.equipamento_id!) ?? 0) + 1);
@@ -91,6 +97,26 @@ export default async function PaginaPatrimonio({
                     href={`/e/${empresaId}/patrimonio/${i.id}`}
                     className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-slate-50"
                   >
+                    {miniatura.get(i.foto_path ?? "") ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={miniatura.get(i.foto_path ?? "")}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-12 w-12 shrink-0 rounded-lg border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-400"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" />
+                          <path d="m3 8 9 5 9-5M12 13v8" />
+                        </svg>
+                      </span>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium text-slate-900">{i.nome}</p>
                       <p className="truncate text-xs text-slate-500">
