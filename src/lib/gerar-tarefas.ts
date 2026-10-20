@@ -275,6 +275,7 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
       .order("ordem"),
   ]);
 
+  const statusAbertos = (status ?? []).map((s) => s.id);
   const statusInicial = new Map<string, string>();
   for (const s of status ?? []) if (!statusInicial.has(s.empresa_id)) statusInicial.set(s.empresa_id, s.id);
 
@@ -403,7 +404,22 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
   for (const t of novas) {
     const { error: e } = await admin.from("tarefas").insert(t);
     if (!e) criadas++;
-    else if (e.code !== "23505") console.error("Erro ao gerar tarefa", e.message);
+    else if (e.code === "23505") {
+      // ao salvar uma ação, a ocorrência já existente (ainda aberta) ganha o prazo novo
+      if (filtro?.acaoId && t.origem === "acao") {
+        let q = admin
+          .from("tarefas")
+          .update({ prazo: t.prazo })
+          .eq("origem", "acao")
+          .eq("origem_id", t.origem_id)
+          .eq("ocorrencia_em", t.ocorrencia_em)
+          .in("status_id", statusAbertos)
+          .neq("prazo", t.prazo);
+        q = t.unidade_id ? q.eq("unidade_id", t.unidade_id) : q.is("unidade_id", null);
+        const { error: e2 } = await q;
+        if (e2) console.error("Erro ao ajustar prazo da tarefa", e2.message);
+      }
+    } else console.error("Erro ao gerar tarefa", e.message);
   }
   return { criadas, avaliadas: novas.length };
 }
