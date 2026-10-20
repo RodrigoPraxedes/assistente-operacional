@@ -49,6 +49,7 @@ begin
 
   return new;
 end;
+$$;
 
 create or replace function public.tg_tarefas_historico()
 returns trigger
