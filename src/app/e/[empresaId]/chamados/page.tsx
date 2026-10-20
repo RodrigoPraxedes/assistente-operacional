@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { PRIORIDADES, type Chamado, type Status, type Tarefa } from "@/lib/types";
 import { LinkBotao, Select, Titulo } from "@/components/ui";
+import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { Kanban } from "../tarefas/kanban";
 
 export default async function PaginaChamados({
@@ -98,14 +99,13 @@ export default async function PaginaChamados({
           </Select>
         )}
         {(equipamentos ?? []).some((e) => e.ativo) && (
-          <Select name="equipamento" defaultValue={filtros.equipamento ?? ""} className="w-auto">
-            <option value="">Todos os equipamentos</option>
-            {equipamentos!.filter((e) => e.ativo).map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nome}
-              </option>
-            ))}
-          </Select>
+          <SeletorComBusca
+            name="equipamento"
+            opcoes={equipamentos!.filter((e) => e.ativo)}
+            inicial={filtros.equipamento ?? ""}
+            vazio="Todos os equipamentos"
+            className="w-full sm:w-64"
+          />
         )}
         <button className="rounded-lg border border-slate-300 bg-superficie px-3 py-2 text-sm">Filtrar</button>
         {(filtros.unidade || filtros.equipamento || filtros.prioridade) && (

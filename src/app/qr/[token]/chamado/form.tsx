@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { abrirChamadoQr } from "@/lib/chamado-qr";
 import { trocarPorReduzidas } from "@/lib/foto";
 import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
+import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { BotaoEnviar } from "@/components/botao-enviar";
 
 type Opcao = { id: string; nome: string };
@@ -59,16 +60,10 @@ export function FormChamadoQr({
           </Campo>
         )}
         {equipamentos.length > 0 && (
-          <Campo rotulo="Equipamento (opcional)">
-            <Select name="equipamento_id" defaultValue="">
-              <option value="">—</option>
-              {equipamentos.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nome}
-                </option>
-              ))}
-            </Select>
-          </Campo>
+          <div className="space-y-1">
+            <span className="text-sm font-medium text-slate-700">Equipamento (opcional)</span>
+            <SeletorComBusca name="equipamento_id" opcoes={equipamentos} />
+          </div>
         )}
         <Campo rotulo="Local (opcional)">
           <Input name="local" maxLength={120} placeholder="Ex.: cozinha, banheiro dos clientes" />
