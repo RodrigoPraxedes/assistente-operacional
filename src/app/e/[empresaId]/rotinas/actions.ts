@@ -25,7 +25,7 @@ export async function salvarRotina(empresaId: string, form: FormData) {
     descricao: txt(form, "descricao"),
     horario,
     dias,
-    setor_id: txt(form, "setor_id"),
+    setor_ids: [...new Set(form.getAll("setor_ids").map(String).filter(Boolean))],
     funcao_id: txt(form, "funcao_id"),
     unidade_id: txt(form, "unidade_id"),
     ativo: form.get("ativo") !== "false",

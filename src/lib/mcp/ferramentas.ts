@@ -1054,12 +1054,12 @@ const rotinas: Ferramenta = {
     const { data: funcoes } = await ctx.supabase.from("funcoes").select("id, nome").eq("empresa_id", e.empresaId);
     let q = ctx.supabase
       .from("rotinas")
-      .select("nome, descricao, horario, dias, setor_id, funcao_id, unidade_id, ativo")
+      .select("nome, descricao, horario, dias, setor_ids, funcao_id, unidade_id, ativo")
       .eq("empresa_id", e.empresaId)
       .order("horario");
     if (args.incluir_inativas !== true) q = q.eq("ativo", true);
     const setor = texto(args.setor);
-    if (setor) q = q.eq("setor_id", acharId(n.setores, setor, "Setor"));
+    if (setor) q = q.contains("setor_ids", [acharId(n.setores, setor, "Setor")]);
     const funcao = texto(args.funcao);
     if (funcao) q = q.eq("funcao_id", acharId(funcoes ?? [], funcao, "Função"));
     const unidade = texto(args.unidade);
@@ -1067,7 +1067,7 @@ const rotinas: Ferramenta = {
     const dia = DIAS_SEMANA.indexOf(texto(args.dia) ?? "");
     if (dia > 0) q = q.contains("dias", [dia]);
     const { data, error } = await q.returns<
-      { nome: string; descricao: string | null; horario: string; dias: number[]; setor_id: string | null; funcao_id: string | null; unidade_id: string | null; ativo: boolean }[]
+      { nome: string; descricao: string | null; horario: string; dias: number[]; setor_ids: string[]; funcao_id: string | null; unidade_id: string | null; ativo: boolean }[]
     >();
     if (error) throw new Error("Não consegui consultar as rotinas.");
     const busca = texto(args.texto);
@@ -1082,7 +1082,7 @@ const rotinas: Ferramenta = {
         horario: r.horario.slice(0, 5),
         dias: r.dias.length === 7 ? "todos os dias" : [...r.dias].sort().map((d) => DIAS_SEMANA[d]).join(", "),
         passo_a_passo: r.descricao || undefined,
-        setor: n.setor(r.setor_id) ?? undefined,
+        setores: r.setor_ids.map((id) => n.setor(id)).filter(Boolean),
         funcao: (funcoes ?? []).find((f) => f.id === r.funcao_id)?.nome,
         unidade: n.unidade(r.unidade_id) ?? "todas as unidades",
         inativa: !r.ativo || undefined,

@@ -489,7 +489,7 @@ export interface Rotina {
   horario: string;
   // 1 = segunda ... 7 = domingo
   dias: number[];
-  setor_id: string | null;
+  setor_ids: string[];
   funcao_id: string | null;
   unidade_id: string | null;
   ativo: boolean;

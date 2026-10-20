@@ -79,7 +79,7 @@ export async function importarRotinas(empresaId: string, _: EstadoImportacao, fo
 
   const [{ data: setores }, { data: existentes }] = await Promise.all([
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId),
-    supabase.from("rotinas").select("nome, horario, setor_id").eq("empresa_id", empresaId),
+    supabase.from("rotinas").select("nome, horario, setor_ids").eq("empresa_id", empresaId),
   ]);
   const idSetor = new Map((setores ?? []).map((s) => [normalizar(s.nome), s.id as string]));
 
@@ -95,13 +95,15 @@ export async function importarRotinas(empresaId: string, _: EstadoImportacao, fo
   }
 
   const chave = (horario: string, setorId: string | null, nome: string) => `${horario.slice(0, 5)}|${setorId ?? ""}|${normalizar(nome)}`;
-  const jaTem = new Set((existentes ?? []).map((r) => chave(r.horario, r.setor_id, r.nome)));
+  const jaTem = new Set(
+    (existentes ?? []).flatMap((r) => (r.setor_ids?.length ? r.setor_ids : [null]).map((s: string | null) => chave(r.horario, s, r.nome))),
+  );
   const novas = lista
     .map((r) => ({ empresa_id: empresaId, nome: r.nome, horario: r.horario, setor_id: r.setor ? (idSetor.get(normalizar(r.setor)) ?? null) : null }))
     .filter((r) => /^\d{2}:\d{2}$/.test(r.horario) && r.nome && !jaTem.has(chave(r.horario, r.setor_id, r.nome)));
 
   if (novas.length) {
-    const { error } = await supabase.from("rotinas").insert(novas);
+    const { error } = await supabase.from("rotinas").insert(novas.map(({ setor_id, ...r }) => ({ ...r, setor_ids: setor_id ? [setor_id] : [] })));
     if (error) return { erro: error.message };
   }
   revalidatePath(`/e/${empresaId}/rotinas`);
