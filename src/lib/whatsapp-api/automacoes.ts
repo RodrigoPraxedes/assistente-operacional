@@ -386,3 +386,92 @@ export async function gerarLembretesAcoes(agora = new Date()) {
   }
   return total;
 }
+
+// Prazo venceu e a tarefa segue aberta: não dá para concluir pelo WhatsApp, então o
+// responsável (e quem criou, se for outra pessoa) é lembrado de concluir no app.
+// Só olha prazos das últimas 24 h. A chave da mensagem leva o prazo: sai uma vez por
+// prazo e pessoa (prazo editado avisa de novo). Avisos de prazo não saem de madrugada
+// (ver ORIGENS_SEM_MADRUGADA em fila.ts). Check-list tem regra própria; privada fica de fora.
+const PRAZO_JANELA_HORAS = 24;
+
+export async function gerarAvisosPrazoVencido(agora = new Date()) {
+  const admin = createAdminClient();
+  const { data: configs } = await admin
+    .from("whatsapp_automacoes")
+    .select("empresa_id, link_prazo, empresas(fuso_horario)")
+    .eq("aviso_prazo", true)
+    .returns<{ empresa_id: string; link_prazo: boolean; empresas: { fuso_horario: string } | null }[]>();
+
+  let total = 0;
+  for (const c of configs ?? []) {
+    const fuso = c.empresas?.fuso_horario ?? "America/Sao_Paulo";
+    const [{ data: tarefas }, { data: abertos }] = await Promise.all([
+      admin
+        .from("tarefas")
+        .select("id, titulo, prazo, unidade_id, responsaveis, criado_por, status_id, unidades(nome)")
+        .eq("empresa_id", c.empresa_id)
+        .neq("origem", "checklist")
+        .eq("privado", false)
+        .is("concluida_em", null)
+        .not("prazo", "is", null)
+        .lte("prazo", agora.toISOString())
+        .gt("prazo", new Date(agora.getTime() - PRAZO_JANELA_HORAS * 3_600_000).toISOString())
+        .returns<
+          {
+            id: string;
+            titulo: string;
+            prazo: string;
+            unidade_id: string | null;
+            responsaveis: string[];
+            criado_por: string | null;
+            status_id: string;
+            unidades: { nome: string } | null;
+          }[]
+        >(),
+      admin.from("status").select("id").eq("empresa_id", c.empresa_id).in("tipo", ["aberto", "em_andamento"]),
+    ]);
+    const statusAberto = new Set((abertos ?? []).map((s) => s.id));
+    const vencidas = (tarefas ?? []).filter((t) => statusAberto.has(t.status_id));
+    if (!vencidas.length) continue;
+
+    // a cada minuto o relógio passa por aqui: pula quem já foi avisado sem chamar o banco
+    const { data: jaAvisadas } = await admin
+      .from("whatsapp_mensagens")
+      .select("chave")
+      .eq("empresa_id", c.empresa_id)
+      .eq("origem", "prazo")
+      .in("origem_id", vencidas.map((t) => t.id))
+      .returns<{ chave: string }[]>();
+    const chaves = new Set((jaAvisadas ?? []).map((m) => m.chave));
+
+    const idsNomes = [...new Set(vencidas.flatMap((t) => [...t.responsaveis, ...(t.criado_por ? [t.criado_por] : [])]))];
+    const { data: nomes } = await admin.from("membros").select("id, nome").in("id", idsNomes);
+    const nomeDe = new Map((nomes ?? []).map((m) => [m.id, m.nome.trim().split(/\s+/)[0]]));
+
+    const concluir = c.link_prazo ? "conclua pelo link." : "conclua no app.";
+    for (const t of vencidas) {
+      const base = `${t.titulo}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`;
+      const prazo = `Prazo: ${diaMes(t.prazo, fuso)} ${hora(t.prazo, fuso)}`;
+      const quemFaz = t.responsaveis.map((id) => nomeDe.get(id)).filter(Boolean).join(", ");
+      const destinos = [...t.responsaveis, ...(t.criado_por && !t.responsaveis.includes(t.criado_por) ? [t.criado_por] : [])];
+      for (const membroId of destinos) {
+        const chave = `prazo:${t.id}:${new Date(t.prazo).getTime()}:${membroId}`;
+        if (chaves.has(chave)) continue;
+        const responsavel = t.responsaveis.includes(membroId);
+        const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
+          p_empresa: c.empresa_id,
+          p_unidade: t.unidade_id,
+          p_membro: membroId,
+          p_texto: responsavel
+            ? [`*Prazo venceu*`, base, prazo, `Se já fez, ${concluir}`].join("\n")
+            : [`*Prazo venceu e a tarefa segue aberta*`, base, prazo, ...(quemFaz ? [`Responsável: ${quemFaz}`] : [])].join("\n"),
+          p_origem: "prazo",
+          p_origem_id: t.id,
+          p_chave: chave,
+        });
+        if (id) total++;
+      }
+    }
+  }
+  return total;
+}

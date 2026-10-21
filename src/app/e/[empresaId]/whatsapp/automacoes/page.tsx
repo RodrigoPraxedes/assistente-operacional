@@ -22,7 +22,7 @@ export default async function Automacoes({
   const [{ data: config }, { data: conexoes }, { data: contatos }, { data: membros }, { count: enviadas }] = await Promise.all([
     supabase
       .from("whatsapp_automacoes")
-      .select("aviso_tarefa, resumo_dia, aviso_conclusao, checklist_auto, boas_vindas, lembrete_checklist, lembrete_acao, lembrete_acao_minutos, resumo_hora, limite_diario, link_tarefa, link_conclusao, link_checklist, link_lembrete, link_resumo, contato_duvidas")
+      .select("aviso_tarefa, resumo_dia, aviso_conclusao, checklist_auto, boas_vindas, lembrete_checklist, lembrete_acao, lembrete_acao_minutos, resumo_hora, limite_diario, link_tarefa, link_conclusao, link_checklist, link_lembrete, link_resumo, aviso_prazo, link_prazo, contato_duvidas")
       .eq("empresa_id", empresaId)
       .maybeSingle(),
     supabase.from("whatsapp_conexoes").select("status, envio_pausado").eq("empresa_id", empresaId),
@@ -74,6 +74,18 @@ export default async function Automacoes({
             </span>
           </label>
           <IncluirLink nome="link_tarefa" ligado={config?.link_tarefa ?? true} />
+
+          <label className="flex items-start gap-3">
+            <input type="checkbox" name="aviso_prazo" defaultChecked={config?.aviso_prazo ?? true} className="mt-1 h-4 w-4" />
+            <span className="text-sm">
+              <span className="font-medium text-slate-900">Prazo venceu e a tarefa segue aberta</span>
+              <span className="block text-slate-500">
+                Passou o prazo e a tarefa não foi concluída: os responsáveis recebem um lembrete para concluir no app e quem criou também é
+                avisado. Sai uma vez por prazo (se o prazo mudar, avisa de novo), não sai de madrugada e não vale para check-list nem tarefa privada.
+              </span>
+            </span>
+          </label>
+          <IncluirLink nome="link_prazo" ligado={config?.link_prazo ?? true} />
 
           <label className="flex items-start gap-3">
             <input type="checkbox" name="aviso_conclusao" defaultChecked={config?.aviso_conclusao ?? false} className="mt-1 h-4 w-4" />
