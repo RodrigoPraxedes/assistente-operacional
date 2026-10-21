@@ -170,8 +170,8 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
   for (const [membroId, nome] of pessoas) {
     const lista = porPessoa.get(membroId) ?? [];
     const escala = escalaDe.get(membroId);
-    // nada para hoje: não manda mensagem (menos volume para o número)
-    if (!lista.length && escala?.tipo !== "turno") {
+    // nada para hoje ou atrasado: não manda mensagem (turno sozinho não conta)
+    if (!lista.length) {
       diag.push(`${nome}: nenhuma tarefa aberta com prazo até hoje`);
       continue;
     }
@@ -187,7 +187,6 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
     if (atrasadas.length) {
       linhas.push("", `*Atrasadas (${atrasadas.length})*`, ...itens(atrasadas, (t) => `venceu ${diaMes(t.prazo, fuso)}`));
     }
-    if (!lista.length) linhas.push("Nenhuma tarefa com prazo para hoje.");
 
     const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
       p_empresa: empresaId,
