@@ -5,6 +5,7 @@ import { abrirChamado } from "../actions";
 import { trocarPorReduzidas } from "@/lib/foto";
 import { PRIORIDADES } from "@/lib/types";
 import { Aviso, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
+import { SeletorPrestador } from "@/components/seletor-prestador";
 import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { BotaoEnviar } from "@/components/botao-enviar";
 
@@ -20,6 +21,7 @@ export function FormChamado({
   equipamentos,
   membros,
   fornecedores,
+  podeCadastrarPrestador,
   equipamentoInicial,
   unidadeInicial,
 }: {
@@ -32,6 +34,7 @@ export function FormChamado({
   equipamentos: Opcao[];
   membros: Opcao[];
   fornecedores: Opcao[];
+  podeCadastrarPrestador: boolean;
   equipamentoInicial?: string;
   unidadeInicial?: string;
 }) {
@@ -91,7 +94,7 @@ export function FormChamado({
                 <Select name="responsavel_id">{opcoes(membros)}</Select>
               </Campo>
               <Campo rotulo="Prestador de serviço">
-                <Select name="fornecedor_id">{opcoes(fornecedores)}</Select>
+                <SeletorPrestador empresaId={empresaId} opcoes={fornecedores} podeCadastrar={podeCadastrarPrestador} />
               </Campo>
             </>
           )}
