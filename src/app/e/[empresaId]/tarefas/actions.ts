@@ -100,6 +100,23 @@ export async function marcarMinhaParte(empresaId: string, tarefaId: string, feit
   revalidatePath(`/e/${empresaId}/tarefas`);
 }
 
+// Edita título, descrição e prazo (o banco confere a permissão tarefas.editar e o estado da tarefa)
+export async function editarTarefa(empresaId: string, tarefaId: string, form: FormData) {
+  const { supabase, empresa } = await getContexto(empresaId);
+  const voltar = `/e/${empresaId}/tarefas/${tarefaId}`;
+  const prazo = vazioParaNull(form.get("prazo"));
+  const { error } = await supabase.rpc("editar_tarefa", {
+    p_tarefa: tarefaId,
+    p_titulo: String(form.get("titulo") ?? ""),
+    p_descricao: String(form.get("descricao") ?? ""),
+    p_prazo: prazo ? localParaUtc(prazo, empresa.fuso_horario) : null,
+  });
+  if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
+  revalidatePath(voltar);
+  revalidatePath(`/e/${empresaId}/tarefas`);
+  redirect(`${voltar}?editada=1`);
+}
+
 // Privada: só quem criou e o responsável veem. Só quem criou pode trocar (o banco confere).
 export async function mudarPrivacidadeTarefa(empresaId: string, tarefaId: string, privado: boolean) {
   const { supabase } = await getContexto(empresaId);

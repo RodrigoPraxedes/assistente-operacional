@@ -2,14 +2,14 @@ import { membrosAtribuiveis } from "@/lib/atribuicao";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
-import { formatarDataHora } from "@/lib/formato";
+import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
 import { linkPreencher } from "@/lib/checklist-link";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
-import { Aviso, Botao, Cartao, Etiqueta, Textarea, Titulo } from "@/components/ui";
+import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Textarea, Titulo } from "@/components/ui";
 import { CampoFotoCamera } from "@/components/campo-foto-camera";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { comentarTarefa, enviarFotoTarefa, marcarMinhaParte, mudarCientes, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
+import { comentarTarefa, editarTarefa, enviarFotoTarefa, marcarMinhaParte, mudarCientes, mudarPrivacidadeTarefa, mudarResponsaveis } from "../actions";
 import { BotaoExcluir } from "./botao-excluir";
 import { MudarStatus } from "./mudar-status";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
@@ -27,10 +27,10 @@ export default async function DetalheTarefa({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; tarefaId: string }>;
-  searchParams: Promise<{ nova?: string; erro?: string; responsaveis?: string; foto?: string }>;
+  searchParams: Promise<{ nova?: string; erro?: string; responsaveis?: string; foto?: string; editada?: string }>;
 }) {
   const { empresaId, tarefaId } = await params;
-  const { nova, erro, responsaveis: responsaveisSalvos, foto: fotoEnviada } = await searchParams;
+  const { nova, erro, responsaveis: responsaveisSalvos, foto: fotoEnviada, editada } = await searchParams;
   const { supabase, empresa, membro, pode } = await getContexto(empresaId);
 
   const { data: tarefa } = await supabase.from("tarefas").select("*").eq("id", tarefaId).maybeSingle<Tarefa>();
@@ -102,6 +102,7 @@ export default async function DetalheTarefa({
       (tarefa.origem !== "checklist" || s.tipo === "concluido") &&
       !(s.tipo === "concluido" && (emConjunto || tarefa.exige_foto)),
   );
+  const podeEditar = pode("tarefas.editar") && !encerrada && !["chamado", "checklist", "plano"].includes(tarefa.origem);
   const podeExcluir = pode("tarefas.excluir") || (tarefa.origem === "avulsa" && tarefa.criado_por === membro.id);
 
   const texto = mensagemTarefa(tarefa, {
@@ -116,6 +117,7 @@ export default async function DetalheTarefa({
     <div className="mx-auto max-w-2xl space-y-4">
       {nova && <Aviso tipo="sucesso">Tarefa criada.</Aviso>}
       {responsaveisSalvos && <Aviso tipo="sucesso">Responsáveis atualizados.</Aviso>}
+      {editada && <Aviso tipo="sucesso">Tarefa atualizada.</Aviso>}
       {fotoEnviada && <Aviso tipo="sucesso">Foto enviada.</Aviso>}
       {erro && <Aviso>{erro}</Aviso>}
       <Titulo voltar={{ href: `/e/${empresaId}/tarefas`, rotulo: "Tarefas" }}>{tarefa.titulo}</Titulo>
@@ -217,6 +219,29 @@ export default async function DetalheTarefa({
           {podeExcluir && <BotaoExcluir empresaId={empresaId} tarefaId={tarefa.id} />}
         </div>
       </Cartao>
+
+      {podeEditar && (
+        <Cartao>
+          <details>
+            <summary className="cursor-pointer text-sm font-medium text-blue-700">Editar título, descrição e prazo</summary>
+            <form action={editarTarefa.bind(null, empresaId, tarefa.id)} className="mt-3 space-y-3">
+              <Campo rotulo="Título">
+                <Input name="titulo" defaultValue={tarefa.titulo} required />
+              </Campo>
+              <Campo rotulo="Detalhes">
+                <Textarea name="descricao" rows={3} defaultValue={tarefa.descricao ?? ""} />
+              </Campo>
+              <Campo rotulo="Prazo">
+                <Input type="datetime-local" name="prazo" defaultValue={utcParaLocalInput(tarefa.prazo, empresa.fuso_horario)} />
+              </Campo>
+              {tarefa.origem === "acao" && (
+                <p className="text-xs text-slate-500">Vale só para esta tarefa; a ação recorrente não muda.</p>
+              )}
+              <Botao variante="secundario">Salvar alterações</Botao>
+            </form>
+          </details>
+        </Cartao>
+      )}
 
       {emConjunto && (
         <Cartao className="space-y-3">
