@@ -177,7 +177,7 @@ export default async function DetalheTarefa({
             </>
           )}
         </dl>
-        {pode("tarefas.mudar_status") && opcoesStatus.length > 0 && (
+        {pode("tarefas.mudar_status") && !tarefa.concluida_em && opcoesStatus.length > 0 && (
           <MudarStatus
             empresaId={empresaId}
             tarefaId={tarefa.id}

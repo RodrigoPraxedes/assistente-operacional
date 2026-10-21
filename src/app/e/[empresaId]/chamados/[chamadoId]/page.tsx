@@ -188,7 +188,7 @@ export default async function DetalheChamado({
         </div>
       </Cartao>
 
-      {pode("tarefas.mudar_status") && statusDisponiveis.length > 0 && (
+      {pode("tarefas.mudar_status") && !t.concluida_em && statusDisponiveis.length > 0 && (
         <Cartao>
           <MudarStatus
             empresaId={empresaId}
