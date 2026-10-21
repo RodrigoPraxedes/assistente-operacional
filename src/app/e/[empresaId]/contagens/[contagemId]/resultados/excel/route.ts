@@ -26,7 +26,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ empresaI
     { header: "Nome", key: "nome", width: 20 },
     ...itens.flatMap((i) => [
       { header: rotuloItem(i), key: `q_${i.id}`, width: 16 },
-      ...(contagem.usa_meta ? [{ header: `${contagem.rotulo_falta} - ${i.nome}`, key: `f_${i.id}`, width: 16 }] : []),
+      ...(contagem.usa_meta
+        ? [{ header: `${contagem.pede_vai_fazer ? "Sugestão" : contagem.rotulo_falta} - ${i.nome}`, key: `f_${i.id}`, width: 16 }]
+        : []),
+      ...(contagem.usa_meta && contagem.pede_vai_fazer
+        ? [{ header: `${contagem.rotulo_falta} - ${i.nome}`, key: `v_${i.id}`, width: 16 }]
+        : []),
     ]),
     { header: "Observação", key: "obs", width: 40 },
   ];
@@ -49,6 +54,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ empresaI
       const v = r.valores.get(i.id);
       linha[`q_${i.id}`] = v?.quantidade ?? null;
       if (contagem.usa_meta) linha[`f_${i.id}`] = v?.a_fazer ?? null;
+      if (contagem.usa_meta && contagem.pede_vai_fazer) linha[`v_${i.id}`] = v?.vai_fazer ?? null;
     }
     ws.addRow(linha);
   }

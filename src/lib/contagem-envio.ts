@@ -15,7 +15,11 @@ export async function enviarContagem(_: EstadoContagem, form: FormData): Promise
   const turno = String(form.get("turno") ?? "");
   const observacao = String(form.get("observacao") ?? "");
   const itens: string[] = JSON.parse(String(form.get("itens") ?? "[]"));
-  const valores = itens.map((id) => ({ item_id: id, quantidade: String(form.get(`qtd_${id}`) ?? "").trim() }));
+  const valores = itens.map((id) => ({
+    item_id: id,
+    quantidade: String(form.get(`qtd_${id}`) ?? "").trim(),
+    vai_fazer: String(form.get(`vai_${id}`) ?? "").trim(),
+  }));
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return { erro: "Informe a data da contagem." };
   if (!valores.some((v) => v.quantidade !== "")) return { erro: "Preencha pelo menos uma quantidade." };

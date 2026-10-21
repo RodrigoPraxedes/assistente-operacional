@@ -16,6 +16,7 @@ export interface Valor {
   quantidade: number | null;
   meta: number | null;
   a_fazer: number | null;
+  vai_fazer: number | null;
 }
 
 export interface Registro {
@@ -53,7 +54,7 @@ export async function carregarResultados(supabase: Supabase, empresaId: string, 
   for (let desde = 0; desde < 20000; desde += 1000) {
     let q = supabase
       .from("contagem_registros")
-      .select("id, data_ref, turno, executor_nome, enviado_em, canal, observacao, contagem_valores(item_id, quantidade, meta, a_fazer)")
+      .select("id, data_ref, turno, executor_nome, enviado_em, canal, observacao, contagem_valores(item_id, quantidade, meta, a_fazer, vai_fazer)")
       .eq("contagem_id", contagemId)
       .gte("data_ref", f.de)
       .lte("data_ref", f.ate)
@@ -66,8 +67,8 @@ export async function carregarResultados(supabase: Supabase, empresaId: string, 
     if (error) throw new Error(error.message);
     for (const r of data ?? []) {
       const valores = new Map<string, Valor>();
-      for (const v of (r.contagem_valores ?? []) as { item_id: string; quantidade: unknown; meta: unknown; a_fazer: unknown }[])
-        valores.set(v.item_id, { quantidade: num(v.quantidade), meta: num(v.meta), a_fazer: num(v.a_fazer) });
+      for (const v of (r.contagem_valores ?? []) as { item_id: string; quantidade: unknown; meta: unknown; a_fazer: unknown; vai_fazer: unknown }[])
+        valores.set(v.item_id, { quantidade: num(v.quantidade), meta: num(v.meta), a_fazer: num(v.a_fazer), vai_fazer: num(v.vai_fazer) });
       registros.push({ ...r, valores } as Registro);
     }
     if ((data ?? []).length < 1000) break;
@@ -84,16 +85,17 @@ export interface Dia {
   soma: Map<string, Valor>;
 }
 
-// soma das quantidades (e do que faltava) de cada item por dia
+// soma das quantidades (e do que faltava e do que foi feito) de cada item por dia
 export function somarPorDia(registros: Registro[]): Dia[] {
   const dias = new Map<string, Dia>();
   for (const r of registros) {
     const d = dias.get(r.data_ref) ?? { data: r.data_ref, envios: 0, soma: new Map() };
     d.envios++;
     for (const [id, v] of r.valores) {
-      const s = d.soma.get(id) ?? { quantidade: null, meta: null, a_fazer: null };
+      const s = d.soma.get(id) ?? { quantidade: null, meta: null, a_fazer: null, vai_fazer: null };
       if (v.quantidade !== null) s.quantidade = (s.quantidade ?? 0) + v.quantidade;
       if (v.a_fazer !== null) s.a_fazer = (s.a_fazer ?? 0) + v.a_fazer;
+      if (v.vai_fazer !== null) s.vai_fazer = (s.vai_fazer ?? 0) + v.vai_fazer;
       d.soma.set(id, s);
     }
     dias.set(r.data_ref, d);
