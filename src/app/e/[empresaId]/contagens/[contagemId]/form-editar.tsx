@@ -6,6 +6,8 @@ import { DIAS_SEMANA } from "@/lib/rotinas";
 import type { Contagem, ContagemItem } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { SeletorRecorrencia } from "@/components/seletor-recorrencia";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
 type Opcao = { id: string; nome: string };
 type ItemEditavel = { id?: string; chave: string; nome: string; unidade_medida: string; metas: string[] };
@@ -19,15 +21,26 @@ export function FormEditarContagem({
   itens: iniciais,
   unidades,
   setores,
+  membros,
 }: {
   empresaId: string;
   contagem: Contagem | null;
   itens: ContagemItem[];
   unidades: Opcao[];
   setores: Opcao[];
+  membros: Opcao[];
 }) {
   const [estado, acao] = useActionState(salvarContagem.bind(null, empresaId), undefined);
   const [usaMeta, setUsaMeta] = useState(contagem?.usa_meta ?? false);
+  const [turnosTexto, setTurnosTexto] = useState(contagem?.turnos.join(", ") ?? "");
+  const [agendada, setAgendada] = useState(contagem?.agendada ?? false);
+  // um horário por turno; guardados pelo nome do turno para não trocar ao editar a lista
+  const [horarios, setHorarios] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (contagem?.turnos.length ? contagem.turnos : [""]).map((t, i) => [t, contagem?.horarios?.[i]?.slice(0, 5) ?? ""]),
+    ),
+  );
+  const turnos = [...new Set(turnosTexto.split(",").map((t) => t.trim()).filter(Boolean))].slice(0, 6);
   const [itens, setItens] = useState<ItemEditavel[]>(
     iniciais.length
       ? iniciais.map((i) => ({
@@ -65,7 +78,7 @@ export function FormEditarContagem({
         </Campo>
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo rotulo="Turnos" dica='Separe por vírgula, ex.: "Dia, Noite". Vazio = sem turno.'>
-            <Input name="turnos" defaultValue={contagem?.turnos.join(", ") ?? ""} placeholder="Dia, Noite" />
+            <Input name="turnos" value={turnosTexto} onChange={(e) => setTurnosTexto(e.target.value)} placeholder="Dia, Noite" />
           </Campo>
           <Campo rotulo="Unidade">
             <Select name="unidade_id" defaultValue={contagem?.unidade_id ?? ""}>
@@ -106,6 +119,65 @@ export function FormEditarContagem({
           <Campo rotulo="Nome da coluna do que falta" dica='Ex.: "Embalar", "Produzir", "Repor".'>
             <Input name="rotulo_falta" defaultValue={contagem?.rotulo_falta ?? "Falta"} maxLength={30} className="sm:w-60" />
           </Campo>
+        )}
+      </Cartao>
+
+      <Cartao className="space-y-4">
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="agendada" checked={agendada} onChange={(e) => setAgendada(e.target.checked)} className="mt-1" />
+          <span>
+            <span className="font-medium">Horário, lembrete e WhatsApp</span>
+            <span className="block text-xs text-slate-500">
+              Como no check-list: vira tarefa no Kanban no horário, o responsável recebe lembrete e quem você escolher
+              recebe o resultado.
+            </span>
+          </span>
+        </label>
+        {agendada && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {(turnos.length ? turnos : [""]).map((t, i) => (
+                <Campo key={t || "unico"} rotulo={t ? `Horário · ${t}` : "Horário"}>
+                  <Input
+                    type="time"
+                    name={`horario_${i}`}
+                    required
+                    value={horarios[t] ?? ""}
+                    onChange={(e) => setHorarios((h) => ({ ...h, [t]: e.target.value }))}
+                  />
+                </Campo>
+              ))}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Campo rotulo="Tolerância (min)" dica="Depois disso fica atrasada">
+                <Input type="number" min={0} max={1440} name="tolerancia_minutos" defaultValue={contagem?.tolerancia_minutos ?? 30} />
+              </Campo>
+              <Campo rotulo="Lembrete antes (min)" dica="O responsável recebe no WhatsApp. 0 = sem lembrete.">
+                <Input type="number" min={0} max={720} name="lembrete_minutos" defaultValue={contagem?.lembrete_minutos ?? 30} />
+              </Campo>
+              <Campo rotulo="Repetir">
+                <SeletorRecorrencia inicial={contagem?.recorrencia ?? "FREQ=DAILY"} />
+              </Campo>
+            </div>
+            <SeletorResponsaveis
+              rotulo="Responsáveis"
+              name="responsaveis"
+              inicial={contagem?.responsaveis ?? []}
+              membros={membros}
+              setores={setores}
+              dica="Cada um recebe a tarefa e o lembrete; puxam a equipe mesmo com a contagem aberta a todos"
+            />
+            <Campo rotulo="Recebe o resultado" dica="Recebe no WhatsApp as quantidades (e o que falta) quando a contagem é enviada">
+              <Select name="resultado_membro_id" defaultValue={contagem?.resultado_membro_id ?? ""}>
+                <option value="">—</option>
+                {membros.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nome}
+                  </option>
+                ))}
+              </Select>
+            </Campo>
+          </>
         )}
       </Cartao>
 

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
+import { gerarTarefasRecorrentes } from "@/lib/gerar-tarefas";
+import { regraValida } from "@/lib/recorrencia";
 
 interface ItemForm {
   id?: string;
@@ -31,6 +33,23 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
   if (!itens.length) return { erro: "Adicione pelo menos um item" };
 
   const turnos = [...new Set(String(form.get("turnos") ?? "").split(",").map((t) => t.trim()).filter(Boolean))].slice(0, 6);
+
+  // agenda: um horário por turno (sem turno, um só), na ordem dos turnos
+  const agendada = form.get("agendada") === "on";
+  const horarios = (turnos.length ? turnos : [""]).map((_, i) => txt(`horario_${i}`));
+  const recorrencia = txt("recorrencia") ?? "FREQ=DAILY";
+  const responsaveis = form.getAll("responsaveis").map(String).filter(Boolean);
+  const inteiro = (k: string, padrao: number, max: number) => {
+    const n = Number(form.get(k) ?? padrao);
+    return Number.isInteger(n) && n >= 0 && n <= max ? n : padrao;
+  };
+  if (agendada) {
+    if (horarios.some((h) => !h || !/^\d{2}:\d{2}$/.test(h)))
+      return { erro: turnos.length ? "Informe o horário de cada turno" : "Informe o horário da contagem" };
+    if (!regraValida(recorrencia)) return { erro: "Regra de repetição inválida" };
+    if (!responsaveis.length) return { erro: "Escolha ao menos um responsável pela contagem" };
+  }
+
   const dados = {
     nome,
     descricao: txt("descricao"),
@@ -41,6 +60,14 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
     rotulo_falta: txt("rotulo_falta")?.slice(0, 30) ?? "Falta",
     publico_qr: form.get("publico_qr") === "on",
     ativo: form.get("ativo") !== "false",
+    agendada,
+    // agenda desligada guarda o que estava preenchido, para religar depois
+    ...(agendada || horarios.every(Boolean) ? { horarios } : {}),
+    recorrencia: regraValida(recorrencia) ? recorrencia : "FREQ=DAILY",
+    tolerancia_minutos: inteiro("tolerancia_minutos", 30, 1440),
+    lembrete_minutos: inteiro("lembrete_minutos", 30, 720),
+    responsaveis,
+    resultado_membro_id: txt("resultado_membro_id"),
   };
 
   let contagemId = id;
@@ -73,6 +100,15 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
       ? await supabase.from("contagem_itens").update(linha).eq("id", i.id)
       : await supabase.from("contagem_itens").insert({ ...linha, contagem_id: contagemId, empresa_id: empresaId });
     if (error) return { erro: error.message };
+  }
+
+  // já cria no Kanban as tarefas de hoje e dos próximos dias (precisa da service_role)
+  if (agendada && dados.ativo && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      await gerarTarefasRecorrentes({ contagemId: contagemId! });
+    } catch (e) {
+      console.error("Falha ao gerar tarefas da contagem", e);
+    }
   }
 
   revalidatePath(`/e/${empresaId}/contagens`);

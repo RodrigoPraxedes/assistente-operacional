@@ -273,6 +273,17 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Horário, lembrete e WhatsApp",
+        passos: [
+          "No editar da contagem, marque Horário, lembrete e WhatsApp. Funciona como no check-list.",
+          "Informe o horário: com turnos, um horário para cada turno (ex.: Dia 10:00, Noite 18:00). Depois, a tolerância (minutos até ficar atrasada), o lembrete antes (0 = sem lembrete) e o Repetir (todos os dias, dias úteis...).",
+          "Escolha os responsáveis: cada um recebe a tarefa no Kanban e o lembrete no WhatsApp, e puxa a equipe para contar.",
+          "Em Recebe o resultado, escolha quem recebe no WhatsApp as quantidades (e o que falta para a meta) assim que a contagem é enviada.",
+          "A tarefa aparece em Tarefas 1 hora antes do horário, com o botão azul para abrir a contagem já no turno certo. Ao salvar a contagem, a tarefa daquele dia e turno é concluída sozinha.",
+          "Não contou até 30 minutos depois do prazo (horário + tolerância): a tarefa é cancelada como Não realizado no tempo.",
+        ],
+      },
+      {
         titulo: "Contar",
         passos: [
           "No app: em Contagens, toque em Contar no cartão. Pelo QR Code: aponte a câmera para o QR da unidade e escolha a contagem em Contagens (a pessoa digita o nome, sem PIN).",
@@ -303,7 +314,7 @@ export const SECOES: SecaoGuia[] = [
       },
     ],
     dicas: [
-      "Contagem não cria tarefa. Para cobrar com horário e responsável, crie uma Ação com o mesmo horário.",
+      "Sem Horário, lembrete e WhatsApp a contagem não cria tarefa: fica só no cartão e no QR Code, para contar quando quiser.",
       "Quem pode montar check-lists também monta contagens; quem vê check-lists preenchidos também vê os resultados. Isso pode ser mudado em Configurações › Perfis de acesso.",
     ],
   },
@@ -662,7 +673,7 @@ export const SECOES: SecaoGuia[] = [
           "Lembrete de ação recorrente: os responsáveis recebem outro aviso alguns minutos antes do horário da ocorrência (padrão 30; dá para mudar na própria tela).",
           "Tarefa concluída: quem criou é avisado quando ela termina.",
           "Check-list concluído: o resultado sai sozinho para quem foi cadastrado (desligado, vira rascunho para confirmar).",
-          "Lembrete de check-list: o responsável recebe um lembrete antes do horário.",
+          "Lembrete de check-list: o responsável recebe um lembrete antes do horário. Vale também para as contagens com horário.",
           "Boas-vindas: quem é autorizado recebe uma apresentação pedindo para salvar o número.",
           "Resumo do dia: no horário escolhido, só recebe quem tem tarefa que vence hoje ou atrasada (sem pendência, nenhuma mensagem; o turno sozinho não conta). Quem tem, recebe o turno de hoje, as tarefas que vencem hoje e as atrasadas. Mudar o horário no mesmo dia libera um novo envio do resumo (quem já recebeu hoje não recebe de novo). Só recebe quem está ligado a um colaborador: ao autorizar, escolha o colaborador ou use o mesmo celular do cadastro (o app liga sozinho). Na lista de Destinatários, toque no nome para abrir o colaborador ligado (dá para trocar) e o botão de desativar (o resumo e os avisos vão para as tarefas desse colaborador).",
           "Reenviar o resumo de hoje: botão no fim da tela, para quando o resumo não chegou (ex.: WhatsApp desconectado). Manda de novo a todos, inclusive a quem já recebeu, com a marca \"Reenvio do resumo do dia\" no início; pede confirmação antes. Se nada for enviado, a mensagem na tela diz o motivo de cada pessoa. Os avisos automáticos usam sempre o número real quando existe um número de ensaio (simulação).",

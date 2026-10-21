@@ -68,11 +68,11 @@ export default async function PaginaTarefas({
     .or(`ocorrencia_em.is.null,ocorrencia_em.lte.${fimDeHoje}`)
     .or(`concluida_em.is.null,concluida_em.gte.${seteDiasAtras}`)
     .or(`cancelada_em.is.null,cancelada_em.gte.${doisDiasAtras}`)
-    .or(`origem.neq.checklist,ocorrencia_em.lte.${daquiUmaHora}`)
+    .or(`origem.not.in.(checklist,contagem),ocorrencia_em.lte.${daquiUmaHora}`)
     .order("prazo", { ascending: true, nullsFirst: false })
     .limit(500);
   // check-list se repete várias vezes ao dia: concluído sai do quadro e da lista (fica na Central de Check-lists)
-  if (recorte !== "concluidas_hoje") consulta = consulta.or("origem.neq.checklist,concluida_em.is.null");
+  if (recorte !== "concluidas_hoje") consulta = consulta.or("origem.not.in.(checklist,contagem),concluida_em.is.null");
   if (busca) consulta = consulta.or(`titulo.ilike.%${busca}%,descricao.ilike.%${busca}%`);
   if (filtros.origem) consulta = consulta.eq("origem", filtros.origem);
   if (filtros.unidade) consulta = consulta.eq("unidade_id", filtros.unidade);

@@ -247,7 +247,7 @@ function diaMes(iso: string, fuso: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: fuso }).format(new Date(iso));
 }
 
-// Lembrete de check-list: "lembrete_minutos" antes do horário, o responsável
+// Lembrete de check-list (e de contagem com horário): "lembrete_minutos" antes do horário, o responsável
 // recebe um aviso para puxar a equipe. Só envia antes do horário (relógio
 // atrasado não manda lembrete de algo que já começou).
 const LEMBRETE_MAX_MIN = 720;
@@ -266,9 +266,9 @@ export async function gerarLembretesChecklist(agora = new Date()) {
     const [{ data: tarefas }, { data: abertos }] = await Promise.all([
       admin
         .from("tarefas")
-        .select("id, origem_id, unidade_id, responsaveis, status_id, ocorrencia_em, unidades(nome)")
+        .select("id, origem, origem_id, titulo, unidade_id, responsaveis, status_id, ocorrencia_em, unidades(nome)")
         .eq("empresa_id", c.empresa_id)
-        .eq("origem", "checklist")
+        .in("origem", ["checklist", "contagem"])
         .not("responsavel_id", "is", null)
         .is("concluida_em", null)
         .gt("ocorrencia_em", agora.toISOString())
@@ -276,7 +276,9 @@ export async function gerarLembretesChecklist(agora = new Date()) {
         .returns<
           {
             id: string;
+            origem: "checklist" | "contagem";
             origem_id: string;
+            titulo: string;
             unidade_id: string | null;
             responsaveis: string[];
             status_id: string;
@@ -290,11 +292,12 @@ export async function gerarLembretesChecklist(agora = new Date()) {
     const pendentes = (tarefas ?? []).filter((t) => statusAberto.has(t.status_id));
     if (!pendentes.length) continue;
 
-    const { data: modelos } = await admin
-      .from("checklist_modelos")
-      .select("id, nome, lembrete_minutos")
-      .in("id", [...new Set(pendentes.map((t) => t.origem_id))]);
-    const modeloDe = new Map((modelos ?? []).map((m) => [m.id, m]));
+    const ids = (origem: string) => [...new Set(pendentes.filter((t) => t.origem === origem).map((t) => t.origem_id))];
+    const [{ data: modelos }, { data: contagens }] = await Promise.all([
+      admin.from("checklist_modelos").select("id, nome, lembrete_minutos").in("id", ids("checklist")),
+      admin.from("contagens").select("id, nome, lembrete_minutos").in("id", ids("contagem")),
+    ]);
+    const modeloDe = new Map([...(modelos ?? []), ...(contagens ?? [])].map((m) => [m.id, m]));
 
     for (const t of pendentes) {
       const m = modeloDe.get(t.origem_id);
@@ -309,8 +312,8 @@ export async function gerarLembretesChecklist(agora = new Date()) {
           p_unidade: t.unidade_id,
           p_membro: responsavel,
           p_texto: [
-            `*Lembrete: check-list às ${hora(t.ocorrencia_em, fuso)}*`,
-            `${m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+            `*Lembrete: ${t.origem === "contagem" ? "contagem" : "check-list"} às ${hora(t.ocorrencia_em, fuso)}*`,
+            `${t.origem === "contagem" ? t.titulo.replace(/^Contagem: /, "") : m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
             "Você é o responsável: lembre a equipe de fazer.",
           ].join("\n"),
           p_origem: "lembrete",
@@ -410,7 +413,7 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
         .from("tarefas")
         .select("id, titulo, prazo, unidade_id, responsaveis, criado_por, status_id, unidades(nome)")
         .eq("empresa_id", c.empresa_id)
-        .neq("origem", "checklist")
+        .not("origem", "in", "(checklist,contagem)")
         .eq("privado", false)
         .is("concluida_em", null)
         .not("prazo", "is", null)

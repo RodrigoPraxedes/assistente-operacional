@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
 import { dataDeHoje } from "@/lib/contagens";
+import { descreverRecorrencia } from "@/lib/recorrencias-prontas";
 import type { Contagem } from "@/lib/types";
 import { Aviso, Cartao, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
 
@@ -88,6 +89,11 @@ export default async function PaginaContagens({
                   <div className="flex flex-wrap gap-1">
                     {c.publico_qr && <Etiqueta cor="#2563eb">QR Code</Etiqueta>}
                     {c.usa_meta && <Etiqueta cor="#16a34a">Meta: {c.rotulo_falta}</Etiqueta>}
+                    {c.agendada && (
+                      <Etiqueta cor="#7c3aed">
+                        {descreverRecorrencia(c.recorrencia)} · {c.horarios.map((h) => h.slice(0, 5)).join(" e ")}
+                      </Etiqueta>
+                    )}
                     {!c.ativo && <Etiqueta>Inativa</Etiqueta>}
                   </div>
                   {hojeFeitas.length > 0 && (

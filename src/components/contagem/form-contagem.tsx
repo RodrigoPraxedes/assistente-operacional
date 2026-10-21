@@ -24,6 +24,8 @@ interface Props {
   executor?: string;
   // "AAAA-MM-DD" de hoje no fuso da empresa
   hoje: string;
+  // turno já escolhido (vindo da tarefa do Kanban)
+  turnoInicial?: string;
   voltar: { href: string; rotulo: string };
 }
 
@@ -34,10 +36,12 @@ const botaoTurno = (ativo: boolean) =>
 
 // Preenchimento de uma contagem, no app ou pelo QR Code: uma quantidade por item.
 // Com meta, mostra na hora quanto falta para a meta do dia da semana escolhido.
-export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje, voltar }: Props) {
+export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje, turnoInicial, voltar }: Props) {
   const [estado, acao] = useActionState(enviarContagem, undefined);
   const [data, setData] = useState(hoje);
-  const [turno, setTurno] = useState(contagem.turnos.length === 1 ? contagem.turnos[0] : "");
+  const [turno, setTurno] = useState(
+    turnoInicial && contagem.turnos.includes(turnoInicial) ? turnoInicial : contagem.turnos.length === 1 ? contagem.turnos[0] : "",
+  );
   const [qtds, setQtds] = useState<Record<string, string>>({});
   const [nome, setNome] = useState("");
   const dia = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaDaSemana(data) : diaDaSemana(hoje);

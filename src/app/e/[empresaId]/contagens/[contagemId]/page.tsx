@@ -18,7 +18,7 @@ export default async function EditarContagem({
   const { supabase } = await exigirPermissao(empresaId, "contagens.editar");
   const nova = contagemId === "novo";
 
-  const [{ data: contagem }, { data: itens }, { data: unidades }, { data: setores }] = await Promise.all([
+  const [{ data: contagem }, { data: itens }, { data: unidades }, { data: setores }, { data: membros }] = await Promise.all([
     nova
       ? Promise.resolve({ data: null })
       : supabase.from("contagens").select("*").eq("id", contagemId).eq("empresa_id", empresaId).maybeSingle(),
@@ -27,6 +27,7 @@ export default async function EditarContagem({
       : supabase.from("contagem_itens").select("*").eq("contagem_id", contagemId).eq("ativo", true).order("ordem"),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+    supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
   if (!nova && !contagem) notFound();
 
@@ -59,6 +60,7 @@ export default async function EditarContagem({
         itens={(itens ?? []) as ContagemItem[]}
         unidades={unidades ?? []}
         setores={setores ?? []}
+        membros={membros ?? []}
       />
     </div>
   );

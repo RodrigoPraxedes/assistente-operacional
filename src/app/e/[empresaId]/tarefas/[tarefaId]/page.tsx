@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
-import { linkPreencher } from "@/lib/checklist-link";
+import { linkPreencher, viaFormulario } from "@/lib/checklist-link";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
 import { ORIGENS, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Textarea, Titulo } from "@/components/ui";
@@ -87,11 +87,11 @@ export default async function DetalheTarefa({
   const minhaParteFeita = tarefa.partes_feitas.includes(membro.id);
   // check-list ainda pendente: botão para abrir o formulário
   const podePreencher =
-    tarefa.origem === "checklist" &&
+    viaFormulario(tarefa.origem) &&
     !!tarefa.origem_id &&
     !execucao &&
     ["aberto", "em_andamento", "adiado"].includes(atual?.tipo ?? "") &&
-    pode("checklist.executar");
+    (tarefa.origem === "contagem" || pode("checklist.executar"));
   // status que dá para escolher aqui: os do módulo da tarefa; check-list só conclui; em conjunto e com foto,
   // a conclusão vem de "marcar minha parte" / "enviar foto"
   const opcoesStatus = (status ?? []).filter(
@@ -99,10 +99,10 @@ export default async function DetalheTarefa({
       s.ativo &&
       s.id !== tarefa.status_id &&
       (!s.modulo || s.modulo === tarefa.origem) &&
-      (tarefa.origem !== "checklist" || s.tipo === "concluido") &&
+      (!viaFormulario(tarefa.origem) || s.tipo === "concluido") &&
       !(s.tipo === "concluido" && (emConjunto || tarefa.exige_foto)),
   );
-  const podeEditar = pode("tarefas.editar") && !encerrada && !["chamado", "checklist", "plano"].includes(tarefa.origem);
+  const podeEditar = pode("tarefas.editar") && !encerrada && !["chamado", "checklist", "plano", "contagem"].includes(tarefa.origem);
   const podeExcluir = pode("tarefas.excluir") || (tarefa.origem === "avulsa" && tarefa.criado_por === membro.id);
 
   const texto = mensagemTarefa(tarefa, {
@@ -192,7 +192,7 @@ export default async function DetalheTarefa({
               href={linkPreencher(empresaId, tarefa)}
               className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
-              Abrir check-list
+              {tarefa.origem === "contagem" ? "Abrir contagem" : "Abrir check-list"}
             </Link>
           )}
           <a

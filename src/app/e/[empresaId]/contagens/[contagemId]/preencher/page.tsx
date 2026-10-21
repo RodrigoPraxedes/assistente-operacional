@@ -9,12 +9,13 @@ export default async function PreencherContagem({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; contagemId: string }>;
-  searchParams: Promise<{ unidade?: string }>;
+  searchParams: Promise<{ unidade?: string; turno?: string; de?: string }>;
 }) {
   const { empresaId, contagemId } = await params;
-  const { unidade: unidadeParam } = await searchParams;
+  const { unidade: unidadeParam, turno, de } = await searchParams;
   const { supabase, membro, empresa } = await getContexto(empresaId);
-  const voltar = { href: `/e/${empresaId}/contagens`, rotulo: "Contagens" };
+  const voltar =
+    de === "tarefas" ? { href: `/e/${empresaId}/tarefas`, rotulo: "Tarefas" } : { href: `/e/${empresaId}/contagens`, rotulo: "Contagens" };
 
   const [{ data: contagem }, { data: itens }] = await Promise.all([
     supabase.from("contagens").select("*").eq("id", contagemId).eq("empresa_id", empresaId).eq("ativo", true).maybeSingle(),
@@ -41,7 +42,8 @@ export default async function PreencherContagem({
         unidadeId={unidade.id}
         executor={membro.nome}
         hoje={dataDeHoje(empresa.fuso_horario)}
-        voltar={{ href: voltar.href, rotulo: "Voltar para Contagens" }}
+        turnoInicial={turno}
+        voltar={{ href: voltar.href, rotulo: `Voltar para ${voltar.rotulo}` }}
       />
     </div>
   );

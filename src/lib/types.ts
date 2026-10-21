@@ -1,6 +1,6 @@
 export type TipoStatus = "aberto" | "em_andamento" | "adiado" | "concluido" | "cancelado";
 export type Escopo = "proprias" | "setor" | "unidade" | "empresa";
-export type Origem = "avulsa" | "checklist" | "acao" | "chamado" | "alerta" | "plano";
+export type Origem = "avulsa" | "checklist" | "acao" | "chamado" | "alerta" | "plano" | "contagem";
 
 export type SituacaoEmpresa = "pendente" | "ativa" | "suspensa";
 
@@ -180,6 +180,7 @@ export const ORIGENS: Record<Origem, string> = {
   chamado: "Chamado",
   alerta: "Alerta",
   plano: "Projeto (PMLP)",
+  contagem: "Contagem",
 };
 
 export const TIPOS_STATUS: Record<TipoStatus, string> = {
@@ -512,6 +513,16 @@ export interface Contagem {
   rotulo_falta: string;
   publico_qr: boolean;
   ativo: boolean;
+  // agenda: vira tarefa no Kanban, com lembrete e resultado no WhatsApp
+  agendada: boolean;
+  // um "HH:MM:SS" por turno, na ordem de turnos (sem turno: um só)
+  horarios: string[];
+  recorrencia: string;
+  tolerancia_minutos: number;
+  lembrete_minutos: number;
+  responsaveis: string[];
+  resultado_membro_id: string | null;
+  created_at: string;
 }
 
 export interface ContagemItem {

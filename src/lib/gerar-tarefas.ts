@@ -109,6 +109,55 @@ async function fontesChecklist(admin: Admin, { id: modeloId, empresaId }: Filtro
   }));
 }
 
+// Contagem com agenda: uma fonte por horário (um por turno). A chave única da
+// tarefa leva o instante, então os turnos do mesmo dia não se confundem.
+async function fontesContagens(admin: Admin, { id: contagemId, empresaId }: Filtro = {}): Promise<Fonte[]> {
+  let q = admin
+    .from("contagens")
+    .select(
+      "id, empresa_id, unidade_id, setor_id, responsaveis, nome, turnos, horarios, tolerancia_minutos, recorrencia, created_at, empresas(fuso_horario)",
+    )
+    .eq("ativo", true)
+    .eq("agendada", true);
+  if (contagemId) q = q.eq("id", contagemId);
+  if (empresaId) q = q.eq("empresa_id", empresaId);
+  const { data, error } = await q.returns<
+    ({
+      id: string;
+      empresa_id: string;
+      unidade_id: string | null;
+      setor_id: string | null;
+      responsaveis: string[];
+      nome: string;
+      turnos: string[];
+      horarios: string[];
+      tolerancia_minutos: number;
+      recorrencia: string;
+      created_at: string;
+    } & ComFuso)[]
+  >();
+  // banco ainda sem a migration da agenda: as contagens não podem travar os outros módulos
+  if (error) {
+    console.error("Contagens fora da geração de tarefas", error.message);
+    return [];
+  }
+  return (data ?? []).flatMap((c) => {
+    const fuso = c.empresas?.fuso_horario ?? "America/Sao_Paulo";
+    return c.horarios.map((horario, i) => ({
+      origem: "contagem" as const,
+      id: c.id,
+      empresa_id: c.empresa_id,
+      unidade_id: c.unidade_id,
+      setor_id: c.setor_id,
+      categoria_id: null,
+      responsaveis: c.responsaveis,
+      titulo: `Contagem: ${c.nome}${c.turnos[i] ? ` · ${c.turnos[i]}` : ""}`,
+      fuso,
+      momentos: porRegra({ regra: c.recorrencia, horario, inicio: new Date(c.created_at), fuso }, c.tolerancia_minutos),
+    }));
+  });
+}
+
 async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {}): Promise<Fonte[]> {
   let q = admin
     .from("acoes")
@@ -244,11 +293,12 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
 
 // Gera no Kanban as tarefas de hoje e dos próximos dias de todos os módulos
 // recorrentes. Idempotente: pode rodar várias vezes sem duplicar (índice único).
-export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acaoId?: string; alertaId?: string }) {
+export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acaoId?: string; alertaId?: string; contagemId?: string }) {
   const admin = createAdminClient();
-  const soUm = filtro?.modeloId || filtro?.acaoId || filtro?.alertaId;
+  const soUm = filtro?.modeloId || filtro?.acaoId || filtro?.alertaId || filtro?.contagemId;
   const todas = [
     ...(!soUm || filtro?.modeloId ? await fontesChecklist(admin, { id: filtro?.modeloId }) : []),
+    ...(!soUm || filtro?.contagemId ? await fontesContagens(admin, { id: filtro?.contagemId }) : []),
     ...(!soUm || filtro?.acaoId ? await fontesAcoes(admin, { id: filtro?.acaoId }) : []),
     ...(!soUm || filtro?.alertaId ? await fontesAlertas(admin, { id: filtro?.alertaId }) : []),
   ];
@@ -335,21 +385,29 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
   // única) e geraria uma segunda tarefa no mesmo dia. Então, para cada dia, as
   // tarefas ainda no status inicial e fora do novo horário são reaproveitadas
   // (ou removidas, se sobrarem); as já em andamento/concluídas ficam como estão.
-  if (filtro?.modeloId) {
+  // A contagem faz o mesmo, juntando os horários de todos os turnos.
+  if (filtro?.modeloId || filtro?.contagemId) {
     const dia = (d: Date, fuso: string) => d.toLocaleDateString("en-CA", { timeZone: fuso });
-    for (const f of fontes.filter((x) => x.origem === "checklist")) {
-      const statusId = statusInicial.get(f.empresa_id);
-      if (!statusId || !f.fuso) continue;
-      let momentos: { quando: Date; prazo: Date }[];
+    const ajustaveis = new Map<string, Fonte>();
+    const momentosDe = new Map<string, { quando: Date; prazo: Date; titulo: string }[]>();
+    for (const x of fontes.filter((x) => x.origem === "checklist" || x.origem === "contagem")) {
+      let ms: { quando: Date; prazo: Date }[];
       try {
-        momentos = f.momentos(DIAS_A_FRENTE);
+        ms = x.momentos(DIAS_A_FRENTE);
       } catch {
         continue;
       }
+      ajustaveis.set(x.id, x);
+      momentosDe.set(x.id, [...(momentosDe.get(x.id) ?? []), ...ms.map((m) => ({ ...m, titulo: x.titulo }))]);
+    }
+    for (const f of ajustaveis.values()) {
+      const statusId = statusInicial.get(f.empresa_id);
+      if (!statusId || !f.fuso) continue;
+      const momentos = momentosDe.get(f.id)!;
       const { data: pendentes } = await admin
         .from("tarefas")
         .select("id, unidade_id, ocorrencia_em")
-        .eq("origem", "checklist")
+        .eq("origem", f.origem)
         .eq("origem_id", f.id)
         .eq("status_id", statusId)
         .gte("ocorrencia_em", new Date(Date.now() - 36 * 60 * MINUTO).toISOString());
@@ -357,7 +415,7 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
         ? [f.unidade_id]
         : (unidades ?? []).filter((u) => u.empresa_id === f.empresa_id).map((u) => u.id);
       for (const unidadeId of unidadesDoModelo) {
-        const doDia = new Map<string, { quando: Date; prazo: Date }[]>();
+        const doDia = new Map<string, { quando: Date; prazo: Date; titulo: string }[]>();
         for (const m of momentos) {
           const k = dia(m.quando, f.fuso);
           doDia.set(k, [...(doDia.get(k) ?? []), m]);
@@ -374,10 +432,10 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
             const { error: e } = m
               ? await admin
                   .from("tarefas")
-                  .update({ ocorrencia_em: m.quando.toISOString(), prazo: m.prazo.toISOString() })
+                  .update({ ocorrencia_em: m.quando.toISOString(), prazo: m.prazo.toISOString(), titulo: m.titulo })
                   .eq("id", t.id)
               : await admin.from("tarefas").delete().eq("id", t.id);
-            if (e) console.error("Erro ao ajustar tarefa do check-list", e.message);
+            if (e) console.error(`Erro ao ajustar tarefa (${f.origem})`, e.message);
           }
         }
       }
@@ -432,6 +490,7 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
 export async function previsoesDoMembro(admin: Admin, empresaId: string, membroId: string, dias: number) {
   const fontes = [
     ...(await fontesChecklist(admin, { empresaId })),
+    ...(await fontesContagens(admin, { empresaId })),
     ...(await fontesAcoes(admin, { empresaId })),
     ...(await fontesAlertas(admin, { empresaId })),
   ].filter((f) => f.responsaveis.includes(membroId));
