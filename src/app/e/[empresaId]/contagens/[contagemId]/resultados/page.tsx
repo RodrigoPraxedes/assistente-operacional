@@ -15,12 +15,27 @@ function hora(iso: string, fuso: string) {
   return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso }).format(new Date(iso));
 }
 
-// Célula de um item: a quantidade e, com meta, quanto faltava (em vermelho)
-function Celula({ v, usaMeta }: { v: Valor | undefined; usaMeta: boolean }) {
+// Com meta: quanto faltava (vermelho) e quanto a pessoa disse que vai fazer (azul)
+function MetaEFeito({ v, usaMeta, rotulo }: { v: Valor | undefined; usaMeta: boolean; rotulo: string }) {
+  if (!usaMeta) return null;
+  return (
+    <>
+      {v?.a_fazer ? <span className="block text-xs font-medium text-red-700">−{formatarQtd(v.a_fazer)}</span> : null}
+      {v?.vai_fazer != null ? (
+        <span className="block text-xs font-medium text-blue-700">
+          {rotulo} {formatarQtd(v.vai_fazer)}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+// Célula de um item: a quantidade e, com meta, quanto faltava e quanto vai fazer
+function Celula({ v, usaMeta, rotulo }: { v: Valor | undefined; usaMeta: boolean; rotulo: string }) {
   return (
     <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">
       {formatarQtd(v?.quantidade)}
-      {usaMeta && v?.a_fazer ? <span className="block text-xs font-medium text-red-700">−{formatarQtd(v.a_fazer)}</span> : null}
+      <MetaEFeito v={v} usaMeta={usaMeta} rotulo={rotulo} />
     </td>
   );
 }
@@ -105,7 +120,8 @@ export default async function ResultadosContagem({
 
       <p className="text-xs text-slate-500">
         {registros.length} envio(s) de {formatarDia(filtros.de)} a {formatarDia(filtros.ate)}.
-        {usaMeta && ` Em vermelho, quanto faltava para a meta (${contagem.rotulo_falta.toLowerCase()}).`}
+        {usaMeta && " Em vermelho, quanto faltava para a meta."}
+        {usaMeta && contagem.pede_vai_fazer && ` Em azul, quanto a pessoa disse que vai fazer (${contagem.rotulo_falta.toLowerCase()}).`}
         {porDia && " Na soma por dia, o número pequeno é a diferença para o dia anterior."}
       </p>
 
@@ -151,7 +167,7 @@ export default async function ResultadosContagem({
                                   {formatarQtd(Math.abs(dif))}
                                 </span>
                               ) : null}
-                              {usaMeta && v?.a_fazer ? <span className="block text-xs font-medium text-red-700">−{formatarQtd(v.a_fazer)}</span> : null}
+                              <MetaEFeito v={v} usaMeta={usaMeta} rotulo={contagem.rotulo_falta} />
                             </td>
                           );
                         })}
@@ -169,7 +185,7 @@ export default async function ResultadosContagem({
                       {contagem.turnos.length > 0 && <td className="px-3 py-2">{r.turno ?? "—"}</td>}
                       <td className="px-3 py-2 whitespace-nowrap">{r.executor_nome}</td>
                       {itens.map((i) => (
-                        <Celula key={i.id} v={r.valores.get(i.id)} usaMeta={usaMeta} />
+                        <Celula key={i.id} v={r.valores.get(i.id)} usaMeta={usaMeta} rotulo={contagem.rotulo_falta} />
                       ))}
                       <td className="px-3 py-2 text-slate-600">{r.observacao ?? ""}</td>
                       {podeExcluir && (

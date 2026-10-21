@@ -511,6 +511,8 @@ export interface Contagem {
   turnos: string[];
   usa_meta: boolean;
   rotulo_falta: string;
+  // com meta: pede também quanto a pessoa vai fazer (vem com a sugestão)
+  pede_vai_fazer: boolean;
   publico_qr: boolean;
   ativo: boolean;
   // agenda: vira tarefa no Kanban, com lembrete e resultado no WhatsApp

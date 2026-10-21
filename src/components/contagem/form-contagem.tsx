@@ -13,6 +13,7 @@ export interface ContagemPreencher {
   turnos: string[];
   usa_meta: boolean;
   rotulo_falta: string;
+  pede_vai_fazer?: boolean;
   itens: { id: string; nome: string; unidade_medida: string | null; metas: (number | null)[] | null }[];
 }
 
@@ -43,6 +44,8 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
     turnoInicial && contagem.turnos.includes(turnoInicial) ? turnoInicial : contagem.turnos.length === 1 ? contagem.turnos[0] : "",
   );
   const [qtds, setQtds] = useState<Record<string, string>>({});
+  const [vais, setVais] = useState<Record<string, string>>({});
+  const pedeVai = contagem.usa_meta && !!contagem.pede_vai_fazer;
   const [nome, setNome] = useState("");
   const dia = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaDaSemana(data) : diaDaSemana(hoje);
 
@@ -52,13 +55,15 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
     const q = numero(qtds[item.id]);
     return meta === null || q === null ? null : Math.max(meta - q, 0);
   };
+  // quanto vai fazer: o que a pessoa digitou ou, em branco, a sugestão
+  const vai = (item: ContagemPreencher["itens"][number]) => (pedeVai ? (numero(vais[item.id]) ?? falta(item)) : falta(item));
 
   if (estado && "ok" in estado) {
     const [y, m, d] = data.split("-");
     const linhas = contagem.itens
       .filter((i) => numero(qtds[i.id]) !== null)
       .map((i) => {
-        const f = falta(i);
+        const f = vai(i);
         return `• ${rotuloItem(i)}: ${formatarQtd(numero(qtds[i.id]))}${f ? ` · ${contagem.rotulo_falta.toLowerCase()} ${formatarQtd(f)}` : ""}`;
       });
     const resumo = [
@@ -144,11 +149,12 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
                 </span>
                 {f !== null && (
                   <span className={`block text-sm font-medium ${f > 0 ? "text-red-700" : "text-green-700"}`}>
-                    {f > 0 ? `${contagem.rotulo_falta}: ${formatarQtd(f)}` : "Meta atingida ✓"}
+                    {f > 0 ? `${pedeVai ? "Sugestão" : contagem.rotulo_falta}: ${formatarQtd(f)}` : "Meta atingida ✓"}
                   </span>
                 )}
               </label>
-              <div className="w-24 shrink-0">
+              <div className={pedeVai ? "w-20 shrink-0" : "w-24 shrink-0"}>
+                {pedeVai && <span className="block text-center text-xs text-slate-500">Tem</span>}
                 <Input
                   id={`qtd_${item.id}`}
                   name={`qtd_${item.id}`}
@@ -161,6 +167,22 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
                   onChange={(e) => setQtds((x) => ({ ...x, [item.id]: e.target.value }))}
                 />
               </div>
+              {pedeVai && (
+                <div className="w-20 shrink-0">
+                  <span className="block truncate text-center text-xs text-slate-500">{contagem.rotulo_falta}</span>
+                  <Input
+                    name={`vai_${item.id}`}
+                    inputMode="decimal"
+                    autoComplete="off"
+                    pattern="[0-9]+([.,][0-9]+)?"
+                    aria-label={`${contagem.rotulo_falta}: ${item.nome}`}
+                    className="text-right text-lg"
+                    placeholder={f !== null ? formatarQtd(f) : "0"}
+                    value={vais[item.id] ?? ""}
+                    onChange={(e) => setVais((x) => ({ ...x, [item.id]: e.target.value }))}
+                  />
+                </div>
+              )}
             </li>
           );
         })}

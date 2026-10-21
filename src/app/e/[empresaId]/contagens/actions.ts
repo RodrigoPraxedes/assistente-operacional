@@ -58,6 +58,7 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
     turnos,
     usa_meta: usaMeta,
     rotulo_falta: txt("rotulo_falta")?.slice(0, 30) ?? "Falta",
+    pede_vai_fazer: usaMeta && form.get("pede_vai_fazer") === "on",
     publico_qr: form.get("publico_qr") === "on",
     ativo: form.get("ativo") !== "false",
     agendada,

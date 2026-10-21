@@ -269,6 +269,7 @@ export const SECOES: SecaoGuia[] = [
           "Escolha a unidade, o setor e se ela fica disponível no QR Code da unidade.",
           "Adicione os itens: o nome do produto e a unidade de medida (unidades, varas, pacotes, kg...). Use ↑ e ↓ para mudar a ordem.",
           "Para usar meta, marque Usar meta por dia da semana, dê nome à coluna do que falta (Embalar, Produzir, Repor...) e preencha a meta de cada item em cada dia. Repetir Seg em todos copia a meta de segunda para a semana toda. Dia sem meta fica vazio.",
+          "Com meta, Pedir quanto vai fazer (já vem marcado) põe um segundo campo em cada item, com o nome da coluna (ex.: Embalar), para lançar o que vai ser feito de fato.",
           "Mudar itens e metas vale para as próximas contagens; o histórico não muda. Para parar de usar sem apagar o histórico, mude a situação para Inativa.",
         ],
       },
@@ -290,6 +291,7 @@ export const SECOES: SecaoGuia[] = [
           "Confira a data (vem a de hoje) e escolha o turno.",
           "Digite a quantidade de cada item. Item que não se aplica pode ficar em branco.",
           "Com meta, cada item mostra na hora a meta do dia e quanto falta, em vermelho (ou Meta atingida ✓).",
+          "Se a contagem pede quanto vai fazer, cada item tem dois campos: Tem (o que foi contado) e o da ação (ex.: Embalar), que já mostra a sugestão. Digite o que vai fazer de fato; em branco, vale a sugestão.",
           "Toque em Salvar contagem. Depois de salvo, Enviar resumo no WhatsApp manda as quantidades para o grupo.",
           "O cartão mostra Feito hoje com o turno e a hora de cada envio; no QR aparece o selo verde Feito hoje.",
         ],
@@ -297,7 +299,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Resultados e Excel",
         passos: [
-          "Toque em Resultados no cartão: aparece uma tabela como a planilha do formulário, uma linha por envio e uma coluna por item, com a observação no fim. Com meta, o número vermelho embaixo é quanto faltava.",
+          "Toque em Resultados no cartão: aparece uma tabela como a planilha do formulário, uma linha por envio e uma coluna por item, com a observação no fim. Com meta, o número vermelho embaixo é quanto faltava e o azul é quanto a pessoa disse que vai fazer.",
           "Filtre por período (vem os últimos 30 dias), turno e quem contou, e toque em Filtrar.",
           "Em Ver, escolha Soma por dia para juntar os turnos de cada dia. O número pequeno é a diferença para o dia anterior.",
           "A linha Total soma o período.",

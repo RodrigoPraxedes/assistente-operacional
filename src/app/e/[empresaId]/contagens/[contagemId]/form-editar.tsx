@@ -120,6 +120,18 @@ export function FormEditarContagem({
             <Input name="rotulo_falta" defaultValue={contagem?.rotulo_falta ?? "Falta"} maxLength={30} className="sm:w-60" />
           </Campo>
         )}
+        {usaMeta && (
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="pede_vai_fazer" defaultChecked={contagem?.pede_vai_fazer ?? true} className="mt-1" />
+            <span>
+              Pedir quanto vai fazer
+              <span className="block text-xs text-slate-500">
+                Um segundo campo por item (com o nome da coluna acima) para lançar o que vai ser feito de fato. Vem com a
+                sugestão; em branco, vale a sugestão.
+              </span>
+            </span>
+          </label>
+        )}
       </Cartao>
 
       <Cartao className="space-y-4">
