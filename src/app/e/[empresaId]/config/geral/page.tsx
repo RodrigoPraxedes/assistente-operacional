@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Funcao, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { SeletorPainel } from "@/components/seletor-painel";
 import { Aviso, Botao, Cartao, Etiqueta, Input, Select } from "@/components/ui";
 import {
@@ -14,6 +15,7 @@ import {
   excluirSetor,
   moverStatus,
   salvarCategoria,
+  salvarCentralChamados,
   salvarEmpresa,
   salvarFuncao,
   salvarSetor,
@@ -40,7 +42,8 @@ export default async function ConfigGeral({
     supabase.from("categorias").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("status").select("*").eq("empresa_id", empresaId).order("ordem"),
   ]);
-  const { data: sla } = await supabase.from("empresas").select("sla_chamados, limite_unidades").eq("id", empresaId).single();
+  const { data: sla } = await supabase.from("empresas").select("sla_chamados, limite_unidades, chamados_central_ativo, chamados_central").eq("id", empresaId).single();
+  const { data: membrosAtivos } = await supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome");
   const unidadesAtivas = (unidades as Unidade[] | null)?.filter((u) => u.ativo).length ?? 0;
   const limiteUnidades: number = sla?.limite_unidades ?? 1;
   const prazos = (sla?.sla_chamados ?? {}) as Record<string, number>;
@@ -186,6 +189,34 @@ export default async function ConfigGeral({
               <Input type="number" min={1} name={k} defaultValue={prazos[k] ?? ""} className="w-24" disabled={!pode("config.empresa")} />
             </label>
           ))}
+          {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
+        </form>
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <h2 className="font-medium">Recebedor central de chamados</h2>
+        <p className="text-xs text-slate-500">
+          Com a chave ligada, quem abre o chamado não escolhe o responsável: o chamado cai e avisa os recebedores abaixo, e eles
+          delegam ou compartilham com quem vai acompanhar (se não delegarem, ficam com ele). Desligada, quem abre escolhe.
+        </p>
+        <form action={salvarCentralChamados.bind(null, e)} className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="ativo" defaultChecked={sla?.chamados_central_ativo ?? false} disabled={!pode("config.empresa")} />
+            Centralizar o recebimento de chamados
+          </label>
+          {pode("config.empresa") ? (
+            <SeletorResponsaveis
+              rotulo="Quem recebe"
+              membros={(membrosAtivos ?? []) as { id: string; nome: string }[]}
+              name="recebedores"
+              inicial={(sla?.chamados_central ?? []) as string[]}
+              vazio="Ninguém escolhido"
+            />
+          ) : (
+            <p className="text-sm text-slate-600">
+              {((sla?.chamados_central ?? []) as string[]).map((id) => membrosAtivos?.find((m) => m.id === id)?.nome).filter(Boolean).join(", ") || "Ninguém escolhido"}
+            </p>
+          )}
           {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
         </form>
       </Cartao>
