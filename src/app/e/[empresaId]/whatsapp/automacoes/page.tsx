@@ -147,8 +147,8 @@ export default async function Automacoes({
             <span className="text-sm">
               <span className="font-medium text-slate-900">Resumo do dia</span>
               <span className="block text-slate-500">
-                Uma mensagem por pessoa com o turno de hoje, as tarefas que vencem hoje e as atrasadas. Quem não tem nada no dia não
-                recebe.
+                Uma mensagem por pessoa com o turno de hoje, as tarefas que vencem hoje e as atrasadas. Só recebe quem tem alguma tarefa
+                para hoje ou atrasada: com a agenda livre (só o turno não conta), não vai mensagem.
               </span>
             </span>
           </label>
