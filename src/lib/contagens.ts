@@ -19,6 +19,9 @@ export function diaDaSemana(data: string) {
   return d === 0 ? 7 : d;
 }
 
+// dia seguinte da semana: 1 (seg) ... 7 (dom) → 2 ... 7, 1
+export const diaSeguinte = (dia: number) => (dia % 7) + 1;
+
 // meta do item no dia da semana (1..7); null = sem meta
 export function metaDoDia(metas: (number | null)[] | null | undefined, dia: number) {
   const v = metas?.[dia - 1];

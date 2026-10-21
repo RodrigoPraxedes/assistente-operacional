@@ -10,10 +10,17 @@ import { SeletorRecorrencia } from "@/components/seletor-recorrencia";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 
 type Opcao = { id: string; nome: string };
-type ItemEditavel = { id?: string; chave: string; nome: string; unidade_medida: string; metas: string[] };
+type ItemEditavel = {
+  id?: string;
+  chave: string;
+  nome: string;
+  unidade_medida: string;
+  metas: string[];
+  meta_dia_seguinte: boolean;
+};
 
 let seq = 0;
-const novoItem = (): ItemEditavel => ({ chave: `novo-${++seq}`, nome: "", unidade_medida: "unidades", metas: Array(7).fill("") });
+const novoItem = (): ItemEditavel => ({ chave: `novo-${++seq}`, nome: "", unidade_medida: "unidades", metas: Array(7).fill(""), meta_dia_seguinte: false });
 
 export function FormEditarContagem({
   empresaId,
@@ -49,6 +56,7 @@ export function FormEditarContagem({
           nome: i.nome,
           unidade_medida: i.unidade_medida ?? "",
           metas: Array.from({ length: 7 }, (_, d) => (i.metas?.[d] === null || i.metas?.[d] === undefined ? "" : String(i.metas[d]))),
+          meta_dia_seguinte: i.meta_dia_seguinte ?? false,
         }))
       : [novoItem()],
   );
@@ -243,6 +251,23 @@ export function FormEditarContagem({
                     Repetir Seg em todos
                   </button>
                 </div>
+              )}
+              {usaMeta && (
+                <label className="flex items-start gap-2 pl-5 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={item.meta_dia_seguinte}
+                    onChange={(e) => alterar(item.chave, { meta_dia_seguinte: e.target.checked })}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Meta é para o dia seguinte
+                    <span className="block text-slate-500">
+                      Para o que é preparado hoje para amanhã: digite acima a necessidade de cada dia (ex.: Dom 450) e
+                      quem conta no sábado vê a meta de domingo.
+                    </span>
+                  </span>
+                </label>
               )}
               <div className="flex justify-end gap-3 text-xs">
                 <button type="button" onClick={() => mover(i, -1)} disabled={i === 0} className="disabled:opacity-30" aria-label="Subir">

@@ -535,5 +535,7 @@ export interface ContagemItem {
   ordem: number;
   // 7 posições: 0 = segunda ... 6 = domingo; null = sem meta
   metas: (number | null)[] | null;
+  // item preparado para amanhã: a contagem de hoje usa a meta do dia seguinte
+  meta_dia_seguinte: boolean;
   ativo: boolean;
 }
