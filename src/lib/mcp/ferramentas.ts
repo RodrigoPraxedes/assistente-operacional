@@ -4,6 +4,7 @@ import { hojeIso, horarioTurno, ordenarTurnos, somarDias } from "@/lib/escala";
 import { proximaOcorrencia, descreverRecorrencia } from "@/lib/recorrencia";
 import {
   AUSENCIAS,
+  EVENTOS_PATRIMONIO,
   HORIZONTES,
   ORIGENS,
   PRIORIDADES,
@@ -17,6 +18,7 @@ import {
   type SituacaoPatrimonio,
   type SituacaoPlano,
   type Status,
+  type TipoEventoPatrimonio,
   type TipoEscala,
   type Turno,
 } from "@/lib/types";
@@ -1743,6 +1745,175 @@ const whatsapp_status: Ferramenta = {
   },
 };
 
+const historico_do_equipamento: Ferramenta = {
+  nome: "historico_do_equipamento",
+  titulo: "Histórico do equipamento",
+  descricao:
+    "Histórico de manutenção de um bem do Patrimônio (busca por nome, código, marca ou modelo; vendidos e aposentados também): trajetória (manutenções, trocas de unidade e situação, venda), chamados ligados com solução e custo, total gasto, e ações recorrentes e tarefas ligadas. Filtra por período e por tipo de evento.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      equipamento: { type: "string", description: "Nome, código, marca ou modelo do bem." },
+      de: { type: "string", description: "A partir deste dia (AAAA-MM-DD)." },
+      ate: { type: "string", description: "Até este dia (AAAA-MM-DD)." },
+      tipo_evento: { type: "string", enum: Object.keys(EVENTOS_PATRIMONIO), description: "Só eventos deste tipo na trajetória." },
+    },
+    required: ["equipamento"],
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    const busca = texto(args.equipamento)?.replace(/[%,()]/g, " ");
+    if (!busca) throw new Error("Informe o nome, código, marca ou modelo do equipamento.");
+    const de = dataIso(args.de);
+    const ate = dataIso(args.ate);
+    const tipoEvento = texto(args.tipo_evento) && texto(args.tipo_evento)! in EVENTOS_PATRIMONIO ? texto(args.tipo_evento)! : undefined;
+    const { data: itens, error } = await ctx.supabase
+      .from("equipamentos")
+      .select("id, nome, codigo, marca, modelo, situacao, unidade_id, garantia_ate")
+      .eq("empresa_id", e.empresaId)
+      .or(`nome.ilike.%${busca}%,codigo.ilike.%${busca}%,marca.ilike.%${busca}%,modelo.ilike.%${busca}%`)
+      .order("nome")
+      .limit(4)
+      .returns<{ id: string; nome: string; codigo: string | null; marca: string | null; modelo: string | null; situacao: SituacaoPatrimonio; unidade_id: string | null; garantia_ate: string | null }[]>();
+    if (error) throw new Error("Não consegui buscar o equipamento.");
+    if (!itens?.length) throw new Error(`Nenhum equipamento encontrado para "${busca}".`);
+    const mostrados = itens.slice(0, 3);
+    const ids = mostrados.map((i) => i.id);
+    const agora = Date.now();
+
+    let qe = ctx.supabase
+      .from("patrimonio_eventos")
+      .select("equipamento_id, tipo, data, valor, descricao, situacao_nova, unidade_origem_id, unidade_destino_id, membro_nome")
+      .eq("empresa_id", e.empresaId)
+      .in("equipamento_id", ids)
+      .order("data", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (de) qe = qe.gte("data", de);
+    if (ate) qe = qe.lte("data", ate);
+    if (tipoEvento) qe = qe.eq("tipo", tipoEvento);
+    let qc = ctx.supabase
+      .from("chamados")
+      .select("equipamento_id, numero, prioridade, custo, solucao, created_at, fornecedores(nome), tarefas!inner(titulo, status_id, concluida_em)")
+      .eq("empresa_id", e.empresaId)
+      .in("equipamento_id", ids)
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (de) qc = qc.gte("created_at", janelaDoDia(e.fuso, de).inicio);
+    if (ate) qc = qc.lte("created_at", janelaDoDia(e.fuso, ate).fim);
+    const [{ data: eventos }, { data: chamados }, { data: acoes }, { data: tarefas }] = await Promise.all([
+      qe.returns<
+        {
+          equipamento_id: string;
+          tipo: TipoEventoPatrimonio;
+          data: string;
+          valor: number | null;
+          descricao: string | null;
+          situacao_nova: string | null;
+          unidade_origem_id: string | null;
+          unidade_destino_id: string | null;
+          membro_nome: string | null;
+        }[]
+      >(),
+      qc.returns<
+        {
+          equipamento_id: string;
+          numero: number;
+          prioridade: Prioridade;
+          custo: number | null;
+          solucao: string | null;
+          created_at: string;
+          fornecedores: { nome: string } | null;
+          tarefas: { titulo: string; status_id: string; concluida_em: string | null };
+        }[]
+      >(),
+      ctx.supabase
+        .from("acoes")
+        .select("equipamento_id, nome, recorrencia, horario, data_inicial, data_final, ativo, responsaveis")
+        .eq("empresa_id", e.empresaId)
+        .in("equipamento_id", ids)
+        .returns<{ equipamento_id: string; nome: string; recorrencia: string | null; horario: string; data_inicial: string; data_final: string | null; ativo: boolean; responsaveis: string[] }[]>(),
+      ctx.supabase
+        .from("tarefas")
+        .select(`${CAMPOS_TAREFA}, equipamento_id`)
+        .eq("empresa_id", e.empresaId)
+        .in("equipamento_id", ids)
+        .neq("origem", "chamado")
+        .order("prazo", { ascending: false, nullsFirst: false })
+        .limit(100)
+        .returns<(TarefaLinha & { equipamento_id: string })[]>(),
+    ]);
+    const soma = (xs: (number | null)[]) => xs.reduce<number>((t, v) => t + Number(v ?? 0), 0);
+    return {
+      empresa: e.empresa,
+      periodo: de || ate ? `${de ? formatarDia(de) : "início"} a ${ate ? formatarDia(ate) : "hoje"}` : "tudo",
+      equipamentos_encontrados: itens.length,
+      observacao: itens.length > 3 ? "Mais de 3 equipamentos combinam; mostrando os 3 primeiros. Refine a busca (nome completo ou código)." : undefined,
+      equipamentos: mostrados.map((i) => {
+        const evs = (eventos ?? []).filter((x) => x.equipamento_id === i.id);
+        const chs = (chamados ?? []).filter((x) => x.equipamento_id === i.id);
+        const custoEventos = soma(evs.filter((x) => x.tipo === "manutencao").map((x) => x.valor));
+        const custoChamados = soma(chs.map((x) => x.custo));
+        return {
+          equipamento: [i.nome, i.codigo].filter(Boolean).join(" · "),
+          marca_modelo: [i.marca, i.modelo].filter(Boolean).join(" ") || undefined,
+          situacao: SITUACOES_PATRIMONIO[i.situacao]?.rotulo ?? i.situacao,
+          unidade: n.unidade(i.unidade_id) ?? undefined,
+          garantia_ate: i.garantia_ate ? formatarDia(i.garantia_ate) : undefined,
+          manutencoes_registradas: evs.filter((x) => x.tipo === "manutencao").length,
+          chamados_total: chs.length,
+          gasto_com_manutencao: {
+            eventos_de_manutencao: custoEventos,
+            custo_dos_chamados: custoChamados,
+            observacao: "Os dois valores podem se sobrepor se o mesmo conserto foi lançado nos dois lugares; não somei.",
+          },
+          trajetoria: evs.map((x) => ({
+            data: formatarDia(x.data),
+            evento: EVENTOS_PATRIMONIO[x.tipo] ?? x.tipo,
+            descricao: x.descricao || undefined,
+            valor: x.valor ?? undefined,
+            situacao_nova: x.situacao_nova ? (SITUACOES_PATRIMONIO[x.situacao_nova as SituacaoPatrimonio]?.rotulo ?? x.situacao_nova) : undefined,
+            de_unidade: n.unidade(x.unidade_origem_id) ?? undefined,
+            para_unidade: n.unidade(x.unidade_destino_id) ?? undefined,
+            registrado_por: x.membro_nome ?? undefined,
+          })),
+          chamados: chs.map((c) => ({
+            numero: c.numero,
+            titulo: c.tarefas.titulo,
+            prioridade: PRIORIDADES[c.prioridade]?.rotulo ?? c.prioridade,
+            situacao: n.statusNome(c.tarefas.status_id),
+            aberto_em: formatarDataHora(c.created_at, e.fuso),
+            concluido_em: c.tarefas.concluida_em ? formatarDataHora(c.tarefas.concluida_em, e.fuso) : undefined,
+            dias_aberto: c.tarefas.concluida_em ? undefined : Math.floor((agora - new Date(c.created_at).getTime()) / DIA),
+            prestador: c.fornecedores?.nome,
+            solucao: c.solucao || undefined,
+            custo: c.custo ?? undefined,
+          })),
+          acoes_recorrentes: (acoes ?? [])
+            .filter((a) => a.equipamento_id === i.id)
+            .map((a) => ({
+              acao: a.nome,
+              situacao: a.ativo ? "ativa" : "pausada",
+              repete: a.recorrencia ? descreverRecorrencia(a.recorrencia) : "não repete",
+              horario: a.horario.slice(0, 5),
+              responsaveis: n.pessoas(a.responsaveis),
+              proxima: a.ativo
+                ? (() => {
+                    const p = proximaOcorrencia({ regra: a.recorrencia, horario: a.horario, inicio: a.data_inicial, fim: a.data_final, fuso: e.fuso });
+                    return p ? formatarDataHora(p.toISOString(), e.fuso) : undefined;
+                  })()
+                : undefined,
+            })),
+          tarefas_ligadas: (tarefas ?? []).filter((t) => t.equipamento_id === i.id).map((t) => descreverTarefa(t, n, e.fuso, agora)),
+        };
+      }),
+    };
+  },
+};
+
 export const FERRAMENTAS: Ferramenta[] = [
   minhas_empresas,
   resumo_do_dia,
@@ -1766,4 +1937,5 @@ export const FERRAMENTAS: Ferramenta[] = [
   alertas_cadastrados,
   chamados_do_prestador,
   whatsapp_status,
+  historico_do_equipamento,
 ];
