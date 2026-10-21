@@ -33,7 +33,7 @@ export function textoFinal(m: { empresa_id: string; texto: string; origem: strin
   if (m.com_link === false) return m.texto;
   if (m.origem === "checklist" && m.origem_id)
     return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/checklists/execucoes/${m.origem_id}`)}`;
-  if ((m.origem === "tarefa" || m.origem === "conclusao" || m.origem === "lembrete") && m.origem_id) return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`)}`;
+  if ((m.origem === "tarefa" || m.origem === "conclusao" || m.origem === "lembrete" || m.origem === "prazo") && m.origem_id) return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`)}`;
   if (m.origem === "resumo") return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas`)}`;
   return m.texto;
 }
@@ -187,7 +187,7 @@ const INTERVALO_MIN_MS = 3_000;
 const INTERVALO_MAX_MS = 7_000;
 
 // Avisos que podem esperar (tarefa atribuída e conclusão); lembretes e resumos têm hora própria
-const ORIGENS_SEM_MADRUGADA = new Set(["tarefa", "conclusao"]);
+const ORIGENS_SEM_MADRUGADA = new Set(["tarefa", "conclusao", "prazo"]);
 const SILENCIO_INICIO_H = 22;
 const SILENCIO_FIM_H = 8;
 
