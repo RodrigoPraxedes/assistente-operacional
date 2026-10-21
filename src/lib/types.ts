@@ -498,3 +498,29 @@ export interface Rotina {
   unidade_id: string | null;
   ativo: boolean;
 }
+
+export interface Contagem {
+  id: string;
+  empresa_id: string;
+  nome: string;
+  descricao: string | null;
+  unidade_id: string | null;
+  setor_id: string | null;
+  // vazio = sem turno
+  turnos: string[];
+  usa_meta: boolean;
+  rotulo_falta: string;
+  publico_qr: boolean;
+  ativo: boolean;
+}
+
+export interface ContagemItem {
+  id: string;
+  contagem_id: string;
+  nome: string;
+  unidade_medida: string | null;
+  ordem: number;
+  // 7 posições: 0 = segunda ... 6 = domingo; null = sem meta
+  metas: (number | null)[] | null;
+  ativo: boolean;
+}
