@@ -230,7 +230,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Preencher",
         passos: [
           "No app: toque em Preencher no cartão do check-list, ou no botão azul de lista do cartão em Tarefas (também há Abrir check-list dentro da tarefa).",
-          "Pelo QR Code: aponte a câmera do celular para o QR da unidade e escolha o check-list.",
+          "Pelo QR Code: aponte a câmera do celular para o QR da unidade. A página separa por tipo (Chamado de manutenção, Check-lists e Contagens): em colunas no computador e em lista no celular. Use a barra Pesquisar para achar o item pelo nome.",
           "Os check-lists já preenchidos hoje mostram o selo verde Feito hoje às HH:MM. É só um aviso: dá para abrir e preencher de novo no mesmo dia.",
           "Responda os itens, tire as fotos e toque em Salvar e enviar.",
           "As fotos são tiradas na hora: o botão de foto abre a câmera e uma foto antiga (de mais de 10 minutos, da galeria) é recusada.",
