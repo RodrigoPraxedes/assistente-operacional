@@ -144,17 +144,19 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
                   </span>
                 )}
               </label>
-              <Input
-                id={`qtd_${item.id}`}
-                name={`qtd_${item.id}`}
-                inputMode="decimal"
-                autoComplete="off"
-                pattern="[0-9]+([.,][0-9]+)?"
-                className="w-24 text-right text-lg"
-                placeholder="0"
-                value={qtds[item.id] ?? ""}
-                onChange={(e) => setQtds((x) => ({ ...x, [item.id]: e.target.value }))}
-              />
+              <div className="w-24 shrink-0">
+                <Input
+                  id={`qtd_${item.id}`}
+                  name={`qtd_${item.id}`}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  pattern="[0-9]+([.,][0-9]+)?"
+                  className="text-right text-lg"
+                  placeholder="0"
+                  value={qtds[item.id] ?? ""}
+                  onChange={(e) => setQtds((x) => ({ ...x, [item.id]: e.target.value }))}
+                />
+              </div>
             </li>
           );
         })}

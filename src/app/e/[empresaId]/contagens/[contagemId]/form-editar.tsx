@@ -128,14 +128,15 @@ export function FormEditarContagem({
                   className="min-w-40 flex-1"
                   maxLength={120}
                 />
-                <Input
-                  value={item.unidade_medida}
-                  onChange={(e) => alterar(item.chave, { unidade_medida: e.target.value })}
-                  placeholder="unidades, varas, kg..."
-                  className="w-40"
-                  maxLength={40}
-                  aria-label="Unidade de medida"
-                />
+                <div className="w-40 shrink-0">
+                  <Input
+                    value={item.unidade_medida}
+                    onChange={(e) => alterar(item.chave, { unidade_medida: e.target.value })}
+                    placeholder="unidades, varas, kg..."
+                    maxLength={40}
+                    aria-label="Unidade de medida"
+                  />
+                </div>
               </div>
               {usaMeta && (
                 <div className="flex flex-wrap items-end gap-1 pl-5">
