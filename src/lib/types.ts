@@ -103,6 +103,8 @@ export interface Tarefa {
   todos_concluem: boolean;
   // só conclui com foto tirada na hora (tarefa_fotos)
   exige_foto: boolean;
+  // item do Patrimônio ligado (tarefas de ação recorrente)
+  equipamento_id: string | null;
   criado_por: string | null;
   // privado: só quem criou e o responsável veem
   privado: boolean;
@@ -212,6 +214,7 @@ export interface Acao {
   responsaveis: string[];
   cientes: string[];
   todos_concluem: boolean;
+  equipamento_id: string | null;
   nome: string;
   descricao: string | null;
   data_inicial: string;

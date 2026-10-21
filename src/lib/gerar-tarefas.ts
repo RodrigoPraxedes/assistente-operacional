@@ -30,6 +30,7 @@ interface Fonte {
   // ação/alerta privado: as tarefas nascem privadas, de quem criou
   privado?: boolean;
   criado_por?: string | null;
+  equipamento_id?: string | null;
   titulo: string;
   descricao?: string | null | ((m: { quando: Date; prazo: Date }) => string);
   // check-list: ao regerar, tarefas ainda abertas do mesmo dia mudam de horário em vez de duplicar
@@ -112,7 +113,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
   let q = admin
     .from("acoes")
     .select(
-      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, cientes, todos_concluem, nome, descricao, data_inicial, data_final, horario, prazo_minutos, recorrencia, privado, criado_por, empresas(fuso_horario)",
+      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, cientes, todos_concluem, equipamento_id, nome, descricao, data_inicial, data_final, horario, prazo_minutos, recorrencia, privado, criado_por, empresas(fuso_horario)",
     )
     .eq("ativo", true);
   if (acaoId) q = q.eq("id", acaoId);
@@ -127,6 +128,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
       responsaveis: string[];
       cientes: string[];
       todos_concluem: boolean;
+      equipamento_id: string | null;
       nome: string;
       descricao: string | null;
       data_inicial: string;
@@ -151,6 +153,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
     todos_concluem: a.todos_concluem,
     privado: a.privado,
     criado_por: a.criado_por,
+    equipamento_id: a.equipamento_id,
     titulo: a.nome,
     descricao: a.descricao,
     momentos: porRegra(
@@ -315,6 +318,7 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           todos_concluem: f.todos_concluem ?? true,
           privado: f.privado ?? false,
           criado_por: f.criado_por ?? null,
+          equipamento_id: f.equipamento_id ?? null,
           titulo: f.titulo,
           descricao: typeof f.descricao === "function" ? f.descricao(m) : (f.descricao ?? null),
           origem: f.origem,
@@ -405,16 +409,15 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
     const { error: e } = await admin.from("tarefas").insert(t);
     if (!e) criadas++;
     else if (e.code === "23505") {
-      // ao salvar uma ação, a ocorrência já existente (ainda aberta) ganha o prazo novo
+      // ao salvar uma ação, a ocorrência já existente (ainda aberta) ganha o prazo e o equipamento novos
       if (filtro?.acaoId && t.origem === "acao") {
         let q = admin
           .from("tarefas")
-          .update({ prazo: t.prazo })
+          .update({ prazo: t.prazo, equipamento_id: t.equipamento_id })
           .eq("origem", "acao")
           .eq("origem_id", t.origem_id)
           .eq("ocorrencia_em", t.ocorrencia_em)
-          .in("status_id", statusAbertos)
-          .neq("prazo", t.prazo);
+          .in("status_id", statusAbertos);
         q = t.unidade_id ? q.eq("unidade_id", t.unidade_id) : q.is("unidade_id", null);
         const { error: e2 } = await q;
         if (e2) console.error("Erro ao ajustar prazo da tarefa", e2.message);

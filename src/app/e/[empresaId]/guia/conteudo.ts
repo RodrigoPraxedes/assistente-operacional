@@ -276,6 +276,15 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Ligar a um equipamento ou móvel",
+        passos: [
+          "No campo Equipamento ou móvel da ação, pesquise e escolha um item do Patrimônio (opcional). Serve para limpeza, revisão, troca de filtro e outras rotinas de um item.",
+          "As tarefas geradas levam o nome do item (com link para ele) no quadro, na lista e no detalhe, e a mensagem do WhatsApp também o cita. A lista de Ações mostra o item embaixo do nome e a pesquisa acha ações pelo nome dele.",
+          "No item do Patrimônio aparece o cartão Ações recorrentes, com as ações ligadas e as últimas tarefas concluídas.",
+          "Itens vendidos ou aposentados não aparecem para novas ligações.",
+        ],
+      },
+      {
         titulo: "Criar várias parecidas",
         passos: [
           "Com o formulário preenchido, toque em Salvar e criar nova a partir desta: a ação é salva e abre uma nova com a mesma repetição, horário, datas, prazo, responsáveis, unidade, setor, categoria, visibilidade e situação.",
@@ -462,6 +471,7 @@ export const SECOES: SecaoGuia[] = [
           "Use a busca no alto da lista: ela filtra enquanto você digita (nome, código, marca ou modelo), junto com os filtros de tipo, situação e unidade.",
           "O item mostra o gasto total com manutenção e o aviso de garantia vencida.",
           "O botão Abrir chamado no item já abre o chamado com o equipamento escolhido.",
+          "Ações recorrentes ligadas ao item (e as últimas tarefas concluídas) aparecem no cartão Ações recorrentes do item.",
           "Compartilhar PDF, no item, gera um arquivo com foto, dados e trajetória para enviar a quem não tem acesso ao sistema. Os valores financeiros só entram se você marcar a opção. No celular abre o compartilhamento (WhatsApp, e-mail); no computador baixa o arquivo.",
           "Na lista, cada item mostra uma miniatura da foto à esquerda para facilitar a identificação; itens sem foto mostram um ícone de caixa.",
           "Também dá para importar o patrimônio por planilha, com o histórico de manutenções.",

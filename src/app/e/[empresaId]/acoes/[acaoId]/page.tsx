@@ -20,7 +20,7 @@ export default async function EditarAcao({
   // modelo para "criar nova a partir desta": busca a ação de origem
   const origemId = novo ? copiar : undefined;
 
-  const [{ data: acao }, { data: unidades }, { data: setores }, { data: categorias }, { data: membros }] = await Promise.all([
+  const [{ data: acao }, { data: unidades }, { data: setores }, { data: categorias }, { data: membros }, { data: equipamentos }] = await Promise.all([
     novo && !origemId
       ? Promise.resolve({ data: null })
       : supabase.from("acoes").select("*").eq("id", origemId ?? acaoId).eq("empresa_id", empresaId).maybeSingle(),
@@ -28,6 +28,7 @@ export default async function EditarAcao({
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
     supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+    supabase.from("equipamentos").select("id, nome, ativo").eq("empresa_id", empresaId).order("nome"),
   ]);
   if ((!novo || origemId) && !acao) notFound();
 
@@ -50,6 +51,8 @@ export default async function EditarAcao({
         acao={novo ? null : (acao as Acao | null)}
         modelo={origemId ? (acao as Acao) : null}
         hoje={hoje}
+        // itens baixados só aparecem se já estiverem ligados a esta ação
+        equipamentos={(equipamentos ?? []).filter((e) => e.ativo || e.id === acao?.equipamento_id).map(({ id, nome, ativo }) => ({ id, nome: ativo ? nome : `${nome} (baixado)` }))}
         unidades={unidades ?? []}
         setores={setores ?? []}
         categorias={categorias ?? []}
