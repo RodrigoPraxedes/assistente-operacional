@@ -87,9 +87,9 @@ export default async function ResultadosContagem({
             </Select>
           </label>
         )}
-        <label className="space-y-1">
+        <label className="w-36 space-y-1">
           <span className="block text-xs text-slate-500">Quem contou</span>
-          <Input name="quem" defaultValue={filtros.quem} placeholder="Nome" className="w-36" />
+          <Input name="quem" defaultValue={filtros.quem} placeholder="Nome" />
         </label>
         <label className="space-y-1">
           <span className="block text-xs text-slate-500">Ver</span>
