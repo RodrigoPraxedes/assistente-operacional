@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Funcao, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
+import { SeletorPainel } from "@/components/seletor-painel";
 import { Aviso, Botao, Cartao, Etiqueta, Input, Select } from "@/components/ui";
 import {
   alternarFuncao,
@@ -105,42 +106,47 @@ export default async function ConfigGeral({
       <Cartao className="space-y-3">
         <h2 className="font-medium">Status do Kanban</h2>
         <p className="text-xs text-slate-500">
-          O nome e a cor são livres. O tipo diz ao sistema o que o status significa (aberto, encerrado...) para calcular
+          Escolha o status na caixa para editar. O nome e a cor são livres. O tipo diz ao sistema o que o status significa (aberto, encerrado...) para calcular
           atrasos e relatórios. O módulo limita onde o status aparece (ex.: &quot;Aguardando peça&quot; só em Chamados). Adiar sempre pede uma nova data e permite retornar ao status anterior.
         </p>
-        <ul className="space-y-2">
-          {(status as Status[] | null)?.map((s, i, lista) => (
-            <li key={s.id} className="flex flex-wrap items-center gap-2 text-sm">
-              <form action={salvarStatus.bind(null, e)} className="flex flex-1 flex-wrap items-center gap-2">
-                <input type="hidden" name="id" value={s.id} />
-                <input type="color" name="cor" defaultValue={s.cor} className="h-8 w-8 rounded" disabled={!pode("config.status")} />
-                <Input name="nome" defaultValue={s.nome} className="w-36 flex-1" disabled={!pode("config.status")} />
-                <Select name="tipo" defaultValue={s.tipo} className="w-36" disabled={!pode("config.status")}>
-                  {(Object.keys(TIPOS_STATUS) as TipoStatus[]).map((t) => (
-                    <option key={t} value={t}>
-                      {TIPOS_STATUS[t]}
-                    </option>
-                  ))}
-                </Select>
-                {seletorModulo(s.modulo, !pode("config.status"))}
-                {pode("config.status") && <Botao variante="secundario" className="px-2 py-1">Salvar</Botao>}
-              </form>
-              {pode("config.status") && (
-                <div className="flex gap-1">
-                  <form action={moverStatus.bind(null, e, s.id, -1)}>
-                    <button disabled={i === 0} className="px-1 text-slate-500 disabled:opacity-30" title="Subir">↑</button>
-                  </form>
-                  <form action={moverStatus.bind(null, e, s.id, 1)}>
-                    <button disabled={i === lista.length - 1} className="px-1 text-slate-500 disabled:opacity-30" title="Descer">↓</button>
-                  </form>
-                  <form action={alternarStatus.bind(null, e, s.id, !s.ativo)}>
-                    <button className="px-1 text-xs text-slate-500">{s.ativo ? "Desativar" : "Ativar"}</button>
-                  </form>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+        <SeletorPainel
+          rotulo="Status"
+          itens={((status as Status[] | null) ?? []).map((s, i, lista) => ({
+            id: s.id,
+            rotulo: `${i + 1}. ${s.nome}${s.ativo ? "" : " (inativo)"}`,
+            painel: (
+              <div className="space-y-3 text-sm">
+                <form action={salvarStatus.bind(null, e)} className="flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="id" value={s.id} />
+                  <input type="color" name="cor" defaultValue={s.cor} className="h-8 w-8 rounded" disabled={!pode("config.status")} />
+                  <Input name="nome" defaultValue={s.nome} className="w-36 flex-1" disabled={!pode("config.status")} />
+                  <Select name="tipo" defaultValue={s.tipo} className="w-36" disabled={!pode("config.status")}>
+                    {(Object.keys(TIPOS_STATUS) as TipoStatus[]).map((t) => (
+                      <option key={t} value={t}>
+                        {TIPOS_STATUS[t]}
+                      </option>
+                    ))}
+                  </Select>
+                  {seletorModulo(s.modulo, !pode("config.status"))}
+                  {pode("config.status") && <Botao variante="secundario" className="px-2 py-1">Salvar</Botao>}
+                </form>
+                {pode("config.status") && (
+                  <div className="flex gap-3">
+                    <form action={moverStatus.bind(null, e, s.id, -1)}>
+                      <button disabled={i === 0} className="text-slate-500 disabled:opacity-30">↑ Subir</button>
+                    </form>
+                    <form action={moverStatus.bind(null, e, s.id, 1)}>
+                      <button disabled={i === lista.length - 1} className="text-slate-500 disabled:opacity-30">↓ Descer</button>
+                    </form>
+                    <form action={alternarStatus.bind(null, e, s.id, !s.ativo)}>
+                      <button className="text-slate-500">{s.ativo ? "Desativar" : "Ativar"}</button>
+                    </form>
+                  </div>
+                )}
+              </div>
+            ),
+          }))}
+        />
         {pode("config.status") && (
           <form action={salvarStatus.bind(null, e)} className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
             <input type="color" name="cor" defaultValue="#0891b2" className="h-9 w-9 rounded" />
