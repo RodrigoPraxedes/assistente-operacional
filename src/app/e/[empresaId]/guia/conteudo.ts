@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CalendarSync,
   ChartGantt,
+  ClipboardList,
   LayoutDashboard,
   ListChecks,
   MessageCircle,
@@ -54,6 +55,7 @@ export const SECOES: SecaoGuia[] = [
           "Para quem vai entrar no app, preencha o e-mail. Para quem vai preencher check-list pelo QR Code, crie um PIN de 4 dígitos.",
           "Configurações › Perfis de acesso: confira o que cada perfil pode fazer (já vêm Gestor, Líder de setor e Colaborador).",
           "Check-lists: monte os check-lists da rotina com horário, responsável e repetição.",
+          "Contagens: cadastre as contagens de produtos (o que antes ia num formulário do Google).",
           "Configurações › Geral › unidade › QR Code e detalhes: imprima o QR Code e cole no local de trabalho.",
           "Escalas: cadastre os turnos e monte a semana da equipe.",
           "WhatsApp: conecte um número e ligue as automações que quiser.",
@@ -248,6 +250,61 @@ export const SECOES: SecaoGuia[] = [
     dicas: [
       "Editar os itens não muda os check-lists que já foram preenchidos.",
       "Excluir um check-list mantém os preenchimentos no histórico; só as tarefas em aberto dele somem.",
+    ],
+  },
+  {
+    slug: "contagens",
+    titulo: "Contagens",
+    icone: ClipboardList,
+    resumo: "Quantidades por turno: produtos, produção, retiradas, embalados.",
+    tela: "/contagens",
+    paraQue:
+      "Uma contagem registra quanto há de cada produto, como a contagem da churrasqueira no início do turno, a produção do dia, as retiradas (perda, doação, almoço da equipe) ou os potes embalados. Substitui o formulário do Google: a equipe preenche pelo app ou pelo QR Code, e o histórico fica guardado para consultar, comparar e baixar em Excel. Com meta, o app já mostra quanto falta de cada item.",
+    topicos: [
+      {
+        titulo: "Montar uma contagem",
+        passos: [
+          "Toque em Nova contagem e dê um nome (ex.: Contagem da churrasqueira).",
+          "Em Instrução, diga quando contar (ex.: no início do turno). Em Turnos, escreva os turnos separados por vírgula (ex.: Dia, Noite) ou deixe vazio.",
+          "Escolha a unidade, o setor e se ela fica disponível no QR Code da unidade.",
+          "Adicione os itens: o nome do produto e a unidade de medida (unidades, varas, pacotes, kg...). Use ↑ e ↓ para mudar a ordem.",
+          "Para usar meta, marque Usar meta por dia da semana, dê nome à coluna do que falta (Embalar, Produzir, Repor...) e preencha a meta de cada item em cada dia. Repetir Seg em todos copia a meta de segunda para a semana toda. Dia sem meta fica vazio.",
+          "Mudar itens e metas vale para as próximas contagens; o histórico não muda. Para parar de usar sem apagar o histórico, mude a situação para Inativa.",
+        ],
+      },
+      {
+        titulo: "Contar",
+        passos: [
+          "No app: em Contagens, toque em Contar no cartão. Pelo QR Code: aponte a câmera para o QR da unidade e escolha a contagem em Contagens (a pessoa digita o nome, sem PIN).",
+          "Confira a data (vem a de hoje) e escolha o turno.",
+          "Digite a quantidade de cada item. Item que não se aplica pode ficar em branco.",
+          "Com meta, cada item mostra na hora a meta do dia e quanto falta, em vermelho (ou Meta atingida ✓).",
+          "Toque em Salvar contagem. Depois de salvo, Enviar resumo no WhatsApp manda as quantidades para o grupo.",
+          "O cartão mostra Feito hoje com o turno e a hora de cada envio; no QR aparece o selo verde Feito hoje.",
+        ],
+      },
+      {
+        titulo: "Resultados e Excel",
+        passos: [
+          "Toque em Resultados no cartão: aparece uma tabela como a planilha do formulário, uma linha por envio e uma coluna por item, com a observação no fim. Com meta, o número vermelho embaixo é quanto faltava.",
+          "Filtre por período (vem os últimos 30 dias), turno e quem contou, e toque em Filtrar.",
+          "Em Ver, escolha Soma por dia para juntar os turnos de cada dia. O número pequeno é a diferença para o dia anterior.",
+          "A linha Total soma o período.",
+          "Baixar Excel gera a planilha do período filtrado, no mesmo formato das respostas do Google Forms.",
+          "Quem pode editar contagens vê Apagar em cada linha, para tirar um envio errado ou repetido.",
+        ],
+      },
+      {
+        titulo: "Comparar contagens",
+        passos: [
+          "Em Contagens, toque em Comparar e marque itens de contagens diferentes, por exemplo o frango assado da contagem, o frango para assar da produção e o frango de perda da retirada.",
+          "Escolha o período e toque em Comparar: cada item vira uma coluna, somada por dia, com o total no fim.",
+        ],
+      },
+    ],
+    dicas: [
+      "Contagem não cria tarefa. Para cobrar com horário e responsável, crie uma Ação com o mesmo horário.",
+      "Quem pode montar check-lists também monta contagens; quem vê check-lists preenchidos também vê os resultados. Isso pode ser mudado em Configurações › Perfis de acesso.",
     ],
   },
   {
