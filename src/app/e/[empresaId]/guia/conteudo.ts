@@ -148,6 +148,14 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Editar uma tarefa já criada",
+        passos: [
+          "Abra a tarefa e toque em Editar título, descrição e prazo (aparece para quem tem a permissão Editar tarefas no perfil).",
+          "Mude o que precisar, por exemplo puxar o prazo para hoje, e toque em Salvar alterações. A mudança de prazo fica registrada no histórico, com quem mudou. Não há aviso novo no WhatsApp.",
+          "Tarefa concluída não muda mais de status, e não dá para editar tarefa concluída ou cancelada. Tarefas de ação recorrente mudam só aquela ocorrência (a ação continua igual). Check-lists, manutenções e etapas de projeto são editados na tela do próprio módulo.",
+        ],
+      },
+      {
         titulo: "Tarefa que pede foto",
         passos: [
           "O cartão ganha a etiqueta Pede foto e a tarefa só vai para Concluído com uma foto.",

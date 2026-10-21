@@ -220,7 +220,7 @@ export function Kanban({
     const atual = status.find((s) => s.id === t.status_id);
     return (
       <div className="flex items-center gap-2">
-        {podeMover ? (
+        {podeMover && !t.concluida_em ? (
           <select
             aria-label="Mover para"
             value={t.status_id}
@@ -354,9 +354,9 @@ export function Kanban({
                     return (
                       <article
                         key={t.id}
-                        draggable={podeMover && mouse}
+                        draggable={podeMover && mouse && !t.concluida_em}
                         onDragStart={() => setArrastando(t.id)}
-                        onTouchStart={(e) => segurar(e, t.id)}
+                        onTouchStart={(e) => !t.concluida_em && segurar(e, t.id)}
                         onContextMenu={(e) => toque?.id === t.id && e.preventDefault()}
                         className={`select-none rounded-lg border p-3 text-sm shadow-sm [-webkit-touch-callout:none] ${atrasada(t) ? "border-2 border-l-[6px] border-red-500 bg-red-50" : "border-slate-200 bg-superficie"} ${podeMover ? "cursor-grab" : ""} ${toque?.id === t.id ? "opacity-40" : ""}`}
                       >
