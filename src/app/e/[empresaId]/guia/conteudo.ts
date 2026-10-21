@@ -628,7 +628,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Empresa: nome e fuso horário (todas as datas do app seguem esse fuso).",
           "Unidades: cada loja ou endereço. Em QR Code e detalhes você imprime o QR da unidade. Se ele vazou, Gerar novo QR faz o antigo parar de funcionar.",
-          "Status do Kanban: escolha o status na caixa de seleção para ver só as configurações dele (nome, cor, tipo, módulo, subir/descer e desativar). Dá para criar status de um módulo só, como \"Aguardando peça\" nas manutenções.",
+          "Status do Kanban: escolha o status na caixa de seleção para ver só as configurações dele (nome, cor, tipo, módulo, subir/descer e desativar). Para criar um, escolha \"+ Novo status\" na mesma caixa. Dá para criar status de um módulo só, como \"Aguardando peça\" nas manutenções.",
           "Prazos dos chamados: quantas horas cada prioridade tem para ser atendida.",
           "Funções: quem responde por cada atividade, sem citar a pessoa (Caixa, Cozinheiro, Líder de salão...). Servem para as Rotinas e podem ser ligadas a cada colaborador. Clique no nome para ativar ou desativar; excluir deixa colaboradores e rotinas dela sem função.",
           "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado).",

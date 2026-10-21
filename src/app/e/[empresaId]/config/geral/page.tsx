@@ -106,12 +106,13 @@ export default async function ConfigGeral({
       <Cartao className="space-y-3">
         <h2 className="font-medium">Status do Kanban</h2>
         <p className="text-xs text-slate-500">
-          Escolha o status na caixa para editar. O nome e a cor são livres. O tipo diz ao sistema o que o status significa (aberto, encerrado...) para calcular
+          Escolha o status na caixa para editar, ou &quot;+ Novo status&quot; para criar. O nome e a cor são livres. O tipo diz ao sistema o que o status significa (aberto, encerrado...) para calcular
           atrasos e relatórios. O módulo limita onde o status aparece (ex.: &quot;Aguardando peça&quot; só em Chamados). Adiar sempre pede uma nova data e permite retornar ao status anterior.
         </p>
         <SeletorPainel
           rotulo="Status"
-          itens={((status as Status[] | null) ?? []).map((s, i, lista) => ({
+          itens={[
+            ...((status as Status[] | null) ?? []).map((s, i, lista) => ({
             id: s.id,
             rotulo: `${i + 1}. ${s.nome}${s.ativo ? "" : " (inativo)"}`,
             painel: (
@@ -145,23 +146,32 @@ export default async function ConfigGeral({
                 )}
               </div>
             ),
-          }))}
+          })),
+            ...(pode("config.status")
+              ? [
+                  {
+                    id: "novo",
+                    rotulo: "+ Novo status",
+                    painel: (
+                      <form action={salvarStatus.bind(null, e)} className="flex flex-wrap gap-2">
+              <input type="color" name="cor" defaultValue="#0891b2" className="h-9 w-9 rounded" />
+              <Input name="nome" placeholder="Novo status (ex.: Aguardando peça)" required className="flex-1" />
+              <Select name="tipo" defaultValue="em_andamento" className="w-36">
+                {(Object.keys(TIPOS_STATUS) as TipoStatus[]).map((t) => (
+                  <option key={t} value={t}>
+                    {TIPOS_STATUS[t]}
+                  </option>
+                ))}
+              </Select>
+              {seletorModulo(null, false)}
+              <Botao variante="secundario">Adicionar</Botao>
+                      </form>
+                    ),
+                  },
+                ]
+              : []),
+          ]}
         />
-        {pode("config.status") && (
-          <form action={salvarStatus.bind(null, e)} className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-            <input type="color" name="cor" defaultValue="#0891b2" className="h-9 w-9 rounded" />
-            <Input name="nome" placeholder="Novo status (ex.: Aguardando peça)" required className="flex-1" />
-            <Select name="tipo" defaultValue="em_andamento" className="w-36">
-              {(Object.keys(TIPOS_STATUS) as TipoStatus[]).map((t) => (
-                <option key={t} value={t}>
-                  {TIPOS_STATUS[t]}
-                </option>
-              ))}
-            </Select>
-            {seletorModulo(null, false)}
-            <Botao variante="secundario">Adicionar</Botao>
-          </form>
-        )}
       </Cartao>
 
       <Cartao className="space-y-3">
