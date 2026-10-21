@@ -106,7 +106,7 @@ export default async function ConfigGeral({
       <Cartao className="space-y-3">
         <h2 className="font-medium">Status do Kanban</h2>
         <p className="text-xs text-slate-500">
-          Escolha o status na caixa para editar, ou "+ Novo status" para criar. O nome e a cor são livres. O tipo diz ao sistema o que o status significa (aberto, encerrado...) para calcular
+          Escolha o status na caixa para editar, ou &quot;+ Novo status&quot; para criar. O nome e a cor são livres. O tipo diz ao sistema o que o status significa (aberto, encerrado...) para calcular
           atrasos e relatórios. O módulo limita onde o status aparece (ex.: &quot;Aguardando peça&quot; só em Chamados). Adiar sempre pede uma nova data e permite retornar ao status anterior.
         </p>
         <SeletorPainel
