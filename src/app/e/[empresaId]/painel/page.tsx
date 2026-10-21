@@ -127,7 +127,7 @@ export default async function PaginaPainel({
         .eq("empresa_id", empresaId)
         .in("status_id", idsPendentes)
         .or(`ocorrencia_em.is.null,ocorrencia_em.lte.${fimHoje}`)
-        .or(`origem.neq.checklist,ocorrencia_em.lte.${daquiUmaHora}`)
+        .or(`origem.not.in.(checklist,contagem),ocorrencia_em.lte.${daquiUmaHora}`)
         .limit(2000),
     ).returns<TarefaPainel[]>(),
     deMim(

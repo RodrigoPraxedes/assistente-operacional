@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { ListChecks, MessageCircle } from "lucide-react";
-import { linkPreencher } from "@/lib/checklist-link";
+import { linkPreencher, viaFormulario } from "@/lib/checklist-link";
 import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
 import { ORIGENS, type Status, type Tarefa } from "@/lib/types";
 import { Botao, Etiqueta, Input, Textarea } from "@/components/ui";
@@ -157,7 +157,7 @@ export function Kanban({
   }
 
   // check-list é feito ou não feito: só vai para Concluído
-  const podeIrPara = (t: Tarefa, statusId: string) => t.origem !== "checklist" || tipoDe(statusId) === "concluido";
+  const podeIrPara = (t: Tarefa, statusId: string) => !viaFormulario(t.origem) || tipoDe(statusId) === "concluido";
 
   function mover(tarefa: Tarefa, statusId: string) {
     if (tarefa.status_id === statusId) return;
@@ -208,10 +208,10 @@ export function Kanban({
     </>
   );
 
-  // check-list ainda pendente: atalho para preencher
+  // check-list ou contagem ainda pendente: atalho para preencher
   const preenchivel = (t: Tarefa) =>
-    podePreencher &&
-    t.origem === "checklist" &&
+    (t.origem === "contagem" || podePreencher) &&
+    viaFormulario(t.origem) &&
     !!t.origem_id &&
     ["aberto", "em_andamento", "adiado"].includes(tipoDe(t.status_id) ?? "");
 
@@ -251,8 +251,8 @@ export function Kanban({
         {preenchivel(t) && (
           <Link
             href={linkPreencher(empresaId, t)}
-            title="Abrir check-list"
-            aria-label={`Abrir o check-list "${t.titulo}"`}
+            title={t.origem === "contagem" ? "Abrir contagem" : "Abrir check-list"}
+            aria-label={`Abrir "${t.titulo}"`}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700"
           >
             <ListChecks className="h-4 w-4" aria-hidden />
