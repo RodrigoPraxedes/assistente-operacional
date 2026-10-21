@@ -480,7 +480,7 @@ export const SECOES: SecaoGuia[] = [
           "O item mostra o gasto total com manutenção e o aviso de garantia vencida.",
           "O botão Abrir chamado no item já abre o chamado com o equipamento escolhido.",
           "Ações recorrentes ligadas ao item (e as últimas tarefas concluídas) aparecem no cartão Ações recorrentes do item.",
-          "Compartilhar PDF, no item, gera um arquivo com foto, dados e trajetória para enviar a quem não tem acesso ao sistema. Os valores financeiros só entram se você marcar a opção. No celular abre o compartilhamento (WhatsApp, e-mail); no computador baixa o arquivo.",
+          "Compartilhar PDF, no item, gera um arquivo com foto, dados e trajetória para enviar a quem não tem acesso ao sistema. Os valores financeiros entram por padrão; desmarque a opção para enviar sem eles. No celular abre o compartilhamento (WhatsApp, e-mail); no computador baixa o arquivo.",
           "Na lista, cada item mostra uma miniatura da foto à esquerda para facilitar a identificação; itens sem foto mostram um ícone de caixa.",
           "Também dá para importar o patrimônio por planilha, com o histórico de manutenções.",
         ],

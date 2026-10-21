@@ -6,7 +6,7 @@ import { useState } from "react";
 // nativo (WhatsApp, e-mail...), no computador baixa o arquivo. Sem link público.
 export function CompartilharPdf({ empresaId, itemId, nome }: { empresaId: string; itemId: string; nome: string }) {
   const [aberto, setAberto] = useState(false);
-  const [valores, setValores] = useState(false);
+  const [valores, setValores] = useState(true);
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -49,7 +49,7 @@ export function CompartilharPdf({ empresaId, itemId, nome }: { empresaId: string
   }
 
   return (
-    <div className="relative">
+    <div className="sm:relative">
       <button
         type="button"
         onClick={() => setAberto((v) => !v)}
@@ -58,12 +58,12 @@ export function CompartilharPdf({ empresaId, itemId, nome }: { empresaId: string
         Compartilhar PDF
       </button>
       {aberto && (
-        <div className="absolute right-0 z-10 mt-2 w-72 space-y-3 rounded-xl border border-slate-200 bg-superficie p-3 shadow-lg">
+        <div className="fixed inset-x-4 z-10 mt-2 space-y-3 sm:absolute sm:inset-x-auto sm:right-0 sm:w-72 rounded-xl border border-slate-200 bg-superficie p-3 shadow-lg">
           <label className="flex items-start gap-2 text-sm text-slate-700">
             <input type="checkbox" checked={valores} onChange={(e) => setValores(e.target.checked)} className="mt-0.5" />
             <span>
               Incluir valores financeiros (compra e gastos)
-              <span className="block text-xs text-slate-500">O PDF sai do sistema; por padrão, vai sem valores.</span>
+              <span className="block text-xs text-slate-500">O PDF sai do sistema; desmarque para enviar sem valores.</span>
             </span>
           </label>
           {erro && <p className="text-xs text-red-600">{erro}</p>}
