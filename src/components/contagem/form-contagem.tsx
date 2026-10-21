@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { enviarContagem } from "@/lib/contagem-envio";
-import { diaDaSemana, formatarQtd, metaDoDia, rotuloItem } from "@/lib/contagens";
+import { diaDaSemana, diaSeguinte, formatarQtd, metaDoDia, rotuloItem } from "@/lib/contagens";
 import { DIAS_SEMANA } from "@/lib/rotinas";
 import { Aviso, Campo, Input, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
@@ -14,7 +14,13 @@ export interface ContagemPreencher {
   usa_meta: boolean;
   rotulo_falta: string;
   pede_vai_fazer?: boolean;
-  itens: { id: string; nome: string; unidade_medida: string | null; metas: (number | null)[] | null }[];
+  itens: {
+    id: string;
+    nome: string;
+    unidade_medida: string | null;
+    metas: (number | null)[] | null;
+    meta_dia_seguinte?: boolean;
+  }[];
 }
 
 interface Props {
@@ -50,8 +56,10 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
   const dia = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaDaSemana(data) : diaDaSemana(hoje);
 
   const numero = (s: string | undefined) => (s && s.trim() !== "" && !isNaN(Number(s.replace(",", "."))) ? Number(s.replace(",", ".")) : null);
+  // dia da semana da meta do item: o de amanhã nos itens preparados com antecedência
+  const diaMeta = (item: ContagemPreencher["itens"][number]) => (item.meta_dia_seguinte ? diaSeguinte(dia) : dia);
   const falta = (item: ContagemPreencher["itens"][number]) => {
-    const meta = contagem.usa_meta ? metaDoDia(item.metas, dia) : null;
+    const meta = contagem.usa_meta ? metaDoDia(item.metas, diaMeta(item)) : null;
     const q = numero(qtds[item.id]);
     return meta === null || q === null ? null : Math.max(meta - q, 0);
   };
@@ -137,7 +145,7 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
 
       <ol className="space-y-2">
         {contagem.itens.map((item) => {
-          const meta = contagem.usa_meta ? metaDoDia(item.metas, dia) : null;
+          const meta = contagem.usa_meta ? metaDoDia(item.metas, diaMeta(item)) : null;
           const f = falta(item);
           return (
             <li key={item.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-superficie p-3">
@@ -145,7 +153,10 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
                 <span className="block font-medium text-slate-900">{item.nome}</span>
                 <span className="block text-xs text-slate-500">
                   {item.unidade_medida ?? ""}
-                  {meta !== null && `${item.unidade_medida ? " · " : ""}meta ${formatarQtd(meta)}`}
+                  {meta !== null &&
+                    `${item.unidade_medida ? " · " : ""}${
+                      item.meta_dia_seguinte ? `meta para amanhã (${DIAS_SEMANA[diaMeta(item) - 1].curto})` : "meta"
+                    } ${formatarQtd(meta)}`}
                 </span>
                 {f !== null && (
                   <span className={`block text-sm font-medium ${f > 0 ? "text-red-700" : "text-green-700"}`}>

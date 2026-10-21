@@ -269,6 +269,7 @@ export const SECOES: SecaoGuia[] = [
           "Escolha a unidade, o setor e se ela fica disponível no QR Code da unidade.",
           "Adicione os itens: o nome do produto e a unidade de medida (unidades, varas, pacotes, kg...). Use ↑ e ↓ para mudar a ordem.",
           "Para usar meta, marque Usar meta por dia da semana, dê nome à coluna do que falta (Embalar, Produzir, Repor...) e preencha a meta de cada item em cada dia. Repetir Seg em todos copia a meta de segunda para a semana toda. Dia sem meta fica vazio.",
+          "Para o que é preparado hoje para amanhã (ex.: embalar a farofa de domingo no sábado), marque Meta é para o dia seguinte no item. Digite a necessidade de cada dia normalmente (Dom 450, Sáb 230...) e quem conta no sábado vê a meta de domingo, com a sugestão já calculada em cima dela.",
           "Com meta, Pedir quanto vai fazer (já vem marcado) põe um segundo campo em cada item, com o nome da coluna (ex.: Embalar), para lançar o que vai ser feito de fato.",
           "Mudar itens e metas vale para as próximas contagens; o histórico não muda. Para parar de usar sem apagar o histórico, mude a situação para Inativa.",
         ],

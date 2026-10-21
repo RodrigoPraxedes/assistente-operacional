@@ -11,6 +11,7 @@ interface ItemForm {
   nome: string;
   unidade_medida: string;
   metas: string[];
+  meta_dia_seguinte?: boolean;
 }
 
 const numeroOuNulo = (s: string | undefined) => {
@@ -96,6 +97,7 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
       unidade_medida: i.unidade_medida?.trim().slice(0, 40) || null,
       ordem,
       metas: metas.some((m) => m !== null) ? metas : null,
+      meta_dia_seguinte: usaMeta && !!i.meta_dia_seguinte,
     };
     const { error } = i.id
       ? await supabase.from("contagem_itens").update(linha).eq("id", i.id)
