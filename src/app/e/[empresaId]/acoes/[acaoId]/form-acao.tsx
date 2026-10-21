@@ -8,6 +8,7 @@ import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/componen
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
+import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
 
 type Opcao = { id: string; nome: string };
@@ -54,6 +55,7 @@ export function FormAcao({
   unidades,
   setores,
   categorias,
+  equipamentos,
   membros,
   podeMudarPrivado,
 }: {
@@ -66,6 +68,7 @@ export function FormAcao({
   unidades: Opcao[];
   setores: Opcao[];
   categorias: Opcao[];
+  equipamentos: Opcao[];
   membros: (Opcao & { setor_id: string | null })[];
 }) {
   const [estado, acaoForm] = useActionState(salvarAcao.bind(null, empresaId), undefined);
@@ -157,6 +160,9 @@ export function FormAcao({
                 </option>
               ))}
             </Select>
+          </Campo>
+          <Campo rotulo="Equipamento ou móvel" dica="Opcional: item do Patrimônio a que esta ação se refere (limpeza, revisão, troca de filtro...)">
+            <SeletorComBusca name="equipamento_id" opcoes={equipamentos} inicial={base?.equipamento_id ?? ""} vazio="Nenhum" />
           </Campo>
           <CampoVisibilidade privado={base?.privado} podeMudar={podeMudarPrivado} perguntar={!base} />
           {base && (

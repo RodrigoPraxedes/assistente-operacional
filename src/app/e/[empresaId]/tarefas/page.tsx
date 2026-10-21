@@ -101,16 +101,27 @@ export default async function PaginaTarefas({
   const { data: chamadosEq } = idsChamados.length
     ? await supabase.from("chamados").select("tarefa_id, equipamento_id").in("tarefa_id", idsChamados).not("equipamento_id", "is", null)
     : { data: [] as { tarefa_id: string; equipamento_id: string }[] };
-  const idsEq = [...new Set((chamadosEq ?? []).map((c) => c.equipamento_id))];
+  // tarefas de ação recorrente ligadas a um item do Patrimônio
+  const listaTarefas = (tarefas ?? []) as Tarefa[];
+  const idsEq = [
+    ...new Set([
+      ...(chamadosEq ?? []).map((c) => c.equipamento_id),
+      ...listaTarefas.map((t) => t.equipamento_id).filter((id): id is string => !!id),
+    ]),
+  ];
   const { data: equips } = idsEq.length
     ? await supabase.from("equipamentos").select("id, nome").in("id", idsEq)
     : { data: [] as { id: string; nome: string }[] };
   const nomeEquip = new Map((equips ?? []).map((e) => [e.id, e.nome]));
-  const equipDaTarefa = new Map((chamadosEq ?? []).map((c) => [c.tarefa_id, nomeEquip.get(c.equipamento_id) ?? null]));
+  const equipDaTarefa = new Map<string, string | null>([
+    ...listaTarefas.filter((t) => t.equipamento_id).map((t) => [t.id, nomeEquip.get(t.equipamento_id!) ?? null] as [string, string | null]),
+    ...(chamadosEq ?? []).map((c) => [c.tarefa_id, nomeEquip.get(c.equipamento_id) ?? null] as [string, string | null]),
+  ]);
+  const origemDe = new Map(listaTarefas.map((t) => [t.id, t.origem]));
   const etiquetas = Object.fromEntries(
     [...equipDaTarefa.entries()]
       .filter(([, nome]) => nome)
-      .map(([id, nome]) => [id, [{ texto: ORIGENS.chamado, cor: "#7c3aed" }, { texto: nome!, cor: "#0f766e" }]]),
+      .map(([id, nome]) => [id, [{ texto: ORIGENS[origemDe.get(id) ?? "chamado"], cor: "#7c3aed" }, { texto: nome!, cor: "#0f766e" }]]),
   );
 
   // botão do WhatsApp em cada tarefa: mensagem pronta para o responsável

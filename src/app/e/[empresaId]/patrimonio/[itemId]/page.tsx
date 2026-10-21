@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
-import { hojeNoFuso } from "@/lib/formato";
+import { formatarData, hojeNoFuso } from "@/lib/formato";
+import { descreverRecorrencia } from "@/lib/recorrencia";
 import { brl, dataCurta, montarTrajetoria } from "@/lib/patrimonio-trajetoria";
 import {
   SITUACOES_PATRIMONIO,
@@ -40,7 +41,7 @@ export default async function DetalheItem({
     .maybeSingle<Equipamento>();
   if (!item) notFound();
 
-  const [{ data: eventos }, { data: chamados }, { data: unidades }, { data: setores }, { data: status }, foto] = await Promise.all([
+  const [{ data: eventos }, { data: chamados }, { data: unidades }, { data: setores }, { data: status }, foto, { data: acoes }, { data: feitas }] = await Promise.all([
     supabase.from("patrimonio_eventos").select("*").eq("equipamento_id", itemId).returns<EventoPatrimonio[]>(),
     supabase
       .from("chamados")
@@ -51,6 +52,15 @@ export default async function DetalheItem({
     supabase.from("setores").select("id, nome, ativo").eq("empresa_id", empresaId).order("nome"),
     supabase.from("status").select("id, nome, cor").eq("empresa_id", empresaId),
     item.foto_path ? supabase.storage.from("anexos").createSignedUrl(item.foto_path, 3600) : Promise.resolve(null),
+    supabase.from("acoes").select("id, nome, recorrencia, ativo").eq("equipamento_id", itemId).order("nome"),
+    supabase
+      .from("tarefas")
+      .select("id, titulo, concluida_em")
+      .eq("equipamento_id", itemId)
+      .eq("origem", "acao")
+      .not("concluida_em", "is", null)
+      .order("concluida_em", { ascending: false })
+      .limit(5),
   ]);
 
   const un = new Map((unidades ?? []).map((u) => [u.id, u.nome]));
@@ -162,6 +172,44 @@ export default async function DetalheItem({
             unidadeAtual={item.unidade_id}
             baixado={baixado}
           />
+        </Cartao>
+      )}
+
+      {((acoes ?? []).length > 0 || (feitas ?? []).length > 0) && (
+        <Cartao className="space-y-3">
+          <h2 className="font-medium">Ações recorrentes</h2>
+          <ul className="space-y-1 text-sm">
+            {(acoes ?? []).map((a) => (
+              <li key={a.id}>
+                {pode("acoes.editar") ? (
+                  <Link href={`/e/${empresaId}/acoes/${a.id}`} className="text-blue-700">
+                    {a.nome}
+                  </Link>
+                ) : (
+                  a.nome
+                )}{" "}
+                <span className="text-xs text-slate-500">
+                  {descreverRecorrencia(a.recorrencia)}
+                  {!a.ativo && " · inativa"}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {(feitas ?? []).length > 0 && (
+            <>
+              <h3 className="text-sm text-slate-500">Últimas feitas</h3>
+              <ul className="space-y-1 text-sm">
+                {(feitas ?? []).map((t) => (
+                  <li key={t.id}>
+                    <Link href={`/e/${empresaId}/tarefas/${t.id}`} className="text-blue-700">
+                      {t.titulo}
+                    </Link>{" "}
+                    <span className="text-xs text-slate-500">{formatarData(t.concluida_em!, fuso)}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </Cartao>
       )}
 

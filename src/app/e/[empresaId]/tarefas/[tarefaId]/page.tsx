@@ -71,6 +71,10 @@ export default async function DetalheTarefa({
         ])
       : [{ data: null }, { data: [] }];
 
+  const { data: equipamento } = tarefa.equipamento_id
+    ? await supabase.from("equipamentos").select("id, nome").eq("id", tarefa.equipamento_id).maybeSingle()
+    : { data: null };
+
   const st = new Map((status ?? []).map((s) => [s.id, s]));
   const mb = new Map((membros ?? []).map((m) => [m.id, m]));
   const atual = st.get(tarefa.status_id);
@@ -105,6 +109,7 @@ export default async function DetalheTarefa({
     fuso: empresa.fuso_horario,
     responsavel: responsavel?.telefone ? responsavel.nome : null,
     status: atual?.nome,
+    equipamento: equipamento?.nome,
   });
 
   return (
@@ -139,6 +144,16 @@ export default async function DetalheTarefa({
               <dd>
                 <Link href={`/e/${empresaId}/planos/${plano.id}`} className="text-blue-700">
                   {plano.nome}
+                </Link>
+              </dd>
+            </>
+          )}
+          {equipamento && (
+            <>
+              <dt className="text-slate-500">Equipamento</dt>
+              <dd>
+                <Link href={`/e/${empresaId}/patrimonio/${equipamento.id}`} className="text-blue-700">
+                  {equipamento.nome}
                 </Link>
               </dd>
             </>

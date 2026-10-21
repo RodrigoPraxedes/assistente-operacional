@@ -28,6 +28,7 @@ export default async function PaginaAcoes({
     { data: membros },
     { data: setores },
     { data: categorias },
+    { data: equipamentos },
   ] = await Promise.all([
     supabase
       .from("acoes")
@@ -47,7 +48,9 @@ export default async function PaginaAcoes({
       .select("id, nome")
       .eq("empresa_id", empresaId)
       .order("nome"),
+    supabase.from("equipamentos").select("id, nome").eq("empresa_id", empresaId),
   ]);
+  const equipamento = new Map((equipamentos ?? []).map((e) => [e.id, e.nome]));
   const unidade = new Map((unidades ?? []).map((u) => [u.id, u.nome]));
   const membro = new Map((membros ?? []).map((m) => [m.id, m.nome]));
   const fuso = empresa.fuso_horario;
@@ -65,7 +68,7 @@ export default async function PaginaAcoes({
     .filter(
       (a) =>
         (!termo ||
-          normalizar(`${a.nome} ${a.descricao ?? ""}`).includes(termo)) &&
+          normalizar(`${a.nome} ${a.descricao ?? ""} ${equipamento.get(a.equipamento_id ?? "") ?? ""}`).includes(termo)) &&
         (!setor || a.setor_id === setor) &&
         (!categoria || a.categoria_id === categoria),
     )
@@ -172,6 +175,13 @@ export default async function PaginaAcoes({
                         {" "}
                         <Etiqueta>Privada</Etiqueta>
                       </>
+                    )}
+                    {a.equipamento_id && equipamento.has(a.equipamento_id) && (
+                      <p className="text-xs">
+                        <Link href={`/e/${empresaId}/patrimonio/${a.equipamento_id}`} className="text-blue-700">
+                          {equipamento.get(a.equipamento_id)}
+                        </Link>
+                      </p>
                     )}
                     <p className="text-xs text-slate-500">
                       {descreverRecorrencia(a.recorrencia)} ·{" "}

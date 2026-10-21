@@ -21,7 +21,26 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
 
   const prazo_minutos = Math.max(0, Math.round(Number(form.get("prazo_minutos") ?? 480)) || 0);
 
+  // equipamento do Patrimônio: só item ativo da empresa (o já ligado pode continuar mesmo se baixado)
+  const equipamentoId = txt("equipamento_id");
+  if (equipamentoId) {
+    const { data: eq } = await supabase
+      .from("equipamentos")
+      .select("id, ativo")
+      .eq("id", equipamentoId)
+      .eq("empresa_id", empresaId)
+      .maybeSingle();
+    if (!eq) return { erro: "Equipamento não encontrado" };
+    if (!eq.ativo) {
+      const { data: atual } = id
+        ? await supabase.from("acoes").select("equipamento_id").eq("id", id).maybeSingle()
+        : { data: null };
+      if (atual?.equipamento_id !== equipamentoId) return { erro: "Este item foi vendido ou aposentado e não pode ser vinculado" };
+    }
+  }
+
   const dados = {
+    equipamento_id: equipamentoId,
     nome: txt("nome")!,
     descricao: txt("descricao"),
     unidade_id: txt("unidade_id"),
