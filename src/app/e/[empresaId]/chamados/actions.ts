@@ -50,7 +50,7 @@ export async function abrirChamado(empresaId: string, _: { erro?: string } | und
   redirect(`/e/${empresaId}/chamados/${data}?novo=1`);
 }
 
-// Dados de gestão: título, descrição, prioridade, equipamento, fornecedor, custo e responsável
+// Dados de gestão: título, descrição, prioridade, equipamento, fornecedor e custo
 export async function atualizarChamado(empresaId: string, tarefaId: string, form: FormData) {
   const { supabase, empresa } = await getContexto(empresaId);
   const caminho = `/e/${empresaId}/chamados/${tarefaId}`;
@@ -68,7 +68,7 @@ export async function atualizarChamado(empresaId: string, tarefaId: string, form
     .eq("tarefa_id", tarefaId);
   if (error) redirect(`${caminho}?erro=${encodeURIComponent(error.message)}`);
 
-  // título, descrição, responsável e prazo ficam na tarefa
+  // título, descrição e prazo ficam na tarefa
   const titulo = txt(form, "titulo");
   if (!titulo) redirect(`${caminho}?erro=${encodeURIComponent("Informe o título do chamado.")}`);
   const prazo = txt(form, "prazo");
@@ -77,12 +77,22 @@ export async function atualizarChamado(empresaId: string, tarefaId: string, form
     .update({
       titulo,
       descricao: txt(form, "descricao"),
-      responsavel_id: txt(form, "responsavel_id"),
       ...(prazo ? { prazo: localParaUtc(prazo, empresa.fuso_horario) } : {}),
     })
     .eq("id", tarefaId);
   if (e2) redirect(`${caminho}?erro=${encodeURIComponent(e2.message)}`);
 
+  revalidatePath(caminho);
+  redirect(`${caminho}?salvo=1`);
+}
+
+// Recebedor central (ou gestor) passa o chamado adiante; quem entra na lista é avisado
+export async function delegarChamado(empresaId: string, tarefaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const caminho = `/e/${empresaId}/chamados/${tarefaId}`;
+  const ids = form.getAll("responsaveis").map(String).filter(Boolean);
+  const { error } = await supabase.rpc("delegar_chamado", { p_tarefa: tarefaId, p_responsaveis: ids });
+  if (error) redirect(`${caminho}?erro=${encodeURIComponent(error.message)}`);
   revalidatePath(caminho);
   redirect(`${caminho}?salvo=1`);
 }

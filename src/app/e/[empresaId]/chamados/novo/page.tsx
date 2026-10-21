@@ -18,7 +18,7 @@ export default async function NovoChamado({
 
   const [{ data: empresa }, { data: unidades }, { data: setores }, { data: categorias }, { data: equipamentos }, { data: membros }, { data: fornecedores }] =
     await Promise.all([
-      supabase.from("empresas").select("sla_chamados").eq("id", empresaId).single(),
+      supabase.from("empresas").select("sla_chamados, chamados_central_ativo").eq("id", empresaId).single(),
       ativos("unidades"),
       ativos("setores"),
       supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
@@ -40,6 +40,7 @@ export default async function NovoChamado({
       <Titulo voltar={{ href: `/e/${empresaId}/chamados`, rotulo: "Manutenções" }}>Abrir chamado</Titulo>
       <FormChamado
         empresaId={empresaId}
+        centralAtiva={empresa?.chamados_central_ativo ?? false}
         gerencia={pode("chamados.gerenciar")}
         sla={(empresa?.sla_chamados as Record<string, number>) ?? {}}
         unidades={(unidades ?? []) as { id: string; nome: string }[]}

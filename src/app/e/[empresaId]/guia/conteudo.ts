@@ -446,9 +446,17 @@ export const SECOES: SecaoGuia[] = [
           "Toque em Abrir chamado e descreva o problema.",
           "Escolha a prioridade (urgente, alta, média, baixa). Ela define o prazo de atendimento, configurado em Configurações › Geral.",
           "Indique a unidade, o equipamento do patrimônio e o local, e anexe fotos. A lista de equipamentos tem um campo de pesquisa: digite parte do nome para filtrar.",
-          "Se já souber, escolha o responsável interno ou o prestador de serviço. A lista de prestadores tem campo de pesquisa, e o botão + ao lado cadastra um novo na hora (nome e telefone) para quem tem permissão em Prestadores.",
+          "Se já souber, escolha o responsável interno (esse campo some quando a empresa usa o recebedor central, veja abaixo) ou o prestador de serviço. A lista de prestadores tem campo de pesquisa, e o botão + ao lado cadastra um novo na hora (nome e telefone) para quem tem permissão em Prestadores.",
           "Quem não tem login abre chamado pelo QR Code da unidade, em Solicitar manutenção.",
           "Um item de check-list respondido \"Não\" também pode abrir chamado sozinho.",
+        ],
+      },
+      {
+        titulo: "Recebedor central e delegar",
+        passos: [
+          "Em Configurações › Geral, o cartão Recebedor central de chamados tem uma chave. Ligada, quem abre o chamado não escolhe o responsável: o chamado cai nos recebedores que você marcou (um ou mais) e eles recebem o aviso, no app e no WhatsApp.",
+          "Dentro do chamado, o recebedor (ou quem gerencia chamados) usa o cartão Delegar este chamado: escolha quem vai acompanhar e salve. Quem entrar na lista é avisado. Mantenha o seu nome na lista para compartilhar; se não delegar, o chamado continua com você.",
+          "No celular é o mesmo caminho: abra o chamado pelo aviso e role até o cartão Delegar. Com a chave desligada, tudo volta a ser como antes e quem tem permissão escolhe o responsável ao abrir.",
         ],
       },
       {
@@ -630,6 +638,7 @@ export const SECOES: SecaoGuia[] = [
           "Unidades: cada loja ou endereço. Em QR Code e detalhes você imprime o QR da unidade. Se ele vazou, Gerar novo QR faz o antigo parar de funcionar.",
           "Status do Kanban: escolha o status na caixa de seleção para ver só as configurações dele (nome, cor, tipo, módulo, subir/descer e desativar). Para criar um, escolha \"+ Novo status\" na mesma caixa. Dá para criar status de um módulo só, como \"Aguardando peça\" nas manutenções.",
           "Prazos dos chamados: quantas horas cada prioridade tem para ser atendida.",
+          "Recebedor central de chamados: chave que faz todo chamado novo cair em quem você escolher, que depois delega ao responsável.",
           "Funções: quem responde por cada atividade, sem citar a pessoa (Caixa, Cozinheiro, Líder de salão...). Servem para as Rotinas e podem ser ligadas a cada colaborador. Clique no nome para ativar ou desativar; excluir deixa colaboradores e rotinas dela sem função.",
           "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado).",
         ],

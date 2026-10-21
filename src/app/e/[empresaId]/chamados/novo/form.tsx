@@ -14,6 +14,7 @@ type Opcao = { id: string; nome: string };
 export function FormChamado({
   empresaId,
   gerencia,
+  centralAtiva,
   sla,
   unidades,
   setores,
@@ -27,6 +28,7 @@ export function FormChamado({
 }: {
   empresaId: string;
   gerencia: boolean;
+  centralAtiva: boolean;
   sla: Record<string, number>;
   unidades: Opcao[];
   setores: Opcao[];
@@ -88,15 +90,15 @@ export function FormChamado({
           <Campo rotulo="Categoria">
             <Select name="categoria_id">{opcoes(categorias)}</Select>
           </Campo>
+          {gerencia && !centralAtiva && (
+            <Campo rotulo="Responsável interno">
+              <Select name="responsavel_id">{opcoes(membros)}</Select>
+            </Campo>
+          )}
           {gerencia && (
-            <>
-              <Campo rotulo="Responsável interno">
-                <Select name="responsavel_id">{opcoes(membros)}</Select>
-              </Campo>
-              <Campo rotulo="Prestador de serviço">
-                <SeletorPrestador empresaId={empresaId} opcoes={fornecedores} podeCadastrar={podeCadastrarPrestador} />
-              </Campo>
-            </>
+            <Campo rotulo="Prestador de serviço">
+              <SeletorPrestador empresaId={empresaId} opcoes={fornecedores} podeCadastrar={podeCadastrarPrestador} />
+            </Campo>
           )}
         </div>
         <label className="block text-sm">

@@ -6,7 +6,8 @@ import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
 import { PRIORIDADES, type Chamado, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Textarea, Titulo } from "@/components/ui";
 import { comentarTarefa } from "../../tarefas/actions";
-import { adicionarFotos, atualizarChamado } from "../actions";
+import { adicionarFotos, atualizarChamado, delegarChamado } from "../actions";
+import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { SeletorPrestador } from "@/components/seletor-prestador";
 import { CampoFotos } from "./campo-fotos";
 import { MudarStatus } from "../../tarefas/[tarefaId]/mudar-status";
@@ -45,6 +46,10 @@ export default async function DetalheChamado({
       supabase.from("tarefa_comentarios").select("*").eq("tarefa_id", chamadoId).order("created_at"),
       supabase.from("tarefa_historico").select("*").eq("tarefa_id", chamadoId).order("created_at"),
     ]);
+
+  const { data: central } = await supabase.from("empresas").select("chamados_central_ativo, chamados_central").eq("id", empresaId).single();
+  const euRecebo = (central?.chamados_central ?? []).includes(membro.id);
+  const podeDelegar = !t.concluida_em && (pode("chamados.gerenciar") || euRecebo);
 
   const caminhos = (fotos ?? []).map((f) => f.path);
   const { data: assinadas } = caminhos.length
@@ -130,7 +135,7 @@ export default async function DetalheChamado({
           </div>
           <div>
             <dt className="text-slate-500">Responsável</dt>
-            <dd>{responsavel?.nome ?? "—"}</dd>
+            <dd>{(t.responsaveis ?? []).map((id) => mb.get(id)?.nome).filter(Boolean).join(", ") || "—"}</dd>
           </div>
           <div>
             <dt className="text-slate-500">Prestador</dt>
@@ -201,6 +206,26 @@ export default async function DetalheChamado({
         </Cartao>
       )}
 
+      {podeDelegar && (
+        <Cartao>
+          <h2 className="mb-1 font-medium">{euRecebo ? "Delegar este chamado" : "Responsáveis"}</h2>
+          <p className="mb-3 text-xs text-slate-500">
+            {euRecebo
+              ? "Se não delegar, o chamado continua com você. Quem entrar na lista recebe o aviso do que fazer; mantenha seu nome para compartilhar."
+              : "Quem entrar na lista recebe o aviso do chamado."}
+          </p>
+          <form action={delegarChamado.bind(null, empresaId, t.id)} className="space-y-3">
+            <SeletorResponsaveis
+              rotulo="Quem acompanha"
+              membros={(membros ?? []).filter((m) => m.ativo || (t.responsaveis ?? []).includes(m.id))}
+              name="responsaveis"
+              inicial={t.responsaveis ?? []}
+            />
+            <Botao>Salvar</Botao>
+          </form>
+        </Cartao>
+      )}
+
       {pode("chamados.gerenciar") && (
         <Cartao>
           <h2 className="mb-2 font-medium">Gestão</h2>
@@ -226,16 +251,6 @@ export default async function DetalheChamado({
             </Campo>
             <Campo rotulo="Prazo">
               <Input type="datetime-local" name="prazo" defaultValue={utcParaLocalInput(t.prazo, fuso)} />
-            </Campo>
-            <Campo rotulo="Responsável interno">
-              <Select name="responsavel_id" defaultValue={t.responsavel_id ?? ""}>
-                <option value="">—</option>
-                {(membros ?? []).filter((m) => m.ativo || m.id === t.responsavel_id).map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nome}
-                  </option>
-                ))}
-              </Select>
             </Campo>
             <Campo rotulo="Prestador que atendeu">
               <SeletorPrestador

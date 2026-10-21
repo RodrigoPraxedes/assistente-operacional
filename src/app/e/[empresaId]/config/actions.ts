@@ -36,6 +36,19 @@ export async function salvarSla(empresaId: string, form: FormData) {
   revalidatePath(`/e/${empresaId}/config`);
 }
 
+export async function salvarCentralChamados(empresaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  const recebedores = form.getAll("recebedores").map(String).filter(Boolean);
+  const ativo = form.get("ativo") === "on";
+  if (ativo && recebedores.length === 0) falhar(`/e/${empresaId}/config`, "Escolha quem recebe os chamados antes de ligar a chave.");
+  const { error } = await supabase
+    .from("empresas")
+    .update({ chamados_central_ativo: ativo, chamados_central: recebedores })
+    .eq("id", empresaId);
+  if (error) falhar(`/e/${empresaId}/config`, error.message);
+  revalidatePath(`/e/${empresaId}`, "layout");
+}
+
 export async function salvarUnidade(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const id = opcional(form, "id");
