@@ -690,7 +690,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Automações",
         passos: [
-          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo. Cada ocorrência de uma ação recorrente também avisa os responsáveis quando é criada (com o dia e a hora em que acontece); tarefas privadas e rotinas de check-list ficam de fora. A mensagem termina lembrando de concluir a tarefa no app (não dá para concluir pelo WhatsApp).",
+          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo. Cada ocorrência de uma ação recorrente também avisa os responsáveis quando é criada (com o dia e a hora em que acontece); tarefas privadas e rotinas de check-list ficam de fora. A mensagem termina com a frase em negrito e itálico \"Quando concluir, sinalize no app como Concluído.\" (não dá para concluir pelo WhatsApp); o aviso de prazo vencido traz a mesma ideia.",
           "Prazo venceu e a tarefa segue aberta: passou o prazo sem a tarefa ser concluída, cancelada ou adiada, os responsáveis recebem um lembrete para concluir no app e quem criou também é avisado. Sai uma vez por prazo (se o prazo mudar, avisa de novo), nunca de madrugada, e não vale para check-list nem tarefa privada. Dá para desligar aqui.",
           "Lembrete de ação recorrente: os responsáveis recebem outro aviso alguns minutos antes do horário da ocorrência (padrão 30; dá para mudar na própria tela).",
           "Tarefa concluída: quem criou é avisado quando ela termina.",
