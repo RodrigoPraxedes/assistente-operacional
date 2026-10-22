@@ -227,6 +227,13 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Criar vários parecidos",
+        passos: [
+          "Com o check-list preenchido, toque em Salvar e copiar: ele é salvo e abre um novo com os mesmos itens, horário, tolerância, lembrete, repetição, responsáveis, unidade, setor, categoria e opções de QR Code.",
+          "O nome vem como \"Cópia de ...\", já selecionado: digite o novo nome, ajuste o que mudar e salve (ou repita o botão para o próximo). A cópia não altera o original.",
+        ],
+      },
+      {
         titulo: "Preencher",
         passos: [
           "No app: toque em Preencher no cartão do check-list, ou no botão azul de lista do cartão em Tarefas (também há Abrir check-list dentro da tarefa).",

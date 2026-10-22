@@ -117,6 +117,8 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
   }
 
   revalidatePath(`/e/${empresaId}/checklists`);
+  // "Salvar e copiar": abre o formulário novo já preenchido
+  if (form.get("continuar")) redirect(`/e/${empresaId}/checklists/novo?copiar=${modeloId}`);
   redirect(`/e/${empresaId}/checklists?salvo=1`);
 }
 
