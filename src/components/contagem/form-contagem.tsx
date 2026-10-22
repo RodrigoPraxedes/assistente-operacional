@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { linkWhatsApp } from "@/lib/whatsapp";
 import { enviarContagem } from "@/lib/contagem-envio";
 import { diaDaSemana, diaSeguinte, formatarQtd, metaDoDia, rotuloItem } from "@/lib/contagens";
 import { DIAS_SEMANA } from "@/lib/rotinas";
@@ -85,14 +86,23 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
       <div className="space-y-4 text-center">
         <Aviso tipo="sucesso">{remessa ? "Remessa salva!" : "Contagem salva!"}</Aviso>
         <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-left text-xs text-slate-700">{resumo}</pre>
-        <a
-          href={`https://wa.me/?text=${encodeURIComponent(resumo)}`}
-          target="_blank"
-          rel="noopener"
-          className="inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-3 font-medium text-white hover:bg-green-700"
-        >
-          Enviar resumo no WhatsApp
-        </a>
+        {estado.automatico ? (
+          <p className="text-sm text-slate-600">
+            O resultado já foi enviado pelo WhatsApp do Atalaia.{" "}
+            <a href={linkWhatsApp(resumo)} target="_blank" rel="noopener" className="text-blue-600">
+              Enviar também pelo meu WhatsApp
+            </a>
+          </p>
+        ) : (
+          <a
+            href={linkWhatsApp(resumo)}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-3 font-medium text-white hover:bg-green-700"
+          >
+            Enviar resumo no WhatsApp
+          </a>
+        )}
         <a href={voltar.href} className="block text-sm text-blue-600">
           {voltar.rotulo}
         </a>

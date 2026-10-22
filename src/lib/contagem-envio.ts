@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type EstadoContagem = { erro: string } | { ok: true } | undefined;
+export type EstadoContagem = { erro: string } | { ok: true; automatico: boolean } | undefined;
 
 // Recebe o preenchimento de uma contagem (app ou QR) e grava pelo banco,
 // que confere a contagem, a unidade, o turno e calcula quanto falta para a meta.
@@ -48,5 +48,7 @@ export async function enviarContagem(_: EstadoContagem, form: FormData): Promise
           p_remessa: remessa,
         });
   if (error) return { erro: error.message };
-  return { ok: true };
+  // com "Recebe o resultado" preenchido o banco já enfileirou o aviso; o botão manual vira plano B
+  const { data: contagem } = await createAdminClient().from("contagens").select("resultado_membro_id").eq("id", contagemId).maybeSingle();
+  return { ok: true, automatico: !!contagem?.resultado_membro_id };
 }

@@ -8,7 +8,7 @@ import { RESPOSTAS_SIM_NAO } from "@/lib/types";
 
 export type EstadoEnvio =
   | { erro: string }
-  | { ok: true; execucaoId: string; whatsapp: string; resumo: string }
+  | { ok: true; execucaoId: string; whatsapp: string; resumo: string; automatico: boolean }
   | undefined;
 
 type SupabaseQualquer = Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createAdminClient>;
@@ -170,9 +170,17 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
     .filter((l) => l !== null)
     .join("\n");
 
+  // o banco já enfileirou o aviso automático (Evolution)? Então o botão manual vira só plano B
+  const { count: avisos } = await createAdminClient()
+    .from("whatsapp_mensagens")
+    .select("id", { count: "exact", head: true })
+    .eq("origem", "checklist")
+    .eq("origem_id", execucaoId as string);
+
   return {
     ok: true,
     execucaoId: execucaoId as string,
+    automatico: (avisos ?? 0) > 0,
     resumo,
     whatsapp: linkWhatsApp(resumo, exec?.checklist_modelos?.whatsapp_destino),
   };
