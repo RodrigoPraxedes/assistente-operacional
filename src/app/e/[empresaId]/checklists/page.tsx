@@ -3,6 +3,7 @@ import { getContexto } from "@/lib/contexto";
 import { descreverRecorrencia } from "@/lib/recorrencia";
 import { formatarDataHora } from "@/lib/formato";
 import type { ChecklistModelo } from "@/lib/types";
+import { FiltrosChecklists } from "./filtros-checklists";
 import { Aviso, Cartao, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
 
 export default async function PaginaChecklists({
@@ -10,15 +11,16 @@ export default async function PaginaChecklists({
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ salvo?: string; excluido?: string }>;
+  searchParams: Promise<{ salvo?: string; excluido?: string; busca?: string; setor?: string; unidade?: string; qr?: string; situacao?: string }>;
 }) {
   const { empresaId } = await params;
-  const { salvo, excluido } = await searchParams;
+  const { salvo, excluido, ...filtros } = await searchParams;
   const { supabase, empresa, pode } = await getContexto(empresaId);
 
-  const [{ data: modelos }, { data: unidades }, { data: execucoes }] = await Promise.all([
+  const [{ data: modelos }, { data: unidades }, { data: setores }, { data: execucoes }] = await Promise.all([
     supabase.from("checklist_modelos").select("*").eq("empresa_id", empresaId).order("horario_preferencial"),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+    supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).order("nome"),
     pode("checklist.ver_execucoes")
       ? supabase
           .from("checklist_execucoes")
@@ -31,6 +33,20 @@ export default async function PaginaChecklists({
   const nomeUnidade = new Map((unidades ?? []).map((u) => [u.id, u.nome]));
   const base = `/e/${empresaId}/checklists`;
 
+  const normalizar = (t: string) => t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const termo = normalizar(filtros.busca?.trim() ?? "");
+  const filtrando = Boolean(filtros.busca || filtros.setor || filtros.unidade || filtros.qr || filtros.situacao);
+  const visiveis = ((modelos ?? []) as ChecklistModelo[]).filter(
+    (m) =>
+      (!termo || normalizar(m.nome).includes(termo)) &&
+      (!filtros.setor || m.setor_id === filtros.setor) &&
+      (!filtros.unidade || m.unidade_id === filtros.unidade) &&
+      (filtros.qr !== "com" || m.publico_qr) &&
+      (filtros.qr !== "sem" || !m.publico_qr) &&
+      (filtros.situacao !== "ativos" || m.ativo) &&
+      (filtros.situacao !== "inativos" || !m.ativo),
+  );
+
   return (
     <div className="space-y-6">
       <Titulo acoes={pode("checklist.editar_modelo") && <LinkBotao href={`${base}/novo`}>Novo check-list</LinkBotao>}>
@@ -39,11 +55,25 @@ export default async function PaginaChecklists({
       {salvo && <Aviso tipo="sucesso">Check-list salvo.</Aviso>}
       {excluido && <Aviso tipo="sucesso">Check-list excluído. Os preenchimentos já enviados continuam no histórico.</Aviso>}
 
+      {(modelos ?? []).length > 0 && (
+        <FiltrosChecklists
+          busca={filtros.busca ?? ""}
+          setor={filtros.setor ?? ""}
+          unidade={filtros.unidade ?? ""}
+          qr={filtros.qr ?? ""}
+          situacao={filtros.situacao ?? ""}
+          setores={setores ?? []}
+          unidades={unidades ?? []}
+        />
+      )}
+
       {(modelos ?? []).length === 0 ? (
         <Vazio>Nenhum check-list cadastrado ainda.</Vazio>
+      ) : visiveis.length === 0 ? (
+        <Vazio>{filtrando ? "Nenhum check-list encontrado com esses filtros." : "Nenhum check-list cadastrado ainda."}</Vazio>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {(modelos as ChecklistModelo[]).map((m) => {
+          {visiveis.map((m) => {
             const alvo = m.unidade_id ? (unidades ?? []).filter((u) => u.id === m.unidade_id) : unidades ?? [];
             return (
               <li key={m.id}>
