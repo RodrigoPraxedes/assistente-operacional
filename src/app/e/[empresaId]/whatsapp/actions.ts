@@ -241,22 +241,6 @@ export async function excluirContato(empresaId: string, contatoId: string) {
   voltar(empresaId, "/destinatarios", { ok: "Destinatário excluído." });
 }
 
-export async function salvarGatilho(empresaId: string, form: FormData) {
-  const { supabase, membro } = await getContexto(empresaId);
-  const { error } = await supabase.from("whatsapp_gatilhos").insert({
-    empresa_id: empresaId,
-    conexao_id: String(form.get("conexao_id")),
-    modelo_id: String(form.get("modelo_id")),
-    contato_id: String(form.get("contato_id")),
-    criado_por: membro.id,
-  });
-  if (error)
-    voltar(empresaId, "/destinatarios", {
-      erro: error.code === "23505" ? "Esta regra já existe." : "Não foi possível salvar a regra. Confira a conexão, o check-list e o destinatário.",
-    });
-  atualizar(empresaId);
-}
-
 export async function removerGatilho(empresaId: string, gatilhoId: string) {
   const { supabase } = await getContexto(empresaId);
   const { error } = await supabase.from("whatsapp_gatilhos").delete().eq("id", gatilhoId);

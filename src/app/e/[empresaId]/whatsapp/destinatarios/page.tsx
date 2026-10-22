@@ -5,7 +5,7 @@ import { mascararNumero } from "@/lib/whatsapp-api/sanitizar";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Vazio, estilos } from "@/components/ui";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { alternarContato, editarContato, excluirContato, removerGatilho, salvarContato, salvarGatilho, vincularContato } from "../actions";
+import { alternarContato, editarContato, excluirContato, removerGatilho, salvarContato, vincularContato } from "../actions";
 
 interface Contato {
   id: string;
@@ -36,7 +36,7 @@ export default async function Destinatarios({
   const { supabase, empresa, pode } = await getContexto(empresaId);
   if (!pode("whatsapp.gerenciar")) notFound();
 
-  const [{ data: contatos }, { data: membros }, { data: gatilhos }, { data: conexoes }, { data: modelos }] = await Promise.all([
+  const [{ data: contatos }, { data: membros }, { data: gatilhos }] = await Promise.all([
     supabase
       .from("whatsapp_contatos")
       .select("id, nome, telefone, ativo, membro_id, autorizado_em, autorizador:membros!whatsapp_contatos_autorizado_por_fkey(nome)")
@@ -51,15 +51,7 @@ export default async function Destinatarios({
       .eq("empresa_id", empresaId)
       .order("created_at")
       .returns<Gatilho[]>(),
-    supabase
-      .from("whatsapp_conexoes")
-      .select("id, provedor, unidades(nome)")
-      .eq("empresa_id", empresaId)
-      .order("provedor")
-      .returns<{ id: string; provedor: string; unidades: { nome: string } | null }[]>(),
-    supabase.from("checklist_modelos").select("id, nome").eq("empresa_id", empresaId).order("nome"),
   ]);
-  const ativos = (contatos ?? []).filter((c) => c.ativo);
 
   return (
     <div className="space-y-4">
@@ -157,52 +149,15 @@ export default async function Destinatarios({
         </ul>
       )}
 
+      {(gatilhos ?? []).length > 0 && (
       <Cartao className="space-y-3">
         <div>
-          <h2 className="font-semibold text-slate-900">Avisos automáticos de check-list</h2>
+          <h2 className="font-semibold text-slate-900">Regras antigas de aviso de check-list</h2>
           <p className="text-sm text-slate-500">
-            Quando o check-list escolhido for concluído (ex.: Fechamento), o destinatário recebe um aviso. Com “Check-list
-            concluído” ligado na aba Automações, o aviso sai sozinho; desligado, vira rascunho para alguém confirmar na aba Avisos.
+            Quem recebe o resultado agora se escolhe dentro de cada check-list (campo Recebe o resultado). Estas regras são de
+            números de fora da equipe e continuam valendo até você removê-las.
           </p>
         </div>
-        {conexoes?.length && ativos.length && modelos?.length ? (
-          <form action={salvarGatilho.bind(null, empresaId)} className="grid gap-3 sm:grid-cols-3">
-            <Campo rotulo="Check-list">
-              <Select name="modelo_id" required>
-                {modelos.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nome}
-                  </option>
-                ))}
-              </Select>
-            </Campo>
-            <Campo rotulo="Avisar">
-              <Select name="contato_id" required>
-                {ativos.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
-                  </option>
-                ))}
-              </Select>
-            </Campo>
-            <Campo rotulo="Pelo número de">
-              <Select name="conexao_id" required>
-                {conexoes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.unidades?.nome ?? "Empresa toda"}
-                    {c.provedor === "simulacao" && " (ensaio)"}
-                  </option>
-                ))}
-              </Select>
-            </Campo>
-            <div className="sm:col-span-3">
-              <BotaoEnviar>Criar regra</BotaoEnviar>
-            </div>
-          </form>
-        ) : (
-          <p className="text-sm text-slate-500">Precisa de uma conexão, um destinatário ativo e um check-list cadastrado.</p>
-        )}
-        {(gatilhos ?? []).length > 0 && (
           <ul className="divide-y divide-slate-200 border-t border-slate-200">
             {gatilhos!.map((g) => (
               <li key={g.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
@@ -221,8 +176,8 @@ export default async function Destinatarios({
               </li>
             ))}
           </ul>
-        )}
       </Cartao>
+      )}
     </div>
   );
 }

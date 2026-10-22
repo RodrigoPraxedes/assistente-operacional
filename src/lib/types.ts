@@ -148,6 +148,8 @@ export interface ChecklistModelo {
   lembrete_minutos: number;
   // quem recebe o resultado quando o check-list é concluído
   resultado_membro_id: string | null;
+  // todos os que recebem o resultado (a primeira é resultado_membro_id)
+  resultado_membros: string[];
   versao: number;
   ativo: boolean;
   created_at: string;

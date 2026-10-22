@@ -217,7 +217,7 @@ export const SECOES: SecaoGuia[] = [
           "Defina o horário preferencial, a tolerância (depois disso fica atrasado) e a repetição (todos os dias, a cada 2 ou 3 dias, dias úteis, às segundas, toda semana...). Se mudar o horário depois, a tarefa de hoje que ainda não foi iniciada vai para o novo horário, sem ficar duplicada.",
           "Escolha um ou mais responsáveis: cada um recebe a tarefa, o lembrete e aparece no resumo do dia, e puxa a equipe para preencher. Ao trocar os responsáveis, as tarefas abertas de hoje em diante passam para os novos.",
           "Em Lembrete antes, diga quantos minutos antes o responsável recebe o aviso no WhatsApp (0 = sem lembrete).",
-          "Em Recebe o resultado, escolha quem recebe o resumo no WhatsApp quando o check-list é concluído. Quem só recebe o resultado não ganha a tarefa nem o lembrete.",
+          "Em Recebe o resultado, escolha uma ou mais pessoas que recebem o resumo no WhatsApp quando o check-list é concluído (o aviso sai pelo número real da unidade). Quem só recebe o resultado não ganha a tarefa nem o lembrete.",
           "Marque se ele fica disponível no QR Code e quem pode preencher por lá: qualquer pessoa digitando o nome, ou só colaboradores com PIN.",
           "Adicione os itens. Cada um pode ser Sim/Não/Em processo, número ou texto.",
           "Em cada item, escolha se é obrigatório, se aceita foto, se a foto é obrigatória quando a resposta for \"Não\" e se um \"Não\" abre chamado de manutenção sozinho.",
@@ -250,7 +250,7 @@ export const SECOES: SecaoGuia[] = [
           "Responda os itens, tire as fotos e toque em Salvar e enviar.",
           "As fotos são tiradas na hora: o botão de foto abre a câmera e uma foto antiga (de mais de 10 minutos, da galeria) é recusada.",
           "As fotos de check-lists, tarefas e manutenções ficam guardadas por 30 dias e depois são apagadas sozinhas, para não encher o espaço do sistema. As respostas e o histórico continuam; só a imagem some. Se precisar de uma foto por mais tempo, abra a imagem e salve no celular antes.",
-          "Depois de salvo, se o WhatsApp do Atalaia já enviou o resultado (regras em WhatsApp › Destinatários), a tela avisa e deixa só um link discreto Enviar também pelo meu WhatsApp, como plano B. Se nenhum aviso automático saiu, aparece o botão verde Enviar resumo no WhatsApp, que abre o seu WhatsApp com o texto pronto para o grupo ou para quem você escolher. Nesse envio manual os emojis ficam de fora do texto, porque o WhatsApp do Windows os troca por \"�\".",
+          "Depois de salvo, se o WhatsApp do Atalaia já enviou o resultado (pessoas em Recebe o resultado), a tela avisa e deixa só um link discreto Enviar também pelo meu WhatsApp, como plano B. Se nenhum aviso automático saiu, aparece o botão verde Enviar resumo no WhatsApp, que abre o seu WhatsApp com o texto pronto para o grupo ou para quem você escolher. Nesse envio manual os emojis ficam de fora do texto, porque o WhatsApp do Windows os troca por \"�\".",
         ],
       },
       {
@@ -673,10 +673,10 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Só números autorizados recebem mensagens. Cadastre nome e WhatsApp, ligando ao colaborador quando for alguém da equipe.",
           "Em Automações, Autorizar a equipe pelo celular do cadastro autoriza todo mundo de uma vez.",
-          "Em Avisos automáticos de check-list, escolha quem recebe quando um check-list é concluído.",
-          "Regra marcada (ensaio) usa o número real da unidade quando ele estiver conectado. Cada pessoa recebe um aviso só por check-list, mesmo estando numa regra e em Recebe o resultado.",
+          "Quem recebe o aviso de check-list concluído agora se escolhe dentro do próprio check-list, no campo Recebe o resultado. Aqui só aparecem, se existirem, as regras antigas de números de fora da equipe, com o botão Remover.",
+          "Cada pessoa recebe um aviso só por check-list, mesmo estando numa regra antiga e em Recebe o resultado.",
           "Cadastrou errado? Toque no nome do destinatário, corrija o nome ou o número e salve. Número novo é autorizado na hora e o antigo deixa de receber.",
-          "Funcionário saiu? Use Desativar (para de receber e o histórico fica) ou Excluir (apaga o cadastro e as regras de check-list dele). Quem já recebeu avisos só pode ser desativado.",
+          "Funcionário saiu? Use Desativar (para de receber e o histórico fica) ou Excluir (apaga o cadastro e as regras antigas dele). Quem já recebeu avisos só pode ser desativado.",
         ],
       },
       {
