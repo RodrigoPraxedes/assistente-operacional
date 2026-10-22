@@ -41,9 +41,12 @@ export function FormModelo({
   setores,
   categorias,
   membros,
+  copia = false,
 }: {
   empresaId: string;
   modelo: ChecklistModelo | null;
+  // modelo é a origem de "salvar e copiar": preenche o formulário, mas cria um check-list novo
+  copia?: boolean;
   itens: ChecklistItem[];
   unidades: Opcao[];
   setores: Opcao[];
@@ -52,9 +55,13 @@ export function FormModelo({
 }) {
   const [estado, acao] = useActionState(salvarModelo.bind(null, empresaId), undefined);
   const [itens, setItens] = useState<ItemEditavel[]>(
-    iniciais.length ? iniciais.map((i) => ({ ...i, chave: i.id })) : [novoItem()],
+    iniciais.length
+      ? iniciais.map((i) => (copia ? { ...i, id: undefined, chave: `copia-${++seq}` } : { ...i, chave: i.id })) : [novoItem()],
   );
   const regra = modelo?.recorrencia ?? "FREQ=DAILY";
+  // o aviso de visibilidade reenvia o formulário sem o botão clicado; por isso a escolha vai num campo oculto
+  const continuar = useRef<HTMLInputElement>(null);
+  const marcar = (v: string) => continuar.current && (continuar.current.value = v);
 
   const alterar = (chave: string, mudanca: Partial<ItemEditavel>) =>
     setItens((xs) => xs.map((x) => (x.chave === chave ? { ...x, ...mudanca } : x)));
@@ -97,12 +104,19 @@ export function FormModelo({
 
   return (
     <form action={acao} className="space-y-4">
-      {modelo && <input type="hidden" name="id" value={modelo.id} />}
+      <input ref={continuar} type="hidden" name="continuar" defaultValue="" />
+      {modelo && !copia && <input type="hidden" name="id" value={modelo.id} />}
       <input type="hidden" name="itens" value={JSON.stringify(itens)} />
 
       <Cartao className="space-y-4">
         <Campo rotulo="Nome do check-list">
-          <Input name="nome" defaultValue={modelo?.nome} placeholder="Ex.: Abertura da cozinha" required />
+          <Input
+            name="nome"
+            defaultValue={copia ? `Cópia de ${modelo?.nome}` : modelo?.nome}
+            autoFocus={copia}
+            onFocus={(e) => copia && e.currentTarget.select()}
+            placeholder="Ex.: Abertura da cozinha" required
+          />
         </Campo>
         <Campo rotulo="Descrição">
           <Textarea name="descricao" rows={2} defaultValue={modelo?.descricao ?? ""} />
@@ -325,7 +339,12 @@ export function FormModelo({
       </Cartao>
 
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
-      <BotaoEnviar>Salvar check-list</BotaoEnviar>
+      <div className="flex flex-wrap gap-2">
+        <BotaoEnviar onClick={() => marcar("")}>Salvar check-list</BotaoEnviar>
+        <BotaoEnviar variante="secundario" onClick={() => marcar("1")}>
+          Salvar e copiar
+        </BotaoEnviar>
+      </div>
     </form>
   );
 }
