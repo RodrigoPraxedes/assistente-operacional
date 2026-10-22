@@ -234,6 +234,13 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
       {
+        titulo: "Achar um check-list",
+        passos: [
+          "Na lista de cards, use a barra Buscar check-list para procurar pelo nome (não importa acento nem maiúscula).",
+          "Ao lado, filtre por Setor, Unidade, Com ou sem QR Code e Ativos ou inativos. Os filtros valem na hora e podem ser combinados; toque em Limpar para voltar a ver todos.",
+        ],
+      },
+      {
         titulo: "Preencher",
         passos: [
           "No app: toque em Preencher no cartão do check-list, ou no botão azul de lista do cartão em Tarefas (também há Abrir check-list dentro da tarefa).",
