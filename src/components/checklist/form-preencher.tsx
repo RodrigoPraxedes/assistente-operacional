@@ -58,14 +58,23 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, mo
       <div className="space-y-4 text-center">
         <Aviso tipo="sucesso">Check-list salvo!</Aviso>
         <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-left text-xs text-slate-700">{estado.resumo}</pre>
-        <a
-          href={estado.whatsapp}
-          target="_blank"
-          rel="noopener"
-          className="inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-3 font-medium text-white hover:bg-green-700"
-        >
-          Enviar resumo no WhatsApp
-        </a>
+        {estado.automatico ? (
+          <p className="text-sm text-slate-600">
+            O resultado já foi enviado pelo WhatsApp do Atalaia.{" "}
+            <a href={estado.whatsapp} target="_blank" rel="noopener" className="text-blue-600">
+              Enviar também pelo meu WhatsApp
+            </a>
+          </p>
+        ) : (
+          <a
+            href={estado.whatsapp}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-3 font-medium text-white hover:bg-green-700"
+          >
+            Enviar resumo no WhatsApp
+          </a>
+        )}
         <a href={voltar.href} className="block text-sm text-blue-600">
           {voltar.rotulo}
         </a>

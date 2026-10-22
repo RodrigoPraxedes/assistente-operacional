@@ -250,7 +250,7 @@ export const SECOES: SecaoGuia[] = [
           "Responda os itens, tire as fotos e toque em Salvar e enviar.",
           "As fotos são tiradas na hora: o botão de foto abre a câmera e uma foto antiga (de mais de 10 minutos, da galeria) é recusada.",
           "As fotos de check-lists, tarefas e manutenções ficam guardadas por 30 dias e depois são apagadas sozinhas, para não encher o espaço do sistema. As respostas e o histórico continuam; só a imagem some. Se precisar de uma foto por mais tempo, abra a imagem e salve no celular antes.",
-          "Depois de salvo, o botão Enviar resumo no WhatsApp manda o resultado para o grupo ou para quem você escolher.",
+          "Depois de salvo, se o WhatsApp do Atalaia já enviou o resultado (regras em WhatsApp › Destinatários), a tela avisa e deixa só um link discreto Enviar também pelo meu WhatsApp, como plano B. Se nenhum aviso automático saiu, aparece o botão verde Enviar resumo no WhatsApp, que abre o seu WhatsApp com o texto pronto para o grupo ou para quem você escolher. Nesse envio manual os emojis ficam de fora do texto, porque o WhatsApp do Windows os troca por \"�\".",
         ],
       },
       {
@@ -309,7 +309,7 @@ export const SECOES: SecaoGuia[] = [
           "Com meta, cada item mostra na hora a meta do dia e quanto falta, em vermelho (ou Meta atingida ✓).",
           "Se a contagem pede quanto vai fazer, cada item tem dois campos: Tem (o que foi contado) e o da ação (ex.: Embalar), que já mostra a sugestão. Digite o que vai fazer de fato; em branco, vale a sugestão.",
           "Precisou acrescentar no mesmo turno (ex.: colocou 20 para assar e agora mais 10)? Abra a contagem de novo, mesma data e turno, marque Nova remessa e informe só o campo da ação (o Tem fica opcional). A remessa aparece marcada em Resultados e no Excel, com horário e quem fez; o envio anterior não muda.",
-          "Toque em Salvar contagem. Depois de salvo, Enviar resumo no WhatsApp manda as quantidades para o grupo.",
+          "Toque em Salvar contagem. Depois de salvo, se alguém foi escolhido em Recebe o resultado, a tela avisa que o WhatsApp do Atalaia já enviou e deixa só um link discreto Enviar também pelo meu WhatsApp. Sem esse aviso automático, o botão verde Enviar resumo no WhatsApp abre o seu WhatsApp com as quantidades prontas para o grupo.",
           "O cartão mostra Feito hoje com o turno e a hora de cada envio; no QR aparece o selo verde Feito hoje.",
         ],
       },
