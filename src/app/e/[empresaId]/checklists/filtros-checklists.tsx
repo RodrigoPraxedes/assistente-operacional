@@ -42,17 +42,17 @@ export function FiltrosChecklists({
   }
 
   return (
-    <div className="flex flex-wrap items-end gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Input
         type="search"
         value={texto}
         onChange={(e) => digitar(e.target.value)}
         placeholder="Buscar nome, descrição, setor..."
         aria-label="Buscar check-list"
-        className="w-56 flex-1 sm:flex-none"
+        className="flex-[2_1_14rem]"
       />
       {setores.length > 0 && (
-        <Select value={setor} onChange={(e) => aplicar({ setor: e.target.value })} aria-label="Setor" className="w-auto">
+        <Select value={setor} onChange={(e) => aplicar({ setor: e.target.value })} aria-label="Setor" className="flex-[1_1_9rem]">
           <option value="">Todos os setores</option>
           {setores.map((s) => (
             <option key={s.id} value={s.id}>
@@ -62,7 +62,7 @@ export function FiltrosChecklists({
         </Select>
       )}
       {unidades.length > 1 && (
-        <Select value={unidade} onChange={(e) => aplicar({ unidade: e.target.value })} aria-label="Unidade" className="w-auto">
+        <Select value={unidade} onChange={(e) => aplicar({ unidade: e.target.value })} aria-label="Unidade" className="flex-[1_1_9rem]">
           <option value="">Todas as unidades</option>
           {unidades.map((u) => (
             <option key={u.id} value={u.id}>
@@ -71,12 +71,12 @@ export function FiltrosChecklists({
           ))}
         </Select>
       )}
-      <Select value={qr} onChange={(e) => aplicar({ qr: e.target.value })} aria-label="QR Code" className="w-auto">
+      <Select value={qr} onChange={(e) => aplicar({ qr: e.target.value })} aria-label="QR Code" className="flex-[1_1_9rem]">
         <option value="">Com ou sem QR Code</option>
         <option value="com">Com QR Code</option>
         <option value="sem">Sem QR Code</option>
       </Select>
-      <Select value={situacao} onChange={(e) => aplicar({ situacao: e.target.value })} aria-label="Situação" className="w-auto">
+      <Select value={situacao} onChange={(e) => aplicar({ situacao: e.target.value })} aria-label="Situação" className="flex-[1_1_9rem]">
         <option value="">Ativos e inativos</option>
         <option value="ativos">Só ativos</option>
         <option value="inativos">Só inativos</option>
