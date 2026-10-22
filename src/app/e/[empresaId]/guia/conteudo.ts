@@ -197,7 +197,7 @@ export const SECOES: SecaoGuia[] = [
     ],
     dicas: [
       "Tarefas de dias futuros (check-lists e ações recorrentes) só aparecem no dia. Check-lists aparecem 1 hora antes do horário.",
-      "Concluídas somem do quadro depois de 7 dias e canceladas depois de 48 horas. Elas continuam guardadas.",
+      "Na coluna Concluído, a tarefa concluída mais recentemente aparece primeiro. Concluídas somem do quadro depois de 7 dias e canceladas depois de 48 horas. Elas continuam guardadas.",
       "Check-list concluído não aparece em Tarefas (nem no quadro, nem na lista), porque se repete várias vezes ao dia. Ele continua na Central de Check-lists, no histórico e nas contagens do Painel.",
     ],
   },

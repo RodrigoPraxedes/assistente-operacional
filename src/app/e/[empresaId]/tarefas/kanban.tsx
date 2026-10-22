@@ -329,6 +329,9 @@ export function Kanban({
         <div ref={quadro} className="flex gap-3 overflow-x-auto pb-4">
           {colunas.map((s) => {
             const daColuna = tarefas.filter((t) => t.status_id === s.id);
+            // Concluído: a concluída mais recentemente aparece primeiro
+            if (s.tipo === "concluido")
+              daColuna.sort((a, b) => (b.concluida_em ?? "").localeCompare(a.concluida_em ?? ""));
             return (
               <section
                 key={s.id}
