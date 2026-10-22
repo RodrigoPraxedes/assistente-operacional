@@ -236,7 +236,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Achar um check-list",
         passos: [
-          "Na lista de cards, use a barra Buscar check-list para procurar pelo nome (não importa acento nem maiúscula).",
+          "Na lista de cards, use a barra de busca para procurar pelo nome, pela descrição ou pelo setor do check-list (não importa acento nem maiúscula).",
           "Ao lado, filtre por Setor, Unidade, Com ou sem QR Code e Ativos ou inativos. Os filtros valem na hora e podem ser combinados; toque em Limpar para voltar a ver todos.",
         ],
       },

@@ -31,6 +31,7 @@ export default async function PaginaChecklists({
       : Promise.resolve({ data: [] }),
   ]);
   const nomeUnidade = new Map((unidades ?? []).map((u) => [u.id, u.nome]));
+  const nomeSetor = new Map((setores ?? []).map((s) => [s.id, s.nome]));
   const base = `/e/${empresaId}/checklists`;
 
   const normalizar = (t: string) => t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -38,7 +39,7 @@ export default async function PaginaChecklists({
   const filtrando = Boolean(filtros.busca || filtros.setor || filtros.unidade || filtros.qr || filtros.situacao);
   const visiveis = ((modelos ?? []) as ChecklistModelo[]).filter(
     (m) =>
-      (!termo || normalizar(m.nome).includes(termo)) &&
+      (!termo || normalizar(`${m.nome} ${m.descricao ?? ""} ${m.setor_id ? nomeSetor.get(m.setor_id) ?? "" : ""}`).includes(termo)) &&
       (!filtros.setor || m.setor_id === filtros.setor) &&
       (!filtros.unidade || m.unidade_id === filtros.unidade) &&
       (filtros.qr !== "com" || m.publico_qr) &&
