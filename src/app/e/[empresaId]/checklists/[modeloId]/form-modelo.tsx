@@ -176,16 +176,16 @@ export function FormModelo({
               ))}
             </Select>
           </Campo>
-          <Campo rotulo="Recebe o resultado" dica="Recebe o resumo no WhatsApp quando o check-list é concluído">
-            <Select name="resultado_membro_id" defaultValue={modelo?.resultado_membro_id ?? ""}>
-              <option value="">—</option>
-              {membros.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nome}
-                </option>
-              ))}
-            </Select>
-          </Campo>
+          <div>
+            <SeletorResponsaveis
+              rotulo="Recebe o resultado"
+              name="resultado_membros"
+              inicial={modelo?.resultado_membros ?? (modelo?.resultado_membro_id ? [modelo.resultado_membro_id] : [])}
+              membros={membros}
+              vazio="Ninguém"
+              dica="Recebem o resumo no WhatsApp quando o check-list é concluído"
+            />
+          </div>
           <Campo rotulo="Situação">
             <Select name="ativo" defaultValue={String(modelo?.ativo ?? true)}>
               <option value="true">Ativo</option>

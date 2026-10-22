@@ -35,8 +35,9 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
 
   const responsaveis = form.getAll("responsaveis").map(String).filter(Boolean);
   if (!responsaveis.length) return { erro: "Escolha ao menos um responsável pelo check-list" };
-  const resultado = txt("resultado_membro_id");
-  // o link de WhatsApp ao final do preenchimento vai para quem recebe o resultado
+  const resultados = form.getAll("resultado_membros").map(String).filter(Boolean);
+  const resultado = resultados[0] ?? null;
+  // o link de WhatsApp ao final do preenchimento vai para a primeira pessoa que recebe o resultado
   const { data: destino } = resultado
     ? await supabase.from("membros").select("telefone").eq("id", resultado).eq("empresa_id", empresaId).maybeSingle()
     : { data: null };
@@ -51,7 +52,7 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
     setor_id: txt("setor_id"),
     categoria_id: txt("categoria_id"),
     responsaveis,
-    resultado_membro_id: resultado,
+    resultado_membros: resultados,
     lembrete_minutos: Number.isInteger(lembrete) && lembrete >= 0 && lembrete <= 720 ? lembrete : 30,
     horario_preferencial: txt("horario_preferencial") ?? "08:00",
     tolerancia_minutos: Number(form.get("tolerancia_minutos") ?? 30) || 0,
