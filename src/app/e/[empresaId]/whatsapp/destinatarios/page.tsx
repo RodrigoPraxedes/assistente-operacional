@@ -5,7 +5,7 @@ import { mascararNumero } from "@/lib/whatsapp-api/sanitizar";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Vazio, estilos } from "@/components/ui";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { alternarContato, removerGatilho, salvarContato, salvarGatilho, vincularContato } from "../actions";
+import { alternarContato, editarContato, excluirContato, removerGatilho, salvarContato, salvarGatilho, vincularContato } from "../actions";
 
 interface Contato {
   id: string;
@@ -113,6 +113,16 @@ export default async function Destinatarios({
                   {!c.ativo && <Etiqueta>Desativado</Etiqueta>}
                 </summary>
                 <div className="space-y-3 px-4 pb-3">
+                  <form action={editarContato.bind(null, empresaId, c.id)} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                    <Campo rotulo="Nome">
+                      <Input name="nome" required maxLength={120} defaultValue={c.nome} />
+                    </Campo>
+                    <Campo rotulo="WhatsApp (DDD + número)">
+                      <Input name="telefone" required inputMode="tel" defaultValue={c.telefone.replace(/^55/, "")} />
+                    </Campo>
+                    <Botao variante="secundario">Salvar</Botao>
+                  </form>
+                  <p className="text-xs text-slate-500">Trocar o número autoriza o número novo agora; o antigo deixa de receber.</p>
                   {c.ativo && (
                     <form action={vincularContato.bind(null, empresaId, c.id)} className="flex flex-wrap items-center gap-2">
                       <span className="text-xs text-slate-500">Colaborador:</span>
@@ -130,6 +140,14 @@ export default async function Destinatarios({
                   {c.ativo && !c.membro_id && <p className="text-xs text-slate-500">Sem colaborador, o número não recebe o resumo do dia.</p>}
                   <form action={alternarContato.bind(null, empresaId, c.id, !c.ativo)}>
                     <Botao variante="secundario">{c.ativo ? "Desativar" : "Reativar"}</Botao>
+                  </form>
+                  <form action={excluirContato.bind(null, empresaId, c.id)}>
+                    <BotaoConfirmar
+                      mensagem={`Excluir ${c.nome}? As regras de check-list ligadas a ele também são removidas. Se já recebeu avisos, use Desativar.`}
+                      className={estilos.botaoPerigo}
+                    >
+                      Excluir
+                    </BotaoConfirmar>
                   </form>
                 </div>
               </details>
