@@ -47,7 +47,7 @@ export function FiltrosChecklists({
         type="search"
         value={texto}
         onChange={(e) => digitar(e.target.value)}
-        placeholder="Buscar check-list..."
+        placeholder="Buscar nome, descrição, setor..."
         aria-label="Buscar check-list"
         className="w-56 flex-1 sm:flex-none"
       />
