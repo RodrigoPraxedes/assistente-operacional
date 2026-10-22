@@ -100,10 +100,6 @@ export default async function PaginaChecklists({
                   <p className="text-xs text-slate-500">
                     {descreverRecorrencia(m.recorrencia)} · {m.unidade_id ? nomeUnidade.get(m.unidade_id) : "Todas as unidades"}
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {m.publico_qr && <Etiqueta cor="#2563eb">QR Code</Etiqueta>}
-                    {!m.ativo && <Etiqueta>Inativo</Etiqueta>}
-                  </div>
                   {feitosHoje.some((x) => x.modelo_id === m.id) && (
                     <p className="flex items-center gap-1 text-xs font-medium text-green-600">
                       <CheckCircle2 size={14} />
@@ -118,7 +114,9 @@ export default async function PaginaChecklists({
                         : `Feito hoje às ${hora(feitosHoje.filter((x) => x.modelo_id === m.id).at(-1)!.enviado_em, empresa.fuso_horario)}`}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {m.publico_qr && <Etiqueta cor="#2563eb">QR Code</Etiqueta>}
+                    {!m.ativo && <Etiqueta>Inativo</Etiqueta>}
                     {m.ativo &&
                       pode("checklist.executar") &&
                       alvo.map((u) => (
