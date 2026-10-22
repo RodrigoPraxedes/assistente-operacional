@@ -308,6 +308,7 @@ export const SECOES: SecaoGuia[] = [
           "Digite a quantidade de cada item. Item que não se aplica pode ficar em branco.",
           "Com meta, cada item mostra na hora a meta do dia e quanto falta, em vermelho (ou Meta atingida ✓).",
           "Se a contagem pede quanto vai fazer, cada item tem dois campos: Tem (o que foi contado) e o da ação (ex.: Embalar), que já mostra a sugestão. Digite o que vai fazer de fato; em branco, vale a sugestão.",
+          "Precisou acrescentar no mesmo turno (ex.: colocou 20 para assar e agora mais 10)? Abra a contagem de novo, mesma data e turno, marque Nova remessa e informe só o campo da ação (o Tem fica opcional). A remessa aparece marcada em Resultados e no Excel, com horário e quem fez; o envio anterior não muda.",
           "Toque em Salvar contagem. Depois de salvo, Enviar resumo no WhatsApp manda as quantidades para o grupo.",
           "O cartão mostra Feito hoje com o turno e a hora de cada envio; no QR aparece o selo verde Feito hoje.",
         ],
@@ -317,7 +318,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Toque em Resultados no cartão: aparece uma tabela como a planilha do formulário, uma linha por envio e uma coluna por item, com a observação no fim. Com meta, o número vermelho embaixo é quanto faltava e o azul é quanto a pessoa disse que vai fazer.",
           "Filtre por período (vem os últimos 30 dias), turno e quem contou, e toque em Filtrar.",
-          "Em Ver, escolha Soma por dia para juntar os turnos de cada dia. O número pequeno é a diferença para o dia anterior.",
+          "Em Ver, escolha Soma por dia para juntar os turnos de cada dia. O número pequeno é a diferença para o dia anterior. A ação (ex.: Assar) soma todas as remessas do dia; o Tem de uma remessa não entra na soma.",
           "A linha Total soma o período.",
           "Baixar Excel gera a planilha do período filtrado, no mesmo formato das respostas do Google Forms.",
           "Quem pode editar contagens vê Apagar em cada linha, para tirar um envio errado ou repetido.",

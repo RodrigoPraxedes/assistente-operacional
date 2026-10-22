@@ -24,6 +24,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ empresaI
     { header: "Data da contagem", key: "data", width: 14 },
     ...(contagem.turnos.length ? [{ header: "Turno", key: "turno", width: 10 }] : []),
     { header: "Nome", key: "nome", width: 20 },
+    ...(registros.some((r) => r.remessa) ? [{ header: "Nova remessa", key: "remessa", width: 12 }] : []),
     ...itens.flatMap((i) => [
       { header: rotuloItem(i), key: `q_${i.id}`, width: 16 },
       ...(contagem.usa_meta
@@ -48,6 +49,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ empresaI
       data: new Date(Date.UTC(y, m - 1, d)),
       turno: r.turno ?? "",
       nome: r.executor_nome,
+      remessa: r.remessa ? "Sim" : "",
       obs: r.observacao ?? "",
     };
     for (const i of itens) {

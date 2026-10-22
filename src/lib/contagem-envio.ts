@@ -14,6 +14,7 @@ export async function enviarContagem(_: EstadoContagem, form: FormData): Promise
   const data = String(form.get("data_ref") ?? "");
   const turno = String(form.get("turno") ?? "");
   const observacao = String(form.get("observacao") ?? "");
+  const remessa = form.get("remessa") === "on";
   const itens: string[] = JSON.parse(String(form.get("itens") ?? "[]"));
   const valores = itens.map((id) => ({
     item_id: id,
@@ -22,7 +23,8 @@ export async function enviarContagem(_: EstadoContagem, form: FormData): Promise
   }));
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return { erro: "Informe a data da contagem." };
-  if (!valores.some((v) => v.quantidade !== "")) return { erro: "Preencha pelo menos uma quantidade." };
+  if (!valores.some((v) => v.quantidade !== "" || (remessa && v.vai_fazer !== "")))
+    return { erro: remessa ? "Informe o que vai fazer em pelo menos um item." : "Preencha pelo menos uma quantidade." };
 
   const { error } =
     canal === "qr"
@@ -34,6 +36,7 @@ export async function enviarContagem(_: EstadoContagem, form: FormData): Promise
           p_turno: turno,
           p_valores: valores,
           p_observacao: observacao,
+          p_remessa: remessa,
         })
       : await (await createClient()).rpc("enviar_contagem", {
           p_contagem: contagemId,
@@ -42,6 +45,7 @@ export async function enviarContagem(_: EstadoContagem, form: FormData): Promise
           p_turno: turno,
           p_valores: valores,
           p_observacao: observacao,
+          p_remessa: remessa,
         });
   if (error) return { erro: error.message };
   return { ok: true };

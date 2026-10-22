@@ -27,6 +27,7 @@ export interface Registro {
   enviado_em: string;
   canal: string;
   observacao: string | null;
+  remessa: boolean;
   valores: Map<string, Valor>;
 }
 
@@ -54,7 +55,7 @@ export async function carregarResultados(supabase: Supabase, empresaId: string, 
   for (let desde = 0; desde < 20000; desde += 1000) {
     let q = supabase
       .from("contagem_registros")
-      .select("id, data_ref, turno, executor_nome, enviado_em, canal, observacao, contagem_valores(item_id, quantidade, meta, a_fazer, vai_fazer)")
+      .select("id, data_ref, turno, executor_nome, enviado_em, canal, observacao, remessa, contagem_valores(item_id, quantidade, meta, a_fazer, vai_fazer)")
       .eq("contagem_id", contagemId)
       .gte("data_ref", f.de)
       .lte("data_ref", f.ate)
@@ -93,7 +94,8 @@ export function somarPorDia(registros: Registro[]): Dia[] {
     d.envios++;
     for (const [id, v] of r.valores) {
       const s = d.soma.get(id) ?? { quantidade: null, meta: null, a_fazer: null, vai_fazer: null };
-      if (v.quantidade !== null) s.quantidade = (s.quantidade ?? 0) + v.quantidade;
+      // remessa é complemento: o "Tem" dela não entra na soma, só o que vai fazer
+      if (v.quantidade !== null && !r.remessa) s.quantidade = (s.quantidade ?? 0) + v.quantidade;
       if (v.a_fazer !== null) s.a_fazer = (s.a_fazer ?? 0) + v.a_fazer;
       if (v.vai_fazer !== null) s.vai_fazer = (s.vai_fazer ?? 0) + v.vai_fazer;
       d.soma.set(id, s);
@@ -107,6 +109,6 @@ export function somarPorDia(registros: Registro[]): Dia[] {
 export function totalPorItem(registros: Registro[]) {
   const total = new Map<string, number>();
   for (const r of registros)
-    for (const [id, v] of r.valores) if (v.quantidade !== null) total.set(id, (total.get(id) ?? 0) + v.quantidade);
+    for (const [id, v] of r.valores) if (v.quantidade !== null && !r.remessa) total.set(id, (total.get(id) ?? 0) + v.quantidade);
   return total;
 }
