@@ -451,7 +451,6 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
     const { data: nomes } = await admin.from("membros").select("id, nome").in("id", idsNomes);
     const nomeDe = new Map((nomes ?? []).map((m) => [m.id, m.nome.trim().split(/\s+/)[0]]));
 
-    const concluir = c.link_prazo ? "conclua pelo link." : "conclua no app.";
     for (const t of vencidas) {
       const base = `${t.titulo}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`;
       const prazo = `Prazo: ${diaMes(t.prazo, fuso)} ${hora(t.prazo, fuso)}`;
@@ -466,7 +465,7 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
           p_unidade: t.unidade_id,
           p_membro: membroId,
           p_texto: responsavel
-            ? [`*Prazo venceu*`, base, prazo, `Se já fez, ${concluir}`].join("\n")
+            ? [`*Prazo venceu*`, base, prazo, `*_Se já fez, sinalize no app como Concluído._*`].join("\n")
             : [`*Prazo venceu e a tarefa segue aberta*`, base, prazo, ...(quemFaz ? [`Responsável: ${quemFaz}`] : [])].join("\n"),
           p_origem: "prazo",
           p_origem_id: t.id,
