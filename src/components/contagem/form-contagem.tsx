@@ -53,6 +53,7 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
   const [vais, setVais] = useState<Record<string, string>>({});
   const pedeVai = contagem.usa_meta && !!contagem.pede_vai_fazer;
   const [nome, setNome] = useState("");
+  const [remessa, setRemessa] = useState(false);
   const dia = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaDaSemana(data) : diaDaSemana(hoje);
 
   const numero = (s: string | undefined) => (s && s.trim() !== "" && !isNaN(Number(s.replace(",", "."))) ? Number(s.replace(",", ".")) : null);
@@ -69,20 +70,20 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
   if (estado && "ok" in estado) {
     const [y, m, d] = data.split("-");
     const linhas = contagem.itens
-      .filter((i) => numero(qtds[i.id]) !== null)
+      .filter((i) => numero(qtds[i.id]) !== null || (remessa && numero(vais[i.id]) !== null))
       .map((i) => {
         const f = vai(i);
-        return `• ${rotuloItem(i)}: ${formatarQtd(numero(qtds[i.id]))}${f ? ` · ${contagem.rotulo_falta.toLowerCase()} ${formatarQtd(f)}` : ""}`;
+        return `• ${rotuloItem(i)}: ${numero(qtds[i.id]) === null ? "—" : formatarQtd(numero(qtds[i.id]))}${f ? ` · ${contagem.rotulo_falta.toLowerCase()} ${formatarQtd(f)}` : ""}`;
       });
     const resumo = [
-      `*${contagem.nome}* — ${d}/${m}/${y}${turno ? ` · ${turno}` : ""}`,
+      `*${contagem.nome}*${remessa ? " (nova remessa)" : ""} — ${d}/${m}/${y}${turno ? ` · ${turno}` : ""}`,
       `Por ${canal === "qr" ? nome : executor}`,
       "",
       ...linhas,
     ].join("\n");
     return (
       <div className="space-y-4 text-center">
-        <Aviso tipo="sucesso">Contagem salva!</Aviso>
+        <Aviso tipo="sucesso">{remessa ? "Remessa salva!" : "Contagem salva!"}</Aviso>
         <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-left text-xs text-slate-700">{resumo}</pre>
         <a
           href={`https://wa.me/?text=${encodeURIComponent(resumo)}`}
@@ -106,6 +107,7 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
       <input type="hidden" name="unidade_id" value={unidadeId ?? ""} />
       <input type="hidden" name="token" value={token ?? ""} />
       <input type="hidden" name="turno" value={turno} />
+      {remessa && <input type="hidden" name="remessa" value="on" />}
       <input type="hidden" name="itens" value={JSON.stringify(contagem.itens.map((i) => i.id))} />
 
       <div className="space-y-4 rounded-xl border border-slate-200 bg-superficie p-4">
@@ -142,6 +144,18 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
           </div>
         )}
       </div>
+
+      {pedeVai && (
+        <label className="flex items-start gap-2 rounded-xl border border-slate-200 bg-superficie p-3 text-sm">
+          <input type="checkbox" checked={remessa} onChange={(e) => setRemessa(e.target.checked)} className="mt-1" />
+          <span>
+            <span className="font-medium text-slate-900">Nova remessa</span>
+            <span className="block text-xs text-slate-500">
+              Complemento no mesmo turno (ex.: mais 10 para {contagem.rotulo_falta.toLowerCase()}). Só o campo {contagem.rotulo_falta} é obrigatório; o Tem é opcional.
+            </span>
+          </span>
+        </label>
+      )}
 
       <ol className="space-y-2">
         {contagem.itens.map((item) => {
@@ -206,7 +220,7 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
       {contagem.turnos.length > 0 && !turno && <p className="text-sm text-slate-500">Escolha o turno para salvar.</p>}
       {estado && "erro" in estado && <Aviso>{estado.erro}</Aviso>}
       <BotaoEnviar className="w-full py-3" pendente="Salvando...">
-        Salvar contagem
+        {remessa ? "Salvar remessa" : "Salvar contagem"}
       </BotaoEnviar>
     </form>
   );

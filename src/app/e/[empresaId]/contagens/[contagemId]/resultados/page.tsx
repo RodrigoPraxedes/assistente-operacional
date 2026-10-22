@@ -122,7 +122,7 @@ export default async function ResultadosContagem({
         {registros.length} envio(s) de {formatarDia(filtros.de)} a {formatarDia(filtros.ate)}.
         {usaMeta && " Em vermelho, quanto faltava para a meta."}
         {usaMeta && contagem.pede_vai_fazer && ` Em azul, quanto a pessoa disse que vai fazer (${contagem.rotulo_falta.toLowerCase()}).`}
-        {porDia && " Na soma por dia, o número pequeno é a diferença para o dia anterior."}
+        {porDia && " Na soma por dia, o número pequeno é a diferença para o dia anterior; o \"Tem\" de uma nova remessa não entra na soma, só o que vai fazer."}
       </p>
 
       {registros.length === 0 ? (
@@ -178,6 +178,7 @@ export default async function ResultadosContagem({
                     <tr key={r.id} className="align-top">
                       <td className="sticky left-0 bg-superficie px-3 py-2 whitespace-nowrap">
                         <span className="font-medium">{diaCurto(r.data_ref)}</span>
+                        {r.remessa && <span className="block text-xs font-medium text-blue-700">Nova remessa</span>}
                         <span className="block text-xs text-slate-500">
                           {r.canal === "importacao" ? "planilha" : `${hora(r.enviado_em, empresa.fuso_horario)}${r.canal === "qr" ? " · QR" : ""}`}
                         </span>
