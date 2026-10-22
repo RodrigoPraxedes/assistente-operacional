@@ -201,6 +201,46 @@ export async function vincularContato(empresaId: string, contatoId: string, form
   voltar(empresaId, "/destinatarios", { ok: "Colaborador vinculado." });
 }
 
+export async function editarContato(empresaId: string, contatoId: string, form: FormData) {
+  const { supabase, membro, pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/destinatarios", { erro: "Sem permissão." });
+  const nome = String(form.get("nome") ?? "").trim();
+  let telefone = soDigitos(String(form.get("telefone") ?? ""));
+  if (telefone.length === 10 || telefone.length === 11) telefone = `55${telefone}`;
+  if (!nome) voltar(empresaId, "/destinatarios", { erro: "Informe o nome." });
+  if (!/^\d{12,13}$/.test(telefone)) voltar(empresaId, "/destinatarios", { erro: "Telefone inválido. Use DDD + número, ex.: (21) 99999-8888." });
+  const { data: atual } = await supabase.from("whatsapp_contatos").select("telefone").eq("id", contatoId).eq("empresa_id", empresaId).maybeSingle();
+  if (!atual) voltar(empresaId, "/destinatarios", { erro: "Destinatário não encontrado." });
+  // número novo = nova autorização (quem autorizou e quando passam a valer para o número novo)
+  const trocouNumero = atual.telefone !== telefone;
+  const { error } = await supabase
+    .from("whatsapp_contatos")
+    .update(trocouNumero ? { nome, telefone, autorizado_por: membro.id, autorizado_em: new Date().toISOString() } : { nome })
+    .eq("id", contatoId)
+    .eq("empresa_id", empresaId);
+  if (error)
+    voltar(empresaId, "/destinatarios", {
+      erro: error.code === "23505" ? "Este telefone já está cadastrado em outro destinatário." : error.message,
+    });
+  atualizar(empresaId);
+  voltar(empresaId, "/destinatarios", { ok: trocouNumero ? "Destinatário atualizado. O número novo foi autorizado agora." : "Destinatário atualizado." });
+}
+
+export async function excluirContato(empresaId: string, contatoId: string) {
+  const { supabase, pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/destinatarios", { erro: "Sem permissão." });
+  const { error } = await supabase.from("whatsapp_contatos").delete().eq("id", contatoId).eq("empresa_id", empresaId);
+  if (error)
+    voltar(empresaId, "/destinatarios", {
+      erro:
+        error.code === "23503"
+          ? "Este destinatário já recebeu avisos e o histórico precisa dele. Use Desativar: ele para de receber e o histórico fica."
+          : error.message,
+    });
+  atualizar(empresaId);
+  voltar(empresaId, "/destinatarios", { ok: "Destinatário excluído." });
+}
+
 export async function salvarGatilho(empresaId: string, form: FormData) {
   const { supabase, membro } = await getContexto(empresaId);
   const { error } = await supabase.from("whatsapp_gatilhos").insert({
