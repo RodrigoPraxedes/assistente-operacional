@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
 import { descreverRecorrencia } from "@/lib/recorrencia";
+import { dataDeHoje } from "@/lib/contagens";
 import { formatarDataHora } from "@/lib/formato";
 import type { ChecklistModelo } from "@/lib/types";
 import { FiltrosChecklists } from "./filtros-checklists";
 import { Aviso, Cartao, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
+
+function hora(iso: string, fuso: string) {
+  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso }).format(new Date(iso));
+}
 
 export default async function PaginaChecklists({
   params,
@@ -17,7 +23,7 @@ export default async function PaginaChecklists({
   const { salvo, excluido, ...filtros } = await searchParams;
   const { supabase, empresa, pode } = await getContexto(empresaId);
 
-  const [{ data: modelos }, { data: unidades }, { data: setores }, { data: execucoes }] = await Promise.all([
+  const [{ data: modelos }, { data: unidades }, { data: setores }, { data: execucoes }, { data: recentes }] = await Promise.all([
     supabase.from("checklist_modelos").select("*").eq("empresa_id", empresaId).order("horario_preferencial"),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).order("nome"),
@@ -29,7 +35,15 @@ export default async function PaginaChecklists({
           .order("enviado_em", { ascending: false })
           .limit(20)
       : Promise.resolve({ data: [] }),
+    supabase
+      .from("checklist_execucoes")
+      .select("modelo_id, unidade_id, enviado_em")
+      .eq("empresa_id", empresaId)
+      .gte("enviado_em", new Date(Date.now() - 36 * 3600_000).toISOString())
+      .order("enviado_em"),
   ]);
+  const hoje = dataDeHoje(empresa.fuso_horario);
+  const feitosHoje = (recentes ?? []).filter((x) => new Intl.DateTimeFormat("en-CA", { timeZone: empresa.fuso_horario }).format(new Date(x.enviado_em)) === hoje);
   const nomeUnidade = new Map((unidades ?? []).map((u) => [u.id, u.nome]));
   const nomeSetor = new Map((setores ?? []).map((s) => [s.id, s.nome]));
   const base = `/e/${empresaId}/checklists`;
@@ -90,6 +104,20 @@ export default async function PaginaChecklists({
                     {m.publico_qr && <Etiqueta cor="#2563eb">QR Code</Etiqueta>}
                     {!m.ativo && <Etiqueta>Inativo</Etiqueta>}
                   </div>
+                  {feitosHoje.some((x) => x.modelo_id === m.id) && (
+                    <p className="flex items-center gap-1 text-xs font-medium text-green-600">
+                      <CheckCircle2 size={14} />
+                      {alvo.length > 1
+                        ? `Feito hoje: ${alvo
+                            .map((u) => {
+                              const f = feitosHoje.filter((x) => x.modelo_id === m.id && x.unidade_id === u.id).at(-1);
+                              return f ? `${u.nome} às ${hora(f.enviado_em, empresa.fuso_horario)}` : null;
+                            })
+                            .filter(Boolean)
+                            .join(", ")}`
+                        : `Feito hoje às ${hora(feitosHoje.filter((x) => x.modelo_id === m.id).at(-1)!.enviado_em, empresa.fuso_horario)}`}
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-2 pt-1">
                     {m.ativo &&
                       pode("checklist.executar") &&
