@@ -672,6 +672,7 @@ export const SECOES: SecaoGuia[] = [
           "Só números autorizados recebem mensagens. Cadastre nome e WhatsApp, ligando ao colaborador quando for alguém da equipe.",
           "Em Automações, Autorizar a equipe pelo celular do cadastro autoriza todo mundo de uma vez.",
           "Em Avisos automáticos de check-list, escolha quem recebe quando um check-list é concluído.",
+          "Regra marcada (ensaio) usa o número real da unidade quando ele estiver conectado. Cada pessoa recebe um aviso só por check-list, mesmo estando numa regra e em Recebe o resultado.",
           "Cadastrou errado? Toque no nome do destinatário, corrija o nome ou o número e salve. Número novo é autorizado na hora e o antigo deixa de receber.",
           "Funcionário saiu? Use Desativar (para de receber e o histórico fica) ou Excluir (apaga o cadastro e as regras de check-list dele). Quem já recebeu avisos só pode ser desativado.",
         ],

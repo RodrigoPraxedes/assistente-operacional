@@ -21,7 +21,7 @@ interface Gatilho {
   id: string;
   checklist_modelos: { nome: string } | null;
   whatsapp_contatos: { nome: string } | null;
-  whatsapp_conexoes: { unidades: { nome: string } | null } | null;
+  whatsapp_conexoes: { provedor: string; unidades: { nome: string } | null } | null;
 }
 
 export default async function Destinatarios({
@@ -47,15 +47,16 @@ export default async function Destinatarios({
     supabase.from("membros").select("id, nome, telefone").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase
       .from("whatsapp_gatilhos")
-      .select("id, checklist_modelos(nome), whatsapp_contatos(nome), whatsapp_conexoes(unidades(nome))")
+      .select("id, checklist_modelos(nome), whatsapp_contatos(nome), whatsapp_conexoes(provedor, unidades(nome))")
       .eq("empresa_id", empresaId)
       .order("created_at")
       .returns<Gatilho[]>(),
     supabase
       .from("whatsapp_conexoes")
-      .select("id, unidades(nome)")
+      .select("id, provedor, unidades(nome)")
       .eq("empresa_id", empresaId)
-      .returns<{ id: string; unidades: { nome: string } | null }[]>(),
+      .order("provedor")
+      .returns<{ id: string; provedor: string; unidades: { nome: string } | null }[]>(),
     supabase.from("checklist_modelos").select("id, nome").eq("empresa_id", empresaId).order("nome"),
   ]);
   const ativos = (contatos ?? []).filter((c) => c.ativo);
@@ -189,6 +190,7 @@ export default async function Destinatarios({
                 {conexoes.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.unidades?.nome ?? "Empresa toda"}
+                    {c.provedor === "simulacao" && " (ensaio)"}
                   </option>
                 ))}
               </Select>
@@ -207,6 +209,9 @@ export default async function Destinatarios({
                 <p className="min-w-0 flex-1 text-slate-700">
                   <strong>{g.checklist_modelos?.nome}</strong> concluído → avisar <strong>{g.whatsapp_contatos?.nome}</strong>
                   <span className="text-slate-500"> · {g.whatsapp_conexoes?.unidades?.nome ?? "Empresa toda"}</span>
+                  {g.whatsapp_conexoes?.provedor === "simulacao" && (
+                    <span className="text-slate-500"> (ensaio: sai pelo número real da unidade, se houver)</span>
+                  )}
                 </p>
                 <form action={removerGatilho.bind(null, empresaId, g.id)}>
                   <BotaoConfirmar mensagem="Remover esta regra?" className={estilos.botaoPerigo}>
