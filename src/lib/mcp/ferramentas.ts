@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { formatarData, formatarDataHora, formatarDia, hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
 import { hojeIso, horarioTurno, ordenarTurnos, somarDias } from "@/lib/escala";
+import { diaDaSemana, metaDoDia } from "@/lib/contagens";
+import { DIAS_SEMANA as DIAS_ROTINA } from "@/lib/rotinas";
 import { proximaOcorrencia, descreverRecorrencia } from "@/lib/recorrencia";
 import {
   AUSENCIAS,
@@ -1914,6 +1916,304 @@ const historico_do_equipamento: Ferramenta = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Contagens
+// ---------------------------------------------------------------------------
+
+type ContagemLinha = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  unidade_id: string | null;
+  setor_id: string | null;
+  turnos: string[];
+  usa_meta: boolean;
+  rotulo_falta: string;
+  pede_vai_fazer: boolean;
+  agendada: boolean;
+  horarios: string[];
+  ativo: boolean;
+};
+type ItemLinha = {
+  id: string;
+  contagem_id: string;
+  nome: string;
+  unidade_medida: string | null;
+  metas: (number | null)[] | null;
+  meta_dia_seguinte: boolean;
+  ativo: boolean;
+  ordem: number;
+};
+
+const SEL_CONTAGEM = "id, nome, descricao, unidade_id, setor_id, turnos, usa_meta, rotulo_falta, pede_vai_fazer, agendada, horarios, ativo";
+const SEL_ITEM = "id, contagem_id, nome, unidade_medida, metas, meta_dia_seguinte, ativo, ordem";
+
+async function acharContagem(ctx: ContextoMcp, empresaId: string, busca: string) {
+  const { data, error } = await ctx.supabase
+    .from("contagens")
+    .select(SEL_CONTAGEM)
+    .eq("empresa_id", empresaId)
+    .returns<ContagemLinha[]>();
+  if (error) throw new Error("Não consegui consultar as contagens.");
+  const lista = data ?? [];
+  const achadas = lista.filter((c) => c.id === busca || contem(c.nome, busca));
+  if (achadas.length === 0) throw new Error(`Contagem "${busca}" não encontrada. Opções: ${lista.map((c) => c.nome).join(", ")}.`);
+  const exata = achadas.find((c) => c.nome.toLowerCase() === busca.toLowerCase());
+  if (achadas.length > 1 && !exata) throw new Error(`Mais de uma contagem com "${busca}": ${achadas.map((c) => c.nome).join(", ")}.`);
+  return exata ?? achadas[0];
+}
+
+const metasPorDia = (metas: (number | null)[] | null) =>
+  metas && metas.some((m) => m !== null)
+    ? Object.fromEntries(DIAS_ROTINA.map((d, i) => [d.curto, metaDoDia(metas, i + 1)]))
+    : undefined;
+
+const contagens: Ferramenta = {
+  nome: "contagens",
+  titulo: "Contagens cadastradas",
+  descricao:
+    "As contagens de quantidades por turno (ex.: churrasqueira, embalar saladas): turnos, se usa meta, horário agendado, unidade, setor e os itens de cada uma com unidade de medida e a meta por dia da semana.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      texto: { type: "string", description: "Parte do nome da contagem." },
+      incluir_inativas: { type: "boolean" },
+      com_itens: { type: "boolean", description: "true = lista os itens com as metas por dia (padrão: só a quantidade de itens)." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const n = await nomes(ctx, e.empresaId);
+    let q = ctx.supabase.from("contagens").select(SEL_CONTAGEM).eq("empresa_id", e.empresaId).order("nome");
+    if (args.incluir_inativas !== true) q = q.eq("ativo", true);
+    const { data, error } = await q.returns<ContagemLinha[]>();
+    if (error) throw new Error("Não consegui consultar as contagens.");
+    const busca = texto(args.texto);
+    const lista = (data ?? []).filter((c) => !busca || contem(c.nome, busca));
+    const { data: itens } = lista.length
+      ? await ctx.supabase
+          .from("contagem_itens")
+          .select(SEL_ITEM)
+          .in("contagem_id", lista.map((c) => c.id))
+          .eq("ativo", true)
+          .order("ordem")
+          .returns<ItemLinha[]>()
+      : { data: [] as ItemLinha[] };
+    return {
+      empresa: e.empresa,
+      contagens: lista.map((c) => {
+        const deles = (itens ?? []).filter((i) => i.contagem_id === c.id);
+        return {
+          contagem: c.nome,
+          descricao: c.descricao || undefined,
+          turnos: c.turnos.length ? c.turnos : undefined,
+          unidade: n.unidade(c.unidade_id) ?? "todas as unidades",
+          setor: n.setor(c.setor_id) ?? undefined,
+          usa_meta: c.usa_meta,
+          coluna_falta: c.usa_meta ? c.rotulo_falta : undefined,
+          pede_o_que_vai_fazer: c.pede_vai_fazer || undefined,
+          horarios: c.agendada ? c.horarios.map((h) => h.slice(0, 5)) : undefined,
+          itens:
+            args.com_itens === true
+              ? deles.map((i) => ({
+                  item: i.nome,
+                  unidade_medida: i.unidade_medida ?? undefined,
+                  metas_por_dia: metasPorDia(i.metas),
+                  meta_e_do_dia_seguinte: i.meta_dia_seguinte || undefined,
+                }))
+              : deles.length,
+          inativa: !c.ativo || undefined,
+        };
+      }),
+    };
+  },
+};
+
+type ValorLinha = { item_id: string; quantidade: number | null; meta: number | null; a_fazer: number | null; vai_fazer: number | null };
+type RegistroLinha = {
+  id: string;
+  data_ref: string;
+  turno: string | null;
+  executor_nome: string;
+  canal: string;
+  observacao: string | null;
+  enviado_em: string;
+  contagem_valores: ValorLinha[];
+};
+
+const resultados_de_contagem: Ferramenta = {
+  nome: "resultados_de_contagem",
+  titulo: "Resultados de uma contagem",
+  descricao:
+    "Os registros de uma contagem num período (padrão: últimos 7 dias): data, turno, quem contou e, por item, a quantidade, a meta do dia, o que faltava (a_fazer) e o que a pessoa disse que vai fazer (vai_fazer). Exige a permissão de ver resultados das contagens; sem ela só aparecem os registros feitos pela própria pessoa.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      contagem: { type: "string", description: "Nome (ou parte) da contagem." },
+      de: { type: "string", description: "Data inicial AAAA-MM-DD." },
+      ate: { type: "string", description: "Data final AAAA-MM-DD." },
+      turno: { type: "string", description: "Ex.: Dia ou Noite." },
+      quem: { type: "string", description: "Parte do nome de quem contou." },
+      item: { type: "string", description: "Parte do nome de um item, para ver só ele." },
+      limite: { type: "number", description: "Máximo de registros (padrão 30, máximo 100); os mais recentes primeiro." },
+    },
+    required: ["contagem"],
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const c = await acharContagem(ctx, e.empresaId, texto(args.contagem) ?? "");
+    const hoje = hojeIso(e.fuso);
+    const ate = dataIso(args.ate) ?? hoje;
+    const de = dataIso(args.de) ?? somarDias(ate, -6);
+    const limite = numero(args.limite, 30, 100);
+    const { data: itens } = await ctx.supabase
+      .from("contagem_itens")
+      .select(SEL_ITEM)
+      .eq("contagem_id", c.id)
+      .order("ordem")
+      .returns<ItemLinha[]>();
+    const nomeItem = new Map((itens ?? []).map((i) => [i.id, i]));
+    const filtroItem = texto(args.item);
+    const idsItem = filtroItem ? (itens ?? []).filter((i) => contem(i.nome, filtroItem)).map((i) => i.id) : null;
+    if (idsItem && idsItem.length === 0) throw new Error(`Item "${filtroItem}" não existe nessa contagem. Itens: ${(itens ?? []).map((i) => i.nome).join(", ")}.`);
+
+    let q = ctx.supabase
+      .from("contagem_registros")
+      .select("id, data_ref, turno, executor_nome, canal, observacao, enviado_em, contagem_valores(item_id, quantidade, meta, a_fazer, vai_fazer)")
+      .eq("contagem_id", c.id)
+      .gte("data_ref", de)
+      .lte("data_ref", ate)
+      .order("data_ref", { ascending: false })
+      .order("enviado_em", { ascending: false })
+      .limit(limite + 1);
+    const turno = texto(args.turno);
+    if (turno) q = q.ilike("turno", turno);
+    const { data, error } = await q.returns<RegistroLinha[]>();
+    if (error) throw new Error("Não consegui consultar os resultados da contagem.");
+    const quem = texto(args.quem);
+    const todos = (data ?? []).filter((r) => !quem || contem(r.executor_nome, quem));
+    const registros = todos.slice(0, limite);
+    return {
+      empresa: e.empresa,
+      contagem: c.nome,
+      periodo: `${formatarDia(de)} a ${formatarDia(ate)}`,
+      truncado: todos.length > limite ? `Mostrando só os ${limite} mais recentes; reduza o período ou aumente o limite.` : undefined,
+      total: registros.length,
+      registros: registros.map((r) => ({
+        data: formatarDia(r.data_ref),
+        turno: r.turno ?? undefined,
+        quem_contou: r.executor_nome,
+        canal: r.canal,
+        enviado_em: formatarDataHora(r.enviado_em, e.fuso),
+        observacao: r.observacao || undefined,
+        itens: r.contagem_valores
+          .filter((v) => !idsItem || idsItem.includes(v.item_id))
+          .sort((a, b) => (nomeItem.get(a.item_id)?.ordem ?? 0) - (nomeItem.get(b.item_id)?.ordem ?? 0))
+          .map((v) => ({
+            item: nomeItem.get(v.item_id)?.nome ?? "—",
+            unidade_medida: nomeItem.get(v.item_id)?.unidade_medida ?? undefined,
+            quantidade: v.quantidade,
+            meta: v.meta ?? undefined,
+            [c.rotulo_falta.toLowerCase() || "a_fazer"]: v.a_fazer ?? undefined,
+            vai_fazer: v.vai_fazer ?? undefined,
+          })),
+      })),
+    };
+  },
+};
+
+const comparar_itens_de_contagem: Ferramenta = {
+  nome: "comparar_itens_de_contagem",
+  titulo: "Comparar itens de contagens",
+  descricao:
+    "Soma por dia a quantidade de itens (de uma ou de várias contagens) lado a lado, como a tela Comparar. Ex.: frango contado x frango produzido x frango retirado. Padrão: últimos 30 dias, até 12 itens.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      itens: {
+        type: "array",
+        items: { type: "string" },
+        description: 'Itens a comparar, como "Frango" ou "Contagem: Frango" (parte do nome do item, opcionalmente prefixado pela contagem e dois-pontos). Cada texto pode casar vários itens.',
+      },
+      de: { type: "string", description: "Data inicial AAAA-MM-DD." },
+      ate: { type: "string", description: "Data final AAAA-MM-DD." },
+    },
+    required: ["itens"],
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const pedidos = (Array.isArray(args.itens) ? args.itens : []).map(texto).filter((x): x is string => !!x);
+    if (pedidos.length === 0) throw new Error("Informe ao menos um item em itens.");
+    const hoje = hojeIso(e.fuso);
+    const ate = dataIso(args.ate) ?? hoje;
+    const de = dataIso(args.de) ?? somarDias(ate, -29);
+    const [{ data: cs }, { data: todos }] = await Promise.all([
+      ctx.supabase.from("contagens").select("id, nome").eq("empresa_id", e.empresaId).returns<{ id: string; nome: string }[]>(),
+      ctx.supabase
+        .from("contagem_itens")
+        .select("id, contagem_id, nome, unidade_medida")
+        .eq("empresa_id", e.empresaId)
+        .eq("ativo", true)
+        .returns<{ id: string; contagem_id: string; nome: string; unidade_medida: string | null }[]>(),
+    ]);
+    const nomeContagem = new Map((cs ?? []).map((c) => [c.id, c.nome]));
+    const escolhidos = new Map<string, NonNullable<typeof todos>[number]>();
+    for (const p of pedidos) {
+      const [a, b] = p.includes(":") ? [p.slice(0, p.indexOf(":")).trim(), p.slice(p.indexOf(":") + 1).trim()] : ["", p];
+      for (const i of todos ?? []) {
+        if (contem(i.nome, b) && (!a || contem(nomeContagem.get(i.contagem_id), a))) escolhidos.set(i.id, i);
+      }
+    }
+    if (escolhidos.size === 0) throw new Error("Nenhum item encontrado. Use contagens com com_itens=true para ver os nomes.");
+    if (escolhidos.size > 12) throw new Error(`Os textos casam ${escolhidos.size} itens; o máximo é 12. Seja mais específico (use "Contagem: Item").`);
+
+    const soma = new Map<string, Map<string, number>>();
+    for (let desde = 0; desde < 50000; desde += 1000) {
+      const { data, error } = await ctx.supabase
+        .from("contagem_valores")
+        .select("item_id, quantidade, contagem_registros!inner(data_ref)")
+        .in("item_id", [...escolhidos.keys()])
+        .not("quantidade", "is", null)
+        .gte("contagem_registros.data_ref", de)
+        .lte("contagem_registros.data_ref", ate)
+        .order("registro_id")
+        .order("item_id")
+        .range(desde, desde + 999);
+      if (error) throw new Error("Não consegui consultar os valores das contagens.");
+      for (const v of (data ?? []) as unknown as { item_id: string; quantidade: number; contagem_registros: { data_ref: string } }[]) {
+        const dia = soma.get(v.contagem_registros.data_ref) ?? new Map<string, number>();
+        dia.set(v.item_id, (dia.get(v.item_id) ?? 0) + Number(v.quantidade));
+        soma.set(v.contagem_registros.data_ref, dia);
+      }
+      if ((data ?? []).length < 1000) break;
+    }
+    const rotulo = (i: { id: string; nome: string; contagem_id: string; unidade_medida: string | null }) =>
+      `${nomeContagem.get(i.contagem_id) ?? "—"}: ${i.nome}${i.unidade_medida ? ` (${i.unidade_medida})` : ""}`;
+    const itens = [...escolhidos.values()];
+    return {
+      empresa: e.empresa,
+      periodo: `${formatarDia(de)} a ${formatarDia(ate)}`,
+      itens: itens.map(rotulo),
+      total_do_periodo: Object.fromEntries(
+        itens.map((i) => [rotulo(i), [...soma.values()].reduce((t, d) => t + (d.get(i.id) ?? 0), 0)]),
+      ),
+      por_dia: [...soma.keys()]
+        .sort((a, b) => b.localeCompare(a))
+        .map((d) => ({
+          data: formatarDia(d),
+          dia_da_semana: DIAS_ROTINA[diaDaSemana(d) - 1]?.longo,
+          ...Object.fromEntries(itens.map((i) => [rotulo(i), soma.get(d)?.get(i.id) ?? null])),
+        })),
+    };
+  },
+};
+
 export const FERRAMENTAS: Ferramenta[] = [
   minhas_empresas,
   resumo_do_dia,
@@ -1938,4 +2238,7 @@ export const FERRAMENTAS: Ferramenta[] = [
   chamados_do_prestador,
   whatsapp_status,
   historico_do_equipamento,
+  contagens,
+  resultados_de_contagem,
+  comparar_itens_de_contagem,
 ];
