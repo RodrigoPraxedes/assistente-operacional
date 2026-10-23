@@ -418,7 +418,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Ao abrir, aparece o dia de hoje, agrupado por horário. Escolha outro dia da semana, ou Semana toda, para ver uma tabela com os dias marcados de cada rotina.",
           "Filtre por setor e por função: os setores são botões: toque em um para ver só aquele setor e marque dois ou mais para ver as atividades lado a lado, uma coluna por setor, em cada horário (em Todos os setores volta a lista única). A tela muda assim que você escolhe.",
-          "Em cada rotina, toque em Passo a passo para ver as instruções.",
+          "A lista mostra só o título de cada rotina. Toque nela para abrir a leitura: foto, passo a passo, horário, dias e setores. Quem tem permissão encontra ali o link Editar rotina.",
           "Exportar PDF abre a impressão só com o quadro (com o passo a passo aberto), em paisagem.",
         ],
       },
