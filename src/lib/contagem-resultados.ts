@@ -105,10 +105,20 @@ export function somarPorDia(registros: Registro[]): Dia[] {
   return [...dias.values()].sort((a, b) => b.data.localeCompare(a.data));
 }
 
-// total do período por item
-export function totalPorItem(registros: Registro[]) {
-  const total = new Map<string, number>();
+// totais do período por item: o que foi contado, o que faltava para a meta e o que a pessoa disse que ia fazer
+export function totaisPorItem(registros: Registro[]) {
+  const contado = new Map<string, number>();
+  const falta = new Map<string, number>();
+  const feito = new Map<string, number>();
+  const soma = (m: Map<string, number>, id: string, n: number | null) => {
+    if (n !== null) m.set(id, (m.get(id) ?? 0) + n);
+  };
   for (const r of registros)
-    for (const [id, v] of r.valores) if (v.quantidade !== null && !r.remessa) total.set(id, (total.get(id) ?? 0) + v.quantidade);
-  return total;
+    for (const [id, v] of r.valores) {
+      // remessa é complemento: o "Tem" dela não entra no contado
+      if (!r.remessa) soma(contado, id, v.quantidade);
+      soma(falta, id, v.a_fazer);
+      soma(feito, id, v.vai_fazer);
+    }
+  return { contado, falta, feito };
 }

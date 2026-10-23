@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import { getContexto } from "@/lib/contexto";
-import { carregarResultados, lerFiltros } from "@/lib/contagem-resultados";
+import { carregarResultados, lerFiltros, totaisPorItem } from "@/lib/contagem-resultados";
 import { respostaXlsx, normalizar } from "@/lib/planilha";
 import { rotuloItem } from "@/lib/contagens";
 
@@ -60,6 +60,20 @@ export async function GET(req: Request, { params }: { params: Promise<{ empresaI
     }
     ws.addRow(linha);
   }
+
+  // totais do período no fim
+  const t = totaisPorItem(registros);
+  const linhasTotal: [string, Record<string, unknown>][] = [];
+  const mk = (rotulo: string, chave: string, mapa: Map<string, number>) => {
+    const l: Record<string, unknown> = { nome: rotulo };
+    for (const i of itens) l[`${chave}_${i.id}`] = mapa.get(i.id) ?? null;
+    linhasTotal.push([rotulo, l]);
+  };
+  mk(contagem.usa_meta ? "Total contado" : "Total", "q", t.contado);
+  if (contagem.usa_meta) mk("Falta para a meta", "f", t.falta);
+  if (contagem.usa_meta && contagem.pede_vai_fazer) mk(`Total ${contagem.rotulo_falta.toLowerCase()}`, "v", t.feito);
+  ws.addRow({});
+  for (const [, l] of linhasTotal) ws.addRow(l).font = { bold: true };
   ws.getColumn("data").numFmt = "dd/mm/yyyy";
 
   const nome = normalizar(contagem.nome).replace(/ /g, "-") || "contagem";

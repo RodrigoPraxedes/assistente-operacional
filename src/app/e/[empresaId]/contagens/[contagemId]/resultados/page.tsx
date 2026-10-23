@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
-import { carregarResultados, lerFiltros, somarPorDia, totalPorItem, type Valor } from "@/lib/contagem-resultados";
+import { carregarResultados, lerFiltros, somarPorDia, totaisPorItem, type Valor } from "@/lib/contagem-resultados";
 import { diaDaSemana, formatarQtd } from "@/lib/contagens";
 import { DIAS_SEMANA } from "@/lib/rotinas";
 import { formatarDia } from "@/lib/formato";
@@ -59,7 +59,7 @@ export default async function ResultadosContagem({
   if (!dados) notFound();
   const { contagem, itens, registros } = dados;
   const dias = porDia ? somarPorDia(registros) : [];
-  const total = totalPorItem(registros);
+  const total = totaisPorItem(registros);
 
   const base = `/e/${empresaId}/contagens/${contagemId}/resultados`;
   const qs = new URLSearchParams({ de: filtros.de, ate: filtros.ate });
@@ -205,16 +205,29 @@ export default async function ResultadosContagem({
                   ))}
             </tbody>
             <tfoot className="border-t border-slate-200 bg-slate-50 text-xs font-medium text-slate-700">
-              <tr>
-                <td className="sticky left-0 bg-slate-50 px-3 py-2">Total</td>
-                <td className="px-3 py-2" colSpan={porDia ? 1 : contagem.turnos.length > 0 ? 2 : 1} />
-                {itens.map((i) => (
-                  <td key={i.id} className="px-3 py-2 text-right tabular-nums">
-                    {formatarQtd(total.get(i.id))}
-                  </td>
+              {[
+                { rotulo: usaMeta ? "Total contado" : "Total", mapa: total.contado, cor: "", mostra: true },
+                { rotulo: "Falta para a meta", mapa: total.falta, cor: "text-red-700", mostra: usaMeta },
+                {
+                  rotulo: `Total ${contagem.rotulo_falta.toLowerCase()}`,
+                  mapa: total.feito,
+                  cor: "text-blue-700",
+                  mostra: usaMeta && contagem.pede_vai_fazer,
+                },
+              ]
+                .filter((l) => l.mostra)
+                .map((l) => (
+                  <tr key={l.rotulo}>
+                    <td className="sticky left-0 whitespace-nowrap bg-slate-50 px-3 py-2">{l.rotulo}</td>
+                    <td className="px-3 py-2" colSpan={porDia ? 1 : contagem.turnos.length > 0 ? 2 : 1} />
+                    {itens.map((i) => (
+                      <td key={i.id} className={`px-3 py-2 text-right tabular-nums ${l.cor}`}>
+                        {formatarQtd(l.mapa.get(i.id))}
+                      </td>
+                    ))}
+                    {!porDia && <td colSpan={podeExcluir ? 2 : 1} />}
+                  </tr>
                 ))}
-                {!porDia && <td colSpan={podeExcluir ? 2 : 1} />}
-              </tr>
             </tfoot>
           </table>
         </div>
