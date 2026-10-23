@@ -181,7 +181,7 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
     const hojeItens = lista.filter((t) => new Date(t.prazo).getTime() >= inicioDoDia);
     const atrasadas = lista.filter((t) => new Date(t.prazo).getTime() < inicioDoDia);
     const linhas = reenvio ? ["🔁 *Reenvio do resumo do dia*"] : [] as string[];
-    linhas.push(`Olá, ${nome.trim().split(/\s+/)[0]}! 👋`, `Seu dia ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}:`);
+    linhas.push(`*Olá, ${nome.trim().split(/\s+/)[0]}!* 👋`, `Seu dia ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}:`);
     if (escala) linhas.push(linhaEscala(escala));
     if (hojeItens.length) {
       linhas.push("", `*Para hoje* (${hojeItens.length})`, ...itens(hojeItens, membroId, (t) => `até ${hora(t.prazo, fuso)}`));
