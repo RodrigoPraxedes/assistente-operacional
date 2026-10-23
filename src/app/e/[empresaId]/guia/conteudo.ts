@@ -319,7 +319,7 @@ export const SECOES: SecaoGuia[] = [
           "Toque em Resultados no cartão: aparece uma tabela como a planilha do formulário, uma linha por envio e uma coluna por item, com a observação no fim. Com meta, o número vermelho embaixo é quanto faltava e o azul é quanto a pessoa disse que vai fazer.",
           "Filtre por período (vem os últimos 30 dias), turno e quem contou, e toque em Filtrar.",
           "Em Ver, escolha Soma por dia para juntar os turnos de cada dia. O número pequeno é a diferença para o dia anterior. A ação (ex.: Assar) soma todas as remessas do dia; o Tem de uma remessa não entra na soma.",
-          "A linha Total soma o período.",
+          "No fim da tabela ficam os totais do período. Com meta aparecem três linhas: Total contado (soma do que foi contado, ex.: 0+5+10), Falta para a meta (vermelho) e, se a contagem pede o que vai fazer, o total da ação (azul, ex.: Embalar 20+15+10 = 45), que é o total produzido. A nova remessa entra no total da ação. O Excel traz as mesmas linhas no fim.",
           "Baixar Excel gera a planilha do período filtrado, no mesmo formato das respostas do Google Forms.",
           "Quem pode editar contagens vê Apagar em cada linha, para tirar um envio errado ou repetido.",
         ],
