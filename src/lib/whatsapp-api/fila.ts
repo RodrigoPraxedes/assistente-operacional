@@ -39,17 +39,17 @@ function urlDaMensagem(m: { empresa_id: string; origem: string; origem_id: strin
 
 // Texto que sai de verdade (a prévia na tela usa a mesma função).
 // com_link é decidido quando a mensagem nasce (chaves "Incluir link" da aba Automações).
-// O link vai em negrito e itálico, em linha própria, depois de uma linha em branco; o check-list concluído leva "Confira aqui:".
-// Um texto com {link} (negrito e itálico) ou {url} (puro) escolhe onde o link entra.
+// O link vai em linha própria, depois de uma linha em branco; check-list e contagem concluídos
+// levam "Confira aqui:". Um texto com {link} escolhe onde o link entra.
 export function textoFinal(m: { empresa_id: string; texto: string; origem: string; origem_id: string | null; com_link?: boolean }) {
   const marcado = /\{(link|url)\}/.test(m.texto);
   const url = m.com_link === false ? null : urlDaMensagem(m);
   if (marcado) {
     if (!url) return m.texto.split("\n").filter((l) => !/\{(link|url)\}/.test(l)).join("\n").trimEnd();
-    return m.texto.replaceAll("{link}", `*_${url}_*`).replaceAll("{url}", url);
+    return m.texto.replaceAll("{link}", url).replaceAll("{url}", url);
   }
   if (!url) return m.texto;
-  return `${m.texto}\n\n${m.origem === "checklist" ? `*Confira aqui:* ${url}` : `*_${url}_*`}`;
+  return `${m.texto}\n\n${m.origem === "checklist" || m.origem === "contagem" ? `*Confira aqui:* ${url}` : url}`;
 }
 
 export async function processarMensagem(mensagemId: string) {
