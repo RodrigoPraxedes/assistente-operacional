@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Aviso, Botao, Input, Select, Textarea } from "@/components/ui";
 import { utcParaLocalInput } from "@/lib/formato";
+import { trocarPorReduzidas } from "@/lib/foto";
+import { adicionarFotos } from "../../chamados/actions";
 import { moverTarefa, retornarTarefa } from "../actions";
 
 interface Opcao {
@@ -39,6 +41,7 @@ export function MudarStatus({
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
 
+  const fotosRef = useRef<HTMLInputElement>(null);
   const tipo = opcoes.find((o) => o.id === novo)?.tipo;
 
   const concluindoChamado = !!chamado && tipo === "concluido";
@@ -62,6 +65,7 @@ export function MudarStatus({
 
   function gravar() {
     setConfirmar(false);
+    const fotos = concluindoChamado ? fotosRef.current?.files : null;
     startTransition(async () => {
       const valor = Number(custo.replace(",", "."));
       const r = await moverTarefa(
@@ -74,10 +78,16 @@ export function MudarStatus({
         concluindoChamado ? { descricao: solucao.trim(), custo: custo.trim() && !Number.isNaN(valor) ? valor : null } : undefined,
       );
       if (r.erro) return setErro(r.erro);
+      if (fotos?.length) {
+        const f = new FormData();
+        Array.from(fotos).forEach((x) => f.append("fotos", x));
+        await adicionarFotos(empresaId, tarefaId, f);
+      }
       setNovo("");
       setPrazo("");
       setComentario("");
       setQuando("");
+      if (fotosRef.current) fotosRef.current.value = "";
       router.refresh();
     });
   }
@@ -130,6 +140,19 @@ export function MudarStatus({
           <label className="block text-sm text-slate-700">
             Solução do caso
             <Textarea rows={3} value={solucao} onChange={(e) => setSolucao(e.target.value)} placeholder="O que foi feito para resolver" />
+          </label>
+          <label className="block text-sm text-slate-700">
+            Foto (opcional)
+            <input
+              ref={fotosRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="mt-1 block text-sm"
+              onChange={(e) => {
+                trocarPorReduzidas(e.currentTarget);
+              }}
+            />
           </label>
         </>
       )}
