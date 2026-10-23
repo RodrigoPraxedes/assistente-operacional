@@ -30,10 +30,28 @@ export async function salvarRotina(empresaId: string, form: FormData) {
     unidade_id: txt(form, "unidade_id"),
     ativo: form.get("ativo") !== "false",
   };
+
+  // foto ilustrativa: nova substitui a antiga; "remover" apaga sem trocar
+  let antiga: string | null = null;
+  let nova: string | null = null;
+  const foto = form.get("foto");
+  const remover = form.get("remover_foto") === "on";
+  if (id && (remover || (foto instanceof File && foto.size > 0))) {
+    const { data } = await supabase.from("rotinas").select("foto_path").eq("id", id).maybeSingle();
+    antiga = data?.foto_path ?? null;
+  }
+  if (foto instanceof File && foto.size > 0) {
+    const ext = (foto.type.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
+    nova = `${empresaId}/rotinas/${crypto.randomUUID()}.${ext}`;
+    const { error: erroUp } = await supabase.storage.from("anexos").upload(nova, foto, { contentType: foto.type });
+    if (erroUp) erro(`Não foi possível enviar a foto: ${erroUp.message}`);
+  }
+  const fotoDados = nova ? { foto_path: nova } : remover ? { foto_path: null } : {};
   const { error } = id
-    ? await supabase.from("rotinas").update(dados).eq("id", id)
-    : await supabase.from("rotinas").insert({ ...dados, empresa_id: empresaId });
+    ? await supabase.from("rotinas").update({ ...dados, ...fotoDados }).eq("id", id)
+    : await supabase.from("rotinas").insert({ ...dados, ...fotoDados, empresa_id: empresaId });
   if (error) erro(error.message);
+  if (antiga) await supabase.storage.from("anexos").remove([antiga]);
 
   revalidatePath(base);
   redirect(base);
@@ -41,8 +59,10 @@ export async function salvarRotina(empresaId: string, form: FormData) {
 
 export async function excluirRotina(empresaId: string, rotinaId: string) {
   const { supabase } = await getContexto(empresaId);
+  const { data: r } = await supabase.from("rotinas").select("foto_path").eq("id", rotinaId).maybeSingle();
   const { error } = await supabase.from("rotinas").delete().eq("id", rotinaId);
   if (error) redirect(`/e/${empresaId}/rotinas/${rotinaId}?erro=${encodeURIComponent(error.message)}`);
+  if (r?.foto_path) await supabase.storage.from("anexos").remove([r.foto_path]);
   revalidatePath(`/e/${empresaId}/rotinas`);
   redirect(`/e/${empresaId}/rotinas`);
 }

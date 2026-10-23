@@ -5,6 +5,7 @@ import type { Rotina } from "@/lib/types";
 import { SeletorSetores } from "@/components/seletor-setores";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea, Titulo } from "@/components/ui";
+import { CampoFotoRotina } from "../campo-foto";
 import { excluirRotina, salvarRotina } from "../actions";
 
 export default async function EditarRotina({
@@ -29,6 +30,7 @@ export default async function EditarRotina({
   ]);
   if (!novo && !rotina) notFound();
   const r = rotina as Rotina | null;
+  const foto = r?.foto_path ? (await supabase.storage.from("anexos").createSignedUrl(r.foto_path, 3600)).data?.signedUrl : null;
   const dias = new Set(r?.dias ?? DIAS_SEMANA.map((d) => d.n));
 
   return (
@@ -36,7 +38,7 @@ export default async function EditarRotina({
       <Titulo voltar={{ href: `/e/${empresaId}/rotinas`, rotulo: "Rotinas" }}>{novo ? "Nova rotina" : r!.nome}</Titulo>
       {erro && <Aviso>{erro}</Aviso>}
       <Cartao>
-        <form action={salvarRotina.bind(null, empresaId)} className="space-y-4">
+        <form action={salvarRotina.bind(null, empresaId)} className="space-y-4" encType="multipart/form-data">
           {r && <input type="hidden" name="id" value={r.id} />}
           <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
             <Campo rotulo="Atividade">
@@ -55,6 +57,8 @@ export default async function EditarRotina({
               placeholder={"Ligar a chapa e a fritadeira\nConferir o estoque do dia\nAbastecer as bancadas"}
             />
           </Campo>
+
+          <CampoFotoRotina atual={foto} />
 
           <SeletorSetores name="setor_ids" setores={setores ?? []} inicial={r?.setor_ids ?? []} />
 

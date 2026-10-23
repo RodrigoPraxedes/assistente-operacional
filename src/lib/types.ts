@@ -500,6 +500,7 @@ export interface Rotina {
   funcao_id: string | null;
   unidade_id: string | null;
   ativo: boolean;
+  foto_path: string | null;
 }
 
 export interface Contagem {

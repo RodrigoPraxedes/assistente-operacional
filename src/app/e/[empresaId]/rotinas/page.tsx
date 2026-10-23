@@ -24,6 +24,21 @@ export default async function PaginaRotinas({
     supabase.from("funcoes").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId),
   ]);
+  // fotos ilustrativas: uma única chamada para assinar todas
+  const caminhos = ((rotinas ?? []) as Rotina[]).map((r) => r.foto_path).filter((c): c is string => Boolean(c));
+  const { data: assinadas } = caminhos.length
+    ? await supabase.storage.from("anexos").createSignedUrls(caminhos, 3600)
+    : { data: [] };
+  const fotoUrl = new Map((assinadas ?? []).flatMap((a) => (a.path && a.signedUrl ? [[a.path, a.signedUrl] as const] : [])));
+  const miniatura = (r: Rotina, tam: string) => {
+    const url = r.foto_path ? fotoUrl.get(r.foto_path) : null;
+    return url ? (
+      <a href={url} target="_blank" rel="noreferrer" className={`shrink-0 ${tam}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt={`Foto: ${r.nome}`} loading="lazy" className="h-full w-full rounded-lg border border-slate-200 object-cover" />
+      </a>
+    ) : null;
+  };
   const nomeSetor = new Map((setores ?? []).map((s) => [s.id as string, s.nome as string]));
   const nomeFuncao = new Map((funcoes ?? []).map((f) => [f.id as string, f.nome as string]));
   const nomeUnidade = new Map((unidades ?? []).map((u) => [u.id as string, u.nome as string]));
@@ -171,6 +186,7 @@ export default async function PaginaRotinas({
                           const [funcao] = quem(r);
                           return (
                             <div key={r.id} className="rounded-lg border border-slate-200 p-2">
+                              {miniatura(r, "mb-2 block h-24 w-full")}
                               <span className="font-medium text-slate-900">{r.nome}</span>
                               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                                 {funcao && <Etiqueta cor="#2563eb">{funcao}</Etiqueta>}
@@ -211,7 +227,9 @@ export default async function PaginaRotinas({
                   const passos = passosDe(r.descricao);
                   const [funcao, setoresDaRotina] = quem(r);
                   return (
-                    <li key={r.id} className="rounded-xl border border-slate-200 bg-superficie p-3">
+                    <li key={r.id} className="flex gap-3 rounded-xl border border-slate-200 bg-superficie p-3">
+                      {miniatura(r, "block h-16 w-16")}
+                      <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="font-medium text-slate-900">{r.nome}</span>
                         {funcao && <Etiqueta cor="#2563eb">{funcao}</Etiqueta>}
@@ -248,6 +266,7 @@ export default async function PaginaRotinas({
                           </ol>
                         </>
                       )}
+                      </div>
                     </li>
                   );
                 })}
