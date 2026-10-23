@@ -23,7 +23,9 @@ interface Tarefa {
   titulo: string;
   prazo: string;
   privado: boolean;
+  origem: string;
   responsaveis: string[];
+  cientes: string[];
 }
 
 interface EscalaHoje {
@@ -138,9 +140,9 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
     admin.from("status").select("id").eq("empresa_id", empresaId).in("tipo", ["aberto", "em_andamento", "adiado"]),
     admin
       .from("tarefas")
-      .select("titulo, prazo, privado, responsaveis, status_id")
+      .select("titulo, prazo, privado, origem, responsaveis, cientes, status_id")
       .eq("empresa_id", empresaId)
-      .overlaps("responsaveis", ids)
+      .or(`responsaveis.ov.{${ids.join(",")}},cientes.ov.{${ids.join(",")}}`)
       .not("prazo", "is", null)
       .lte("prazo", fimDoDia)
       .is("concluida_em", null)
@@ -160,8 +162,8 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
   const porPessoa = new Map<string, Tarefa[]>();
   for (const t of tarefas ?? []) {
     if (!statusAberto.has(t.status_id)) continue;
-    // tarefa com vários responsáveis entra no resumo de cada um
-    for (const id of t.responsaveis) porPessoa.set(id, [...(porPessoa.get(id) ?? []), t]);
+    // tarefa com vários responsáveis entra no resumo de cada um; quem só está ciente também a recebe
+    for (const id of new Set([...t.responsaveis, ...t.cientes])) porPessoa.set(id, [...(porPessoa.get(id) ?? []), t]);
   }
   const escalaDe = new Map((escalas ?? []).map((e) => [e.membro_id, e]));
 
@@ -179,13 +181,13 @@ async function resumosDaEmpresa(empresaId: string, fuso: string, hoje: string, d
     const hojeItens = lista.filter((t) => new Date(t.prazo).getTime() >= inicioDoDia);
     const atrasadas = lista.filter((t) => new Date(t.prazo).getTime() < inicioDoDia);
     const linhas = reenvio ? ["🔁 *Reenvio do resumo do dia*"] : [] as string[];
-    linhas.push(`*Bom dia, ${nome.trim().split(/\s+/)[0]}!* Seu dia ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}:`);
+    linhas.push(`Olá, ${nome.trim().split(/\s+/)[0]}! 👋`, `Seu dia ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}:`);
     if (escala) linhas.push(linhaEscala(escala));
     if (hojeItens.length) {
-      linhas.push("", `*Para hoje (${hojeItens.length})*`, ...itens(hojeItens, (t) => `até ${hora(t.prazo, fuso)}`));
+      linhas.push("", `*Para hoje* (${hojeItens.length})`, ...itens(hojeItens, membroId, (t) => `até ${hora(t.prazo, fuso)}`));
     }
     if (atrasadas.length) {
-      linhas.push("", `*Atrasadas (${atrasadas.length})*`, ...itens(atrasadas, (t) => `venceu ${diaMes(t.prazo, fuso)}`));
+      linhas.push("", `*Atrasadas* (${atrasadas.length})`, ...itens(atrasadas, membroId, (t) => `venceu ${diaMes(t.prazo, fuso)}`));
     }
 
     const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
@@ -229,10 +231,14 @@ function linhaEscala(e: EscalaHoje) {
 }
 
 // tarefas privadas entram só na contagem, sem título (o texto fica visível para quem gerencia)
-function itens(lista: Tarefa[], quando: (t: Tarefa) => string) {
+// cada linha diz o tipo: Check-list, Tarefa ou Para seu conhecimento (quem só está ciente)
+function itens(lista: Tarefa[], membroId: string, quando: (t: Tarefa) => string) {
   const publicas = lista.filter((t) => !t.privado);
   const privadas = lista.length - publicas.length;
-  const linhas = publicas.slice(0, MAX_ITENS).map((t) => `• ${t.titulo} (${quando(t)})`);
+  const tipo = (t: Tarefa) =>
+    !t.responsaveis.includes(membroId) ? "Para seu conhecimento" : t.origem === "checklist" ? "Check-list" : t.origem === "contagem" ? "Contagem" : "Tarefa";
+  const nome = (t: Tarefa) => t.titulo.replace(/^(Check-list|Contagem): /, "");
+  const linhas = publicas.slice(0, MAX_ITENS).map((t) => `• *${tipo(t)}:* ${nome(t)} _(${quando(t)})_`);
   const resto = publicas.length - Math.min(publicas.length, MAX_ITENS);
   if (resto > 0) linhas.push(`• e mais ${resto}`);
   if (privadas > 0) linhas.push(`• ${privadas} ${privadas === 1 ? "tarefa privada" : "tarefas privadas"}`);
@@ -312,9 +318,10 @@ export async function gerarLembretesChecklist(agora = new Date()) {
           p_unidade: t.unidade_id,
           p_membro: responsavel,
           p_texto: [
-            `*Lembrete: ${t.origem === "contagem" ? "contagem" : "check-list"} às ${hora(t.ocorrencia_em, fuso)}*`,
+            `*Lembrete: ${t.origem === "contagem" ? "contagem" : "check-list"} às ${hora(t.ocorrencia_em, fuso)}* 📝`,
+            "",
             `${t.origem === "contagem" ? t.titulo.replace(/^Contagem: /, "") : m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
-            "Você é o responsável: lembre a equipe de fazer.",
+            "*Você é o responsável:* lembre a equipe de realizar.",
           ].join("\n"),
           p_origem: "lembrete",
           p_origem_id: t.id,
@@ -376,7 +383,8 @@ export async function gerarLembretesAcoes(agora = new Date()) {
           p_unidade: t.unidade_id,
           p_membro: membroId,
           p_texto: [
-            `*${ciente ? "Para seu conhecimento" : "Lembrete"}: ação às ${hora(t.ocorrencia_em, fuso)}*`,
+            `*${ciente ? "Para seu conhecimento" : "Lembrete"}: ação às ${hora(t.ocorrencia_em, fuso)}* ${ciente ? "💡" : "⚠️"}`,
+            "",
             `${t.titulo}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
           ].join("\n"),
           p_origem: "lembrete",
@@ -453,7 +461,7 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
 
     for (const t of vencidas) {
       const base = `${t.titulo}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`;
-      const prazo = `Prazo: ${diaMes(t.prazo, fuso)} ${hora(t.prazo, fuso)}`;
+      const concluir = c.link_prazo ? "conclua pelo link." : "conclua no app.";
       const quemFaz = t.responsaveis.map((id) => nomeDe.get(id)).filter(Boolean).join(", ");
       const destinos = [...t.responsaveis, ...(t.criado_por && !t.responsaveis.includes(t.criado_por) ? [t.criado_por] : [])];
       for (const membroId of destinos) {
@@ -465,8 +473,25 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
           p_unidade: t.unidade_id,
           p_membro: membroId,
           p_texto: responsavel
-            ? [`*Prazo venceu*`, base, prazo, `*_Se já fez, sinalize no app como Concluído._*`].join("\n")
-            : [`*Prazo venceu e a tarefa segue aberta*`, base, prazo, ...(quemFaz ? [`Responsável: ${quemFaz}`] : [])].join("\n"),
+            ? [
+                "*Prazo venceu* ⌛",
+                "",
+                `*${t.titulo}*${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+                `*Prazo:* ${diaMes(t.prazo, fuso)} ${hora(t.prazo, fuso)}`,
+                "",
+                `*_Se já fez, ${concluir}_*`,
+                "{link}",
+              ].join("\n")
+            : [
+                "*Prazo venceu e a tarefa segue aberta*",
+                "",
+                `*${base}*`,
+                `*Prazo:* ${diaMes(t.prazo, fuso)} ${hora(t.prazo, fuso)}`,
+                ...(quemFaz ? [`*Responsável:* ${quemFaz}`] : []),
+                "",
+                "*Confira no link* {url}",
+                "_Caso necessário revise uma nova data_",
+              ].join("\n"),
           p_origem: "prazo",
           p_origem_id: t.id,
           p_chave: chave,

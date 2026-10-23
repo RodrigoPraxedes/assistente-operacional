@@ -27,16 +27,29 @@ interface Reservada {
   telefone: string;
 }
 
+// Endereço que a mensagem leva, por tipo de aviso (null = sem link)
+function urlDaMensagem(m: { empresa_id: string; origem: string; origem_id: string | null }) {
+  if (m.origem === "checklist" && m.origem_id) return urlDoSite(`/e/${m.empresa_id}/checklists/execucoes/${m.origem_id}`);
+  if (m.origem === "contagem") return urlDoSite(`/e/${m.empresa_id}/contagens`);
+  if ((m.origem === "tarefa" || m.origem === "conclusao" || m.origem === "lembrete" || m.origem === "prazo") && m.origem_id)
+    return urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`);
+  if (m.origem === "resumo") return urlDoSite(`/e/${m.empresa_id}/tarefas`);
+  return null;
+}
+
 // Texto que sai de verdade (a prévia na tela usa a mesma função).
 // com_link é decidido quando a mensagem nasce (chaves "Incluir link" da aba Automações).
+// O link vai em negrito e itálico, em linha própria, depois de uma linha em branco; o check-list concluído leva "Confira aqui:".
+// Um texto com {link} (negrito e itálico) ou {url} (puro) escolhe onde o link entra.
 export function textoFinal(m: { empresa_id: string; texto: string; origem: string; origem_id: string | null; com_link?: boolean }) {
-  if (m.com_link === false) return m.texto;
-  if (m.origem === "checklist" && m.origem_id)
-    return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/checklists/execucoes/${m.origem_id}`)}`;
-  if (m.origem === "contagem") return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/contagens`)}`;
-  if ((m.origem === "tarefa" || m.origem === "conclusao" || m.origem === "lembrete" || m.origem === "prazo") && m.origem_id) return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas/${m.origem_id}`)}`;
-  if (m.origem === "resumo") return `${m.texto}\n${urlDoSite(`/e/${m.empresa_id}/tarefas`)}`;
-  return m.texto;
+  const marcado = /\{(link|url)\}/.test(m.texto);
+  const url = m.com_link === false ? null : urlDaMensagem(m);
+  if (marcado) {
+    if (!url) return m.texto.split("\n").filter((l) => !/\{(link|url)\}/.test(l)).join("\n").trimEnd();
+    return m.texto.replaceAll("{link}", `*_${url}_*`).replaceAll("{url}", url);
+  }
+  if (!url) return m.texto;
+  return `${m.texto}\n\n${m.origem === "checklist" ? `*Confira aqui:* ${url}` : `*_${url}_*`}`;
 }
 
 export async function processarMensagem(mensagemId: string) {
