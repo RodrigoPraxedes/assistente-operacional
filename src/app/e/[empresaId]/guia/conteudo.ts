@@ -418,7 +418,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Ao abrir, aparece o dia de hoje, agrupado por horário. Escolha outro dia da semana, ou Semana toda, para ver uma tabela com os dias marcados de cada rotina.",
           "Filtre por setor e por função: os setores são botões: toque em um para ver só aquele setor e marque dois ou mais para ver as atividades lado a lado, uma coluna por setor, em cada horário (em Todos os setores volta a lista única). A tela muda assim que você escolhe.",
-          "Em cada rotina, toque em Passo a passo para ver as instruções.",
+          "A lista mostra só o título de cada rotina. Toque nela para abrir a leitura: foto, passo a passo, horário, dias e setores. Quem tem permissão encontra ali o link Editar rotina.",
           "Exportar PDF abre a impressão só com o quadro (com o passo a passo aberto), em paisagem.",
         ],
       },
@@ -427,6 +427,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Quem tem permissão vê o botão Nova rotina. Informe a atividade, o horário e o dia da semana em que vale (vêm todos marcados).",
           "Em Instrução e passo a passo, escreva um passo por linha: eles aparecem numerados.",
+          "Em Foto (opcional), envie uma imagem de como a atividade deve ficar (a bancada pronta, o caixa organizado). Ela aparece em miniatura na lista de rotinas; toque nela para ampliar. Para trocar, envie outra; para tirar, marque Remover a foto atual.",
           "Escolha a função e os setores (botões: marque quantos precisar, ou Todos os setores para uma rotina da empresa inteira; ela aparece em cada setor marcado) e, se a empresa tiver mais de uma unidade, a unidade (vazio = todas).",
           "Para tirar do quadro sem apagar, mude a situação para Inativa.",
           "Para adiantar o cadastro, use Importar planilha: envie a planilha de respostas do levantamento (uma coluna por horário, como \"8:00h > atividade chave 1\"). Cada atividade vira uma rotina todos os dias, sem função; setores novos são criados e rotinas repetidas não duplicam.",

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronDown, ImageIcon } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
 import { DIAS_SEMANA, diaDeHoje, passosDe, rotuloDias } from "@/lib/rotinas";
 import type { Rotina } from "@/lib/types";
@@ -24,6 +25,12 @@ export default async function PaginaRotinas({
     supabase.from("funcoes").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId),
   ]);
+  // fotos ilustrativas: uma única chamada para assinar todas
+  const caminhos = ((rotinas ?? []) as Rotina[]).map((r) => r.foto_path).filter((c): c is string => Boolean(c));
+  const { data: assinadas } = caminhos.length
+    ? await supabase.storage.from("anexos").createSignedUrls(caminhos, 3600)
+    : { data: [] };
+  const fotoUrl = new Map((assinadas ?? []).flatMap((a) => (a.path && a.signedUrl ? [[a.path, a.signedUrl] as const] : [])));
   const nomeSetor = new Map((setores ?? []).map((s) => [s.id as string, s.nome as string]));
   const nomeFuncao = new Map((funcoes ?? []).map((f) => [f.id as string, f.nome as string]));
   const nomeUnidade = new Map((unidades ?? []).map((u) => [u.id as string, u.nome as string]));
@@ -54,6 +61,73 @@ export default async function PaginaRotinas({
   }
 
   const quem = (r: Rotina) => [r.funcao_id ? nomeFuncao.get(r.funcao_id) : null, r.setor_ids.map((id) => nomeSetor.get(id)).filter(Boolean) as string[]];
+  // Só o título na lista; tocar abre a leitura (foto, passo a passo, quando e quem) com Editar dentro
+  const cartao = (r: Rotina, grade: boolean) => {
+    const passos = passosDe(r.descricao);
+    const [funcao, setoresDaRotina] = quem(r);
+    const url = r.foto_path ? fotoUrl.get(r.foto_path) : null;
+    return (
+      <div key={r.id} className="print:break-inside-avoid">
+        <details className="group rounded-xl border border-slate-200 bg-superficie print:hidden">
+          <summary className="flex cursor-pointer list-none items-center gap-x-2 gap-y-1 p-3 [&::-webkit-details-marker]:hidden">
+            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-medium text-slate-900">{r.nome}</span>
+              {funcao && <Etiqueta cor="#2563eb">{funcao}</Etiqueta>}
+              {!grade &&
+                (setoresDaRotina as string[]).map((nome) => <Etiqueta key={nome}>{nome}</Etiqueta>)}
+              {!grade && varias && r.unidade_id && <Etiqueta>{nomeUnidade.get(r.unidade_id) ?? ""}</Etiqueta>}
+            </span>
+            {url && <ImageIcon className="h-4 w-4 shrink-0 text-slate-400" aria-label="Tem foto" />}
+            <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden />
+          </summary>
+          <div className="space-y-3 border-t border-slate-100 p-3 text-sm">
+            {url && (
+              <a href={url} target="_blank" rel="noreferrer" className="block w-fit">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt={`Foto: ${r.nome}`}
+                  loading="lazy"
+                  className="max-h-72 w-full max-w-md rounded-lg border border-slate-200 object-cover"
+                />
+              </a>
+            )}
+            {passos.length > 0 ? (
+              <ol className="list-decimal space-y-1 pl-5 text-slate-700">
+                {passos.map((p, i) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ol>
+            ) : (
+              !url && <p className="text-slate-500">Sem instruções cadastradas.</p>
+            )}
+            <p className="text-xs text-slate-500">
+              {r.horario.slice(0, 5)} · {rotuloDias(r.dias)}
+              {funcao ? ` · ${funcao}` : ""}
+              {(setoresDaRotina as string[]).length ? ` · ${(setoresDaRotina as string[]).join(", ")}` : ""}
+            </p>
+            {podeEditar && (
+              <Link href={`/e/${empresaId}/rotinas/${r.id}`} className="inline-block text-sm font-medium text-blue-600">
+                Editar rotina
+              </Link>
+            )}
+          </div>
+        </details>
+        <div className="hidden print:block">
+          <span className="font-medium">{r.nome}</span>
+          {funcao && <span className="text-xs"> · {funcao}</span>}
+          {passos.length > 0 && (
+            <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-xs text-slate-700">
+              {passos.map((p, i) => (
+                <li key={i}>{p}</li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const tituloImpressao = semana ? "Rotinas da semana" : `Rotinas de ${DIAS_SEMANA[dia - 1].longo.toLowerCase()}`;
 
   return (
@@ -166,34 +240,7 @@ export default async function PaginaRotinas({
                     <td key={c.id} className="space-y-2 px-2 py-2">
                       {itens
                         .filter((r) => r.setor_ids.includes(c.id))
-                        .map((r) => {
-                          const passos = passosDe(r.descricao);
-                          const [funcao] = quem(r);
-                          return (
-                            <div key={r.id} className="rounded-lg border border-slate-200 p-2">
-                              <span className="font-medium text-slate-900">{r.nome}</span>
-                              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                                {funcao && <Etiqueta cor="#2563eb">{funcao}</Etiqueta>}
-                                {r.dias.length < 7 && <span className="text-xs text-slate-500">{rotuloDias(r.dias)}</span>}
-                                {podeEditar && (
-                                  <Link href={`/e/${empresaId}/rotinas/${r.id}`} className="ml-auto text-xs text-blue-600 print:hidden">
-                                    Editar
-                                  </Link>
-                                )}
-                              </div>
-                              {passos.length > 0 && (
-                                <details className="mt-1 print:hidden">
-                                  <summary className="cursor-pointer text-xs text-blue-600">Passo a passo ({passos.length})</summary>
-                                  <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-slate-700">
-                                    {passos.map((p, i) => (
-                                      <li key={i}>{p}</li>
-                                    ))}
-                                  </ol>
-                                </details>
-                              )}
-                            </div>
-                          );
-                        })}
+                        .map((r) => cartao(r, true))}
                     </td>
                   ))}
                 </tr>
@@ -207,50 +254,7 @@ export default async function PaginaRotinas({
             <section key={hora} className="flex gap-3 print:break-inside-avoid">
               <h2 className="w-14 shrink-0 pt-3 text-sm font-semibold text-slate-700">{hora}</h2>
               <ul className="min-w-0 flex-1 space-y-2">
-                {itens.map((r) => {
-                  const passos = passosDe(r.descricao);
-                  const [funcao, setoresDaRotina] = quem(r);
-                  return (
-                    <li key={r.id} className="rounded-xl border border-slate-200 bg-superficie p-3">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="font-medium text-slate-900">{r.nome}</span>
-                        {funcao && <Etiqueta cor="#2563eb">{funcao}</Etiqueta>}
-                        {(setoresDaRotina as string[]).map((nome) => (
-                          <Etiqueta key={nome}>{nome}</Etiqueta>
-                        ))}
-                        {varias && r.unidade_id && <Etiqueta>{nomeUnidade.get(r.unidade_id) ?? ""}</Etiqueta>}
-                        {r.dias.length < 7 && <span className="text-xs text-slate-500">{rotuloDias(r.dias)}</span>}
-                        {podeEditar && (
-                          <Link
-                            href={`/e/${empresaId}/rotinas/${r.id}`}
-                            className="ml-auto text-xs text-blue-600 print:hidden"
-                          >
-                            Editar
-                          </Link>
-                        )}
-                      </div>
-                      {passos.length > 0 && (
-                        <>
-                          <details className="mt-2 print:hidden">
-                            <summary className="cursor-pointer text-xs text-blue-600">
-                              Passo a passo ({passos.length})
-                            </summary>
-                            <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-slate-700">
-                              {passos.map((p, i) => (
-                                <li key={i}>{p}</li>
-                              ))}
-                            </ol>
-                          </details>
-                          <ol className="mt-1 hidden list-decimal space-y-0.5 pl-5 text-xs text-slate-700 print:block">
-                            {passos.map((p, i) => (
-                              <li key={i}>{p}</li>
-                            ))}
-                          </ol>
-                        </>
-                      )}
-                    </li>
-                  );
-                })}
+                {itens.map((r) => cartao(r, false))}
               </ul>
             </section>
           ))}
