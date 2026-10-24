@@ -73,7 +73,8 @@ export default async function DetalheChamado({
 
   // Fornecedor é externo e não usa o app: sem prioridade e sem link
   const mensagemFornecedor = [
-    `*Chamado:* #${chamado.numero}`,
+    fornecedor ? `Olá, ${fornecedor.nome.trim().split(/\s+/)[0]}! 👋` : null,
+    `*Segue chamado:* #${chamado.numero}`,
     `*O que:* ${t.titulo}`,
     t.descricao ? `*Descrição:* ${t.descricao}` : null,
     unidade || chamado.local ? `*Local:* ${[unidade?.nome, chamado.local].filter(Boolean).join(" · ")}` : null,
