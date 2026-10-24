@@ -67,6 +67,22 @@ export default async function DetalheChamado({
   const prio = PRIORIDADES[chamado.prioridade];
   const statusDisponiveis = (status ?? []).filter((s) => s.ativo && (!s.modulo || s.modulo === "chamado"));
 
+  const { data: setor } = t.setor_id
+    ? await supabase.from("setores").select("nome").eq("id", t.setor_id).maybeSingle()
+    : { data: null };
+
+  // Fornecedor é externo e não usa o app: sem prioridade e sem link
+  const mensagemFornecedor = [
+    `*Chamado:* #${chamado.numero}`,
+    `*O que:* ${t.titulo}`,
+    t.descricao ? `*Descrição:* ${t.descricao}` : null,
+    unidade || chamado.local ? `*Local:* ${[unidade?.nome, chamado.local].filter(Boolean).join(" · ")}` : null,
+    setor ? `*Setor:* ${setor.nome}` : null,
+    t.prazo ? `*Prazo previsto:* ${formatarDataHora(t.prazo, fuso)}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const mensagem = [
     `*Chamado #${chamado.numero}* (${prio.rotulo})`,
     t.titulo,
@@ -174,7 +190,7 @@ export default async function DetalheChamado({
           )}
           {fornecedor && (
             <a
-              href={linkWhatsApp(mensagem, fornecedor.telefone)}
+              href={linkWhatsApp(mensagemFornecedor, fornecedor.telefone)}
               target="_blank"
               rel="noopener"
               className="rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white"
