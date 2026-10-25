@@ -365,7 +365,8 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           categoria_id: f.categoria_id,
           responsaveis: f.responsaveis,
           cientes: f.cientes ?? [],
-          todos_concluem: f.todos_concluem ?? true,
+          // check-list e contagem: quem enviar primeiro conclui para todos
+          todos_concluem: f.todos_concluem ?? false,
           privado: f.privado ?? false,
           criado_por: f.criado_por ?? null,
           equipamento_id: f.equipamento_id ?? null,
