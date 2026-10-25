@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatarDataHora } from "@/lib/formato";
-import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
+import { headers } from "next/headers";
+import { linkWhatsApp, semEmojisNoLink, urlDoSite } from "@/lib/whatsapp";
 import { RESPOSTAS_SIM_NAO } from "@/lib/types";
 
 export type EstadoEnvio =
@@ -182,6 +183,8 @@ export async function enviarChecklist(_: EstadoEnvio, form: FormData): Promise<E
     execucaoId: execucaoId as string,
     automatico: (avisos ?? 0) > 0,
     resumo,
-    whatsapp: linkWhatsApp(resumo, exec?.checklist_modelos?.whatsapp_destino),
+    whatsapp: linkWhatsApp(resumo, exec?.checklist_modelos?.whatsapp_destino, {
+      emojis: !semEmojisNoLink((await headers()).get("user-agent")),
+    }),
   };
 }

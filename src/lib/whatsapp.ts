@@ -2,14 +2,18 @@ import { formatarDataHora, soDigitos } from "@/lib/formato";
 
 // Link wa.me: abre o WhatsApp com a mensagem pronta (a pessoa aperta enviar).
 // Sem telefone, o WhatsApp pergunta para quem enviar.
-export function linkWhatsApp(texto: string, telefone?: string | null) {
-  // o WhatsApp Desktop (Windows) troca emojis do link wa.me por "�": no link vai só texto
-  texto = texto.replace(/[\p{Extended_Pictographic}\u200d\ufe0f]/gu, "").replace(/ {2,}/g, " ").replace(/^ +| +$/gm, "");
+export function linkWhatsApp(texto: string, telefone?: string | null, { emojis = true }: { emojis?: boolean } = {}) {
+  if (!emojis) texto = texto.replace(/[\p{Extended_Pictographic}\u200d\ufe0f]/gu, "").replace(/ {2,}/g, " ").replace(/^ +| +$/gm, "");
   let numero = soDigitos(telefone);
   // número brasileiro sem DDI (DDD + 8/9 dígitos)
   if (numero.length === 10 || numero.length === 11) numero = `55${numero}`;
   const base = numero ? `https://wa.me/${numero}` : "https://wa.me/";
   return `${base}?text=${encodeURIComponent(texto)}`;
+}
+
+// o WhatsApp Desktop (Windows) troca emojis do link wa.me por "�": só nele o texto vai sem emojis
+export function semEmojisNoLink(userAgent?: string | null) {
+  return /Windows/i.test(userAgent ?? "");
 }
 
 export function urlDoSite(caminho: string) {
