@@ -258,7 +258,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Em Preenchidos recentemente fica cada envio, com quem preencheu, a hora e quantos itens deram \"Não\".",
           "No quadro de Tarefas, o check-list do dia é concluído sozinho quando alguém preenche.",
-          "Se ninguém preencher até 30 minutos depois do prazo, ele é encerrado como \"Não realizado no tempo\".",
+          "Se ninguém preencher até 30 minutos depois do prazo, ele é encerrado como \"Não realizado no tempo\". Preencher por qualquer via (link, QR Code ou app) conclui a tarefa, mesmo com vários responsáveis (quem enviar primeiro vale para todos) e mesmo se o envio vier depois do cancelamento: ela volta para Concluído.",
         ],
       },
     ],
