@@ -199,15 +199,16 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
   if (porConclusao.length > 0) {
     const { data: ts, error: errT } = await admin
       .from("tarefas")
-      .select("origem_id, concluida_em, cancelada_em")
+      .select("origem_id, ocorrencia_em, concluida_em, cancelada_em")
       .eq("origem", "acao")
       .in("origem_id", porConclusao.map((a) => a.id))
-      .returns<{ origem_id: string; concluida_em: string | null; cancelada_em: string | null }[]>();
+      .returns<{ origem_id: string; ocorrencia_em: string; concluida_em: string | null; cancelada_em: string | null }[]>();
     if (errT) throw errT;
     for (const t of ts ?? []) {
       const h = historico.get(t.origem_id) ?? { aberta: false, ultima: null };
       const fim = t.concluida_em ?? t.cancelada_em;
-      if (!fim) h.aberta = true;
+      // tarefa futura ainda não começou: se a agenda mudar, ela é refeita ao salvar a ação
+      if (!fim) h.aberta = h.aberta || new Date(t.ocorrencia_em).getTime() <= Date.now();
       else if (!h.ultima || new Date(fim) > h.ultima) h.ultima = new Date(fim);
       historico.set(t.origem_id, h);
     }
@@ -476,6 +477,31 @@ export async function gerarTarefasRecorrentes(filtro?: { modeloId?: string; acao
           }
         }
       }
+    }
+  }
+
+  // Ao salvar uma ação, tarefas futuras ainda no status inicial que não batem mais com a agenda
+  // (data, dia da semana, horário ou regra editados) são removidas; as certas ficam como estão.
+  if (filtro?.acaoId) {
+    for (const f of fontes.filter((x) => x.origem === "acao")) {
+      let certas: Set<number>;
+      try {
+        certas = new Set(f.momentos(DIAS_A_FRENTE).map((m) => m.quando.getTime()));
+      } catch {
+        continue;
+      }
+      const { data: futuras } = await admin
+        .from("tarefas")
+        .select("id, ocorrencia_em")
+        .eq("origem", "acao")
+        .eq("origem_id", f.id)
+        .in("status_id", statusAbertos)
+        .is("concluida_em", null)
+        .gt("ocorrencia_em", new Date().toISOString());
+      const sobrando = (futuras ?? []).filter((t) => !certas.has(new Date(t.ocorrencia_em).getTime())).map((t) => t.id);
+      if (sobrando.length === 0) continue;
+      const { error: e } = await admin.from("tarefas").delete().in("id", sobrando);
+      if (e) console.error("Erro ao remover tarefas futuras desatualizadas", e.message);
     }
   }
 
