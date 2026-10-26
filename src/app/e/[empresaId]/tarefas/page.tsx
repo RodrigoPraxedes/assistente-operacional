@@ -85,11 +85,37 @@ export default async function PaginaTarefas({
   if (recorte === "concluidas_hoje")
     consulta = consulta.gte("concluida_em", horaLocalParaUtc(hoje.y, hoje.m, hoje.d, 0, 0, empresa.fuso_horario).toISOString());
 
-  const [{ data: tarefas }, { data: membros }, { data: unidades }] = await Promise.all([
+  const [{ data: tarefasBrutas }, { data: membros }, { data: unidades }] = await Promise.all([
     consulta,
     supabase.from("membros").select("id, nome, telefone").eq("empresa_id", empresaId),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
+
+  // Projeto (PMLP): mostra só a etapa da vez de cada plano (a de menor ordem ainda aberta);
+  // as demais continuam guardadas e aparecem na tela do plano
+  let tarefas = tarefasBrutas;
+  const idsPlanos = [...new Set((tarefas ?? []).filter((t) => t.origem === "plano").map((t) => t.origem_id as string))];
+  if (idsPlanos.length) {
+    const { data: abertas } = await supabase
+      .from("tarefas")
+      .select("id, origem_id")
+      .eq("origem", "plano")
+      .in("origem_id", idsPlanos)
+      .in("status_id", idsPendentes);
+    const { data: ordens } = abertas?.length
+      ? await supabase.from("plano_etapas").select("tarefa_id, ordem").in("tarefa_id", abertas.map((a) => a.id))
+      : { data: [] as { tarefa_id: string; ordem: number }[] };
+    const ordemDe = new Map((ordens ?? []).map((o) => [o.tarefa_id, o.ordem]));
+    const minPorPlano = new Map<string, number>();
+    for (const a of abertas ?? []) {
+      const o = ordemDe.get(a.id) ?? 0;
+      minPorPlano.set(a.origem_id, Math.min(minPorPlano.get(a.origem_id) ?? o, o));
+    }
+    tarefas = (tarefas ?? []).filter((t) => {
+      if (t.origem !== "plano" || !idsPendentes.includes(t.status_id)) return true;
+      return (ordemDe.get(t.id) ?? 0) <= (minPorPlano.get(t.origem_id) ?? 0);
+    });
+  }
 
   const nomes = {
     membros: Object.fromEntries((membros ?? []).map((m) => [m.id, m.nome])),

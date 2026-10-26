@@ -509,6 +509,7 @@ export const SECOES: SecaoGuia[] = [
           "Marque de quais etapas ela depende: ela mostra \"Aguardando etapa...\" até as anteriores terminarem, e depois \"Pode começar\".",
           "Marque a equipe da etapa (força-tarefa): essas pessoas veem o projeto e atualizam a etapa no quadro.",
           "Use as setas para mudar a ordem das etapas.",
+          "No quadro e na lista de Tarefas aparece só a etapa da vez de cada projeto (a primeira que ainda não foi concluída, pela ordem). Ao concluí-la, a seguinte aparece. A tela do projeto mostra todas as etapas.",
         ],
       },
       {
