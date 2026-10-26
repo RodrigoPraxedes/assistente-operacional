@@ -16,12 +16,11 @@ export default async function NovoChamado({
   const ativos = (tabela: string) =>
     supabase.from(tabela).select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome");
 
-  const [{ data: empresa }, { data: unidades }, { data: setores }, { data: categorias }, { data: equipamentos }, { data: membros }, { data: fornecedores }] =
+  const [{ data: empresa }, { data: unidades }, { data: setores }, { data: equipamentos }, { data: membros }, { data: fornecedores }] =
     await Promise.all([
       supabase.from("empresas").select("sla_chamados, chamados_central_ativo").eq("id", empresaId).single(),
       ativos("unidades"),
       ativos("setores"),
-      supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
       supabase.from("equipamentos").select("id, nome, unidade_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
       ativos("membros"),
       supabase
@@ -45,7 +44,6 @@ export default async function NovoChamado({
         sla={(empresa?.sla_chamados as Record<string, number>) ?? {}}
         unidades={(unidades ?? []) as { id: string; nome: string }[]}
         setores={(setores ?? []) as { id: string; nome: string }[]}
-        categorias={categorias ?? []}
         equipamentos={(equipamentos ?? []) as { id: string; nome: string }[]}
         equipamentoInicial={doItem?.id}
         unidadeInicial={doItem?.unidade_id ?? undefined}

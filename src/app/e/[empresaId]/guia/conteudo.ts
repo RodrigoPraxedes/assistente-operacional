@@ -535,7 +535,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Toque em Abrir chamado e descreva o problema.",
           "Escolha a prioridade (urgente, alta, média, baixa). Ela define o prazo de atendimento, configurado em Configurações › Geral.",
-          "Indique a unidade, o equipamento do patrimônio e o local, e anexe fotos. A lista de equipamentos tem um campo de pesquisa: digite parte do nome para filtrar.",
+          "Indique a unidade, o setor e o equipamento do patrimônio, e anexe fotos. Se precisar dizer onde fica (cozinha, banheiro...), escreva em Detalhes; todo chamado já é de manutenção, por isso não há campo de categoria. A lista de equipamentos tem um campo de pesquisa: digite parte do nome para filtrar.",
           "Se já souber, escolha o responsável interno (esse campo some quando a empresa usa o recebedor central, veja abaixo) ou o prestador de serviço. A lista de prestadores tem campo de pesquisa, e o botão + ao lado cadastra um novo na hora (nome e telefone) para quem tem permissão em Prestadores.",
           "Quem não tem login abre chamado pelo QR Code da unidade, em Solicitar manutenção.",
           "Um item de check-list respondido \"Não\" também pode abrir chamado sozinho.",
