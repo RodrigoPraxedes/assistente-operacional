@@ -57,14 +57,14 @@ export default async function PaginaAcoes({
   if (porConclusao.length > 0) {
     const { data: ts } = await supabase
       .from("tarefas")
-      .select("origem_id, concluida_em, cancelada_em")
+      .select("origem_id, ocorrencia_em, concluida_em, cancelada_em")
       .eq("origem", "acao")
       .in("origem_id", porConclusao)
-      .returns<{ origem_id: string; concluida_em: string | null; cancelada_em: string | null }[]>();
+      .returns<{ origem_id: string; ocorrencia_em: string; concluida_em: string | null; cancelada_em: string | null }[]>();
     for (const t of ts ?? []) {
       const h = historico.get(t.origem_id) ?? { aberta: false, ultima: null };
       const fim = t.concluida_em ?? t.cancelada_em;
-      if (!fim) h.aberta = true;
+      if (!fim) h.aberta = h.aberta || new Date(t.ocorrencia_em).getTime() <= Date.now();
       else if (!h.ultima || new Date(fim) > h.ultima) h.ultima = new Date(fim);
       historico.set(t.origem_id, h);
     }
