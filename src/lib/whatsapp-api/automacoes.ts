@@ -439,7 +439,7 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
             unidades: { nome: string } | null;
           }[]
         >(),
-      admin.from("status").select("id").eq("empresa_id", c.empresa_id).in("tipo", ["aberto", "em_andamento"]),
+      admin.from("status").select("id").eq("empresa_id", c.empresa_id).in("tipo", ["aberto", "em_andamento", "adiado"]),
     ]);
     const statusAberto = new Set((abertos ?? []).map((s) => s.id));
     const vencidas = (tarefas ?? []).filter((t) => statusAberto.has(t.status_id));
