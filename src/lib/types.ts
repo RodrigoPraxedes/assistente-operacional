@@ -226,6 +226,7 @@ export interface Acao {
   prazo_horas: number;
   prazo_minutos: number;
   recorrencia: string | null;
+  contar_da_conclusao: boolean;
   ativo: boolean;
   privado: boolean;
   criado_por: string | null;

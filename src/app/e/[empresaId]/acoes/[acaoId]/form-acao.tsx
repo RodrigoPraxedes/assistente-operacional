@@ -107,6 +107,18 @@ export function FormAcao({
               <Input type="date" name="data_final" defaultValue={base?.data_final ?? ""} />
             </Campo>
           )}
+          {regra && (
+            <label className="flex items-start gap-2 text-sm sm:col-span-2">
+              <input type="checkbox" name="contar_da_conclusao" defaultChecked={base?.contar_da_conclusao ?? false} className="mt-1" />
+              <span>
+                Contar a próxima a partir da data da conclusão
+                <span className="block text-xs text-slate-500">
+                  Desligado, a próxima segue o calendário (data inicial + repetição). Ligado, a próxima só nasce depois que
+                  você conclui e conta da data da conclusão: concluir em 28/10 uma ação &quot;a cada 5 meses&quot; gera a próxima em 28/03.
+                </span>
+              </span>
+            </label>
+          )}
           <CampoPrazo horario={horario} inicial={base?.prazo_minutos ?? 480} />
           <div className="sm:col-span-2">
             <SeletorResponsaveis

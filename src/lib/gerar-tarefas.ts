@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { avisosDeAlerta, ocorrencias, type RegraRecorrencia } from "@/lib/recorrencia";
-import { formatarData } from "@/lib/formato";
+import { formatarData, hojeNoFuso } from "@/lib/formato";
 import type { Origem } from "@/lib/types";
 
 const DIAS_A_FRENTE = 2;
@@ -162,7 +162,7 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
   let q = admin
     .from("acoes")
     .select(
-      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, cientes, todos_concluem, equipamento_id, nome, descricao, data_inicial, data_final, horario, prazo_minutos, recorrencia, privado, criado_por, empresas(fuso_horario)",
+      "id, empresa_id, unidade_id, setor_id, categoria_id, responsaveis, cientes, todos_concluem, equipamento_id, nome, descricao, data_inicial, data_final, horario, prazo_minutos, recorrencia, contar_da_conclusao, privado, criado_por, empresas(fuso_horario)",
     )
     .eq("ativo", true);
   if (acaoId) q = q.eq("id", acaoId);
@@ -185,11 +185,34 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
       horario: string;
       prazo_minutos: number;
       recorrencia: string | null;
+      contar_da_conclusao: boolean;
       privado: boolean;
       criado_por: string | null;
     } & ComFuso)[]
   >();
   if (error) throw error;
+
+  // "Contar a partir da conclusão": só há uma tarefa por vez e a próxima conta do
+  // dia em que a anterior foi concluída (ou cancelada).
+  const porConclusao = (data ?? []).filter((a) => a.contar_da_conclusao && a.recorrencia);
+  const historico = new Map<string, { aberta: boolean; ultima: Date | null }>();
+  if (porConclusao.length > 0) {
+    const { data: ts, error: errT } = await admin
+      .from("tarefas")
+      .select("origem_id, concluida_em, cancelada_em")
+      .eq("origem", "acao")
+      .in("origem_id", porConclusao.map((a) => a.id))
+      .returns<{ origem_id: string; concluida_em: string | null; cancelada_em: string | null }[]>();
+    if (errT) throw errT;
+    for (const t of ts ?? []) {
+      const h = historico.get(t.origem_id) ?? { aberta: false, ultima: null };
+      const fim = t.concluida_em ?? t.cancelada_em;
+      if (!fim) h.aberta = true;
+      else if (!h.ultima || new Date(fim) > h.ultima) h.ultima = new Date(fim);
+      historico.set(t.origem_id, h);
+    }
+  }
+
   return (data ?? []).map((a) => ({
     origem: "acao",
     id: a.id,
@@ -205,17 +228,30 @@ async function fontesAcoes(admin: Admin, { id: acaoId, empresaId }: Filtro = {})
     equipamento_id: a.equipamento_id,
     titulo: a.nome,
     descricao: a.descricao,
-    momentos: porRegra(
-      {
-        regra: a.recorrencia,
-        horario: a.horario,
-        inicio: a.data_inicial,
-        fim: a.data_final,
-        fuso: a.empresas?.fuso_horario ?? "America/Sao_Paulo",
-      },
-      a.prazo_minutos,
-    ),
+    momentos: momentosAcao(a, historico.get(a.id)),
   }));
+}
+
+// Ações com "contar a partir da conclusão": enquanto há tarefa aberta não nasce outra;
+// depois, a próxima é a primeira ocorrência da regra DEPOIS do dia da conclusão.
+function momentosAcao(
+  a: { recorrencia: string | null; contar_da_conclusao: boolean; horario: string; data_inicial: string; data_final: string | null; prazo_minutos: number } & ComFuso,
+  h?: { aberta: boolean; ultima: Date | null },
+) {
+  const fuso = a.empresas?.fuso_horario ?? "America/Sao_Paulo";
+  const regra = { regra: a.recorrencia, horario: a.horario, inicio: a.data_inicial as Date | string, fim: a.data_final, fuso };
+  if (!a.contar_da_conclusao || !a.recorrencia) return porRegra(regra, a.prazo_minutos);
+  return (dias: number) => {
+    if (h?.aberta) return [];
+    if (!h?.ultima) return porRegra(regra, a.prazo_minutos)(dias);
+    const chave = (d: Date) => {
+      const l = hojeNoFuso(fuso, d);
+      return `${l.y}-${String(l.m).padStart(2, "0")}-${String(l.d).padStart(2, "0")}`;
+    };
+    const dia = chave(h.ultima);
+    if (dia < a.data_inicial) return porRegra(regra, a.prazo_minutos)(dias);
+    return porRegra({ ...regra, inicio: dia }, a.prazo_minutos)(dias).filter((m) => chave(m.quando) > dia);
+  };
 }
 
 // Cada aviso de alerta é uma fonte: a tarefa aparece X dias antes da data e
