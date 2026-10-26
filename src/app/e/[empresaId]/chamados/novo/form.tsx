@@ -18,7 +18,6 @@ export function FormChamado({
   sla,
   unidades,
   setores,
-  categorias,
   equipamentos,
   membros,
   fornecedores,
@@ -32,7 +31,6 @@ export function FormChamado({
   sla: Record<string, number>;
   unidades: Opcao[];
   setores: Opcao[];
-  categorias: Opcao[];
   equipamentos: Opcao[];
   membros: Opcao[];
   fornecedores: Opcao[];
@@ -81,14 +79,8 @@ export function FormChamado({
             <SeletorComBusca name="equipamento_id" opcoes={equipamentos} inicial={equipamentoInicial ?? ""} />
             <span className="block text-xs text-slate-500">Do patrimônio; o chamado entra no histórico do item</span>
           </div>
-          <Campo rotulo="Local" dica="Ex.: cozinha, banheiro dos clientes">
-            <Input name="local" />
-          </Campo>
           <Campo rotulo="Setor">
             <Select name="setor_id">{opcoes(setores)}</Select>
-          </Campo>
-          <Campo rotulo="Categoria">
-            <Select name="categoria_id">{opcoes(categorias)}</Select>
           </Campo>
           {gerencia && !centralAtiva && (
             <Campo rotulo="Responsável interno">
