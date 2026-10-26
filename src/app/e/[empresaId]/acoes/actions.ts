@@ -55,6 +55,7 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
     prazo_minutos,
     prazo_horas: Math.floor(prazo_minutos / 60),
     recorrencia,
+    contar_da_conclusao: !!recorrencia && form.get("contar_da_conclusao") === "on",
     ativo: form.get("ativo") !== "false",
     ...(lerPrivado(form) !== undefined && { privado: lerPrivado(form) }),
   };
