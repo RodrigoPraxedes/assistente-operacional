@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
-import { descreverRecorrencia, proximaOcorrencia } from "@/lib/recorrencia";
+import { descreverRecorrencia, proximaOcorrencia, proximaPorConclusao } from "@/lib/recorrencia";
 import { formatarData, formatarDataHora } from "@/lib/formato";
 import type { Acao } from "@/lib/types";
 import { Aviso, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
@@ -50,6 +50,31 @@ export default async function PaginaAcoes({
       .order("nome"),
     supabase.from("equipamentos").select("id, nome").eq("empresa_id", empresaId),
   ]);
+
+  // ações que contam a partir da conclusão: a próxima depende da última tarefa encerrada
+  const porConclusao = ((acoes ?? []) as Acao[]).filter((a) => a.contar_da_conclusao && a.recorrencia).map((a) => a.id);
+  const historico = new Map<string, { aberta: boolean; ultima: Date | null }>();
+  if (porConclusao.length > 0) {
+    const { data: ts } = await supabase
+      .from("tarefas")
+      .select("origem_id, concluida_em, cancelada_em")
+      .eq("origem", "acao")
+      .in("origem_id", porConclusao)
+      .returns<{ origem_id: string; concluida_em: string | null; cancelada_em: string | null }[]>();
+    for (const t of ts ?? []) {
+      const h = historico.get(t.origem_id) ?? { aberta: false, ultima: null };
+      const fim = t.concluida_em ?? t.cancelada_em;
+      if (!fim) h.aberta = true;
+      else if (!h.ultima || new Date(fim) > h.ultima) h.ultima = new Date(fim);
+      historico.set(t.origem_id, h);
+    }
+  }
+  const proximaDa = (a: Acao) => {
+    const regra = { regra: a.recorrencia, horario: a.horario, inicio: a.data_inicial, fim: a.data_final, fuso };
+    return a.contar_da_conclusao && a.recorrencia
+      ? proximaPorConclusao(regra, historico.get(a.id)?.ultima ?? null)
+      : proximaOcorrencia(regra);
+  };
   const equipamento = new Map((equipamentos ?? []).map((e) => [e.id, e.nome]));
   const unidade = new Map((unidades ?? []).map((u) => [u.id, u.nome]));
   const membro = new Map((membros ?? []).map((m) => [m.id, m.nome]));
@@ -74,14 +99,9 @@ export default async function PaginaAcoes({
     )
     .map((a) => ({
       a,
-      proxima: a.ativo
-        ? proximaOcorrencia({
-            regra: a.recorrencia,
-            horario: a.horario,
-            inicio: a.data_inicial,
-            fim: a.data_final,
-            fuso,
-          })
+      aguardando: a.ativo && a.contar_da_conclusao && !!historico.get(a.id)?.aberta,
+      proxima: a.ativo && !(a.contar_da_conclusao && historico.get(a.id)?.aberta)
+        ? proximaDa(a)
         : null,
     }))
     .sort(
@@ -154,7 +174,7 @@ export default async function PaginaAcoes({
               </span>
             </h2>
             <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-superficie">
-              {g.itens.map(({ a, proxima }) => (
+              {g.itens.map(({ a, proxima, aguardando }) => (
                 <li
                   key={a.id}
                   className={`flex flex-wrap items-center justify-between gap-2 p-3 text-sm ${a.ativo ? "" : "opacity-60"}`}
@@ -198,6 +218,8 @@ export default async function PaginaAcoes({
                   <div className="text-right text-xs">
                     {!a.ativo ? (
                       <Etiqueta>Inativa</Etiqueta>
+                    ) : aguardando ? (
+                      <span className="text-slate-600">Aguardando conclusão</span>
                     ) : proxima ? (
                       <span className="text-slate-600">
                         Próxima: {formatarDataHora(proxima.toISOString(), fuso)}

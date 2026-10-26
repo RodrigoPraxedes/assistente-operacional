@@ -68,6 +68,23 @@ export function proximaOcorrencia(r: RegraRecorrencia, base = new Date()) {
   }
 }
 
+// Ação "contar a partir da conclusão": a próxima é a primeira ocorrência da regra
+// DEPOIS do dia em que a anterior foi concluída (ou cancelada). Sem histórico, vale a data inicial.
+export function proximaPorConclusao(r: RegraRecorrencia, ultima: Date | null, base = new Date()) {
+  try {
+    if (!ultima) return proximaOcorrencia(r, base);
+    const chave = (d: Date) => {
+      const l = hojeNoFuso(r.fuso, d);
+      return `${l.y}-${String(l.m).padStart(2, "0")}-${String(l.d).padStart(2, "0")}`;
+    };
+    const dia = chave(ultima);
+    if (typeof r.inicio === "string" && dia < r.inicio.slice(0, 10)) return proximaOcorrencia(r, base);
+    return ocorrencias({ ...r, inicio: dia }, 730, base).find((o) => chave(o) > dia) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function regraValida(regra: string) {
   try {
     const o = RRule.parseString(regra.replace(/^RRULE:/i, ""));
