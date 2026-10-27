@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { formatarData, formatarDataHora, formatarDia, hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
 import { hojeIso, horarioTurno, ordenarTurnos, somarDias } from "@/lib/escala";
+import { dataDeHoje } from "@/lib/contagens";
 import { proximaOcorrencia, descreverRecorrencia } from "@/lib/recorrencia";
 import {
   AUSENCIAS,
@@ -1914,6 +1915,98 @@ const historico_do_equipamento: Ferramenta = {
   },
 };
 
+const contagens: Ferramenta = {
+  nome: "contagens",
+  titulo: "Contagens (quantidades por turno)",
+  descricao:
+    "Valores digitados nas Contagens (ex.: quantos frangos foram colocados para assar): por data e turno, cada item com a quantidade que a pessoa tinha (tem), a meta do dia, quanto faltava (a fazer), quanto ela disse que vai fazer e as remessas complementares do mesmo dia. Sem parâmetros devolve as contagens de hoje. Só para quem tem acesso aos resultados das Contagens no app.",
+  parametros: {
+    type: "object",
+    properties: {
+      empresa: P_EMPRESA,
+      contagem: { type: "string", description: "Nome (ou parte) da contagem, ex.: Produção churrasqueira. Omita para todas." },
+      de: { type: "string", description: "Data inicial AAAA-MM-DD (padrão: hoje)." },
+      ate: { type: "string", description: "Data final AAAA-MM-DD (padrão: igual a 'de')." },
+      turno: { type: "string", description: "Ex.: Dia ou Noite." },
+      quem: { type: "string", description: "Parte do nome de quem contou." },
+      item: { type: "string", description: "Só itens cujo nome contém este texto (ex.: frango)." },
+      limite: { type: "number", description: "Máximo de envios (padrão 50, máximo 300)." },
+    },
+    additionalProperties: false,
+  },
+  async executar(ctx, args) {
+    const e = await escolherEmpresa(ctx, args);
+    const hoje = dataDeHoje(e.fuso);
+    const de = dataIso(args.de) ?? hoje;
+    const ate = dataIso(args.ate) ?? (args.de ? de : hoje);
+    if (de > ate) throw new Error("A data inicial é depois da final.");
+    const { data: lista, error: e1 } = await ctx.supabase
+      .from("contagens")
+      .select("id, nome, usa_meta, rotulo_falta, pede_vai_fazer, turnos")
+      .eq("empresa_id", e.empresaId)
+      .returns<{ id: string; nome: string; usa_meta: boolean; rotulo_falta: string; pede_vai_fazer: boolean; turnos: string[] }[]>();
+    if (e1) throw new Error("Não consegui consultar as contagens.");
+    const busca = texto(args.contagem);
+    const cs = (lista ?? []).filter((c) => !busca || contem(c.nome, busca));
+    if (cs.length === 0) throw new Error(busca ? `Contagem "${busca}" não encontrada. Opções: ${(lista ?? []).map((c) => c.nome).join(", ")}.` : "Nenhuma contagem cadastrada.");
+    let q = ctx.supabase
+      .from("contagem_registros")
+      .select(
+        "contagem_id, data_ref, turno, executor_nome, enviado_em, remessa, observacao, contagem_valores(quantidade, meta, a_fazer, vai_fazer, contagem_itens(nome, unidade_medida, ordem))",
+      )
+      .eq("empresa_id", e.empresaId)
+      .in("contagem_id", cs.map((c) => c.id))
+      .gte("data_ref", de)
+      .lte("data_ref", ate)
+      .order("data_ref", { ascending: false })
+      .order("enviado_em", { ascending: false })
+      .limit(numero(args.limite, 50, 300));
+    const turno = texto(args.turno);
+    if (turno) q = q.ilike("turno", turno.replace(/[%_]/g, ""));
+    const quem = texto(args.quem);
+    if (quem) q = q.ilike("executor_nome", `%${quem.replace(/[%_]/g, "")}%`);
+    type Linha = {
+      contagem_id: string; data_ref: string; turno: string | null; executor_nome: string; enviado_em: string; remessa: boolean; observacao: string | null;
+      contagem_valores: { quantidade: number | null; meta: number | null; a_fazer: number | null; vai_fazer: number | null; contagem_itens: { nome: string; unidade_medida: string | null; ordem: number } | null }[];
+    };
+    const { data, error } = await q.returns<Linha[]>();
+    if (error) throw new Error("Não consegui consultar os envios das contagens.");
+    const filtroItem = texto(args.item);
+    return {
+      empresa: e.empresa,
+      periodo: de === ate ? formatarDia(de) : `${formatarDia(de)} a ${formatarDia(ate)}`,
+      envios: (data ?? []).length,
+      observacao:
+        (data ?? []).length === 0
+          ? "Nenhum envio no período (ou você não tem acesso aos resultados das Contagens)."
+          : "tem = quantidade contada; meta = meta do dia; a_fazer = quanto faltava para a meta; vai_fazer = quanto a pessoa disse que vai fazer. Remessa = complemento de produção no mesmo dia.",
+      registros: (data ?? []).map((r) => {
+        const c = cs.find((x) => x.id === r.contagem_id)!;
+        return {
+          contagem: c.nome,
+          data: formatarDia(r.data_ref),
+          turno: r.turno ?? undefined,
+          enviado_por: r.executor_nome,
+          enviado_em: formatarDataHora(r.enviado_em, e.fuso),
+          remessa: r.remessa || undefined,
+          observacao: r.observacao || undefined,
+          itens: [...r.contagem_valores]
+            .filter((v) => v.contagem_itens && (!filtroItem || contem(v.contagem_itens.nome, filtroItem)))
+            .sort((a, b) => a.contagem_itens!.ordem - b.contagem_itens!.ordem)
+            .map((v) => ({
+              item: v.contagem_itens!.nome,
+              unidade: v.contagem_itens!.unidade_medida ?? undefined,
+              tem: v.quantidade ?? undefined,
+              meta: v.meta ?? undefined,
+              a_fazer: v.a_fazer ?? undefined,
+              vai_fazer: v.vai_fazer ?? undefined,
+            })),
+        };
+      }),
+    };
+  },
+};
+
 export const FERRAMENTAS: Ferramenta[] = [
   minhas_empresas,
   resumo_do_dia,
@@ -1938,4 +2031,5 @@ export const FERRAMENTAS: Ferramenta[] = [
   chamados_do_prestador,
   whatsapp_status,
   historico_do_equipamento,
+  contagens,
 ];
