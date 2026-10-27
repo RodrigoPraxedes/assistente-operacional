@@ -50,6 +50,28 @@ const ORIGEM: Record<string, string> = {
   lembrete: "Automático: lembrete de check-list",
 };
 
+// nomes curtos do quadro de envios
+const ORIGEM_CURTA: Record<string, string> = {
+  manual: "Manual",
+  teste: "Teste",
+  checklist: "Check-list concluído",
+  contagem: "Contagem concluída",
+  tarefa: "Tarefa atribuída",
+  conclusao: "Tarefa concluída",
+  resumo: "Resumo do dia",
+  boasvindas: "Boas-vindas",
+  lembrete: "Lembretes",
+  prazo: "Prazo venceu",
+};
+
+interface LinhaEnvios {
+  periodo: "hoje" | "7d" | "30d";
+  origem: string;
+  enviadas: number;
+  falhas: number;
+  outras: number;
+}
+
 export default async function Avisos({
   params,
   searchParams,
@@ -63,7 +85,7 @@ export default async function Avisos({
   const gerencia = pode("whatsapp.gerenciar");
   const fuso = empresa.fuso_horario;
 
-  const [{ data: conexoes }, { data: contatos }, { data: mensagens }] = await Promise.all([
+  const [{ data: conexoes }, { data: contatos }, { data: mensagens }, { data: resumoBruto }] = await Promise.all([
     supabase
       .from("whatsapp_conexoes")
       .select("id, provedor, envio_pausado, unidades(nome)")
@@ -80,7 +102,25 @@ export default async function Avisos({
       .order("created_at", { ascending: false })
       .limit(50)
       .returns<Mensagem[]>(),
+    supabase.rpc("whatsapp_resumo_envios", { p_empresa: empresaId }),
   ]);
+  const resumoEnvios = (resumoBruto ?? []) as LinhaEnvios[];
+  const PERIODOS_ENVIOS = [
+    { chave: "hoje", rotulo: "Hoje" },
+    { chave: "7d", rotulo: "7 dias" },
+    { chave: "30d", rotulo: "30 dias" },
+  ] as const;
+  const origensEnvios = [...new Set((resumoEnvios ?? []).map((l) => l.origem))].sort((a, b) =>
+    (ORIGEM_CURTA[a] ?? a).localeCompare(ORIGEM_CURTA[b] ?? b, "pt-BR"),
+  );
+  const celula = (periodo: string, origem?: string) => {
+    const linhas = (resumoEnvios ?? []).filter((l) => l.periodo === periodo && (!origem || l.origem === origem));
+    return {
+      enviadas: linhas.reduce((t, l) => t + Number(l.enviadas), 0),
+      falhas: linhas.reduce((t, l) => t + Number(l.falhas), 0),
+      outras: linhas.reduce((t, l) => t + Number(l.outras), 0),
+    };
+  };
   const pausada = new Map((conexoes ?? []).map((c) => [c.id, c.envio_pausado]));
   const ensaio = new Set((conexoes ?? []).filter((c) => c.provedor === "simulacao").map((c) => c.id));
   const naFila = (mensagens ?? []).some((m) => m.situacao === "na_fila");
@@ -113,6 +153,53 @@ export default async function Avisos({
             textoInicial={teste ? TEXTO_TESTE : ""}
             teste={!!teste}
           />
+        )}
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-slate-900">Envios</h2>
+          <p className="text-sm text-slate-500">
+            Mensagens que o número real enviou (aceitas, entregues ou lidas). O ensaio não conta. Em vermelho, as que falharam; entre
+            parênteses, as que ainda aguardam.
+          </p>
+        </div>
+        {!origensEnvios.length ? (
+          <p className="text-sm text-slate-500">Nenhum envio nos últimos 30 dias.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+                  <th className="py-1 pr-3 font-medium">Tipo de aviso</th>
+                  {PERIODOS_ENVIOS.map((p) => (
+                    <th key={p.chave} className="px-2 py-1 text-right font-medium">
+                      {p.rotulo}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {[...origensEnvios.map((o) => ({ origem: o as string | undefined, rotulo: ORIGEM_CURTA[o] ?? o })), { origem: undefined, rotulo: "Total" }].map(
+                  (l) => (
+                    <tr key={l.rotulo} className={l.origem ? "" : "font-semibold"}>
+                      <td className="py-1.5 pr-3 text-slate-700">{l.rotulo}</td>
+                      {PERIODOS_ENVIOS.map((p) => {
+                        const c = celula(p.chave, l.origem);
+                        return (
+                          <td key={p.chave} className="px-2 py-1.5 text-right tabular-nums text-slate-900">
+                            {c.enviadas}
+                            {c.falhas > 0 && <span className="ml-1 text-red-600">({c.falhas} falhou)</span>}
+                            {c.outras > 0 && <span className="ml-1 text-slate-500">({c.outras})</span>}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </Cartao>
 
