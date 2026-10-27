@@ -1,6 +1,7 @@
 import { getContexto } from "@/lib/contexto";
 import { Aviso, Botao, Campo, Cartao, Input, Titulo } from "@/components/ui";
 import { trocarMinhaSenha } from "./actions";
+import { Notificacoes } from "./notificacoes";
 
 export default async function MinhaConta({
   params,
@@ -12,6 +13,7 @@ export default async function MinhaConta({
   const { empresaId } = await params;
   const { erro, salvo } = await searchParams;
   const { user, membro } = await getContexto(empresaId);
+  const chavePush = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
@@ -22,6 +24,18 @@ export default async function MinhaConta({
       <Cartao>
         <p className="font-medium text-slate-900">{membro.nome}</p>
         <p className="text-sm text-slate-500">{user.email}</p>
+      </Cartao>
+
+      <Cartao>
+        <h2 className="mb-1 font-medium">Notificações neste aparelho</h2>
+        <p className="mb-3 text-xs text-slate-500">
+          Receba avisos do Atalaia direto no celular ou no computador, além do WhatsApp. Ligue em cada aparelho que você usa.
+        </p>
+        {chavePush ? (
+          <Notificacoes empresaId={empresaId} chavePublica={chavePush} />
+        ) : (
+          <p className="text-sm text-slate-600">As notificações ainda não foram habilitadas pelo administrador do sistema.</p>
+        )}
       </Cartao>
 
       <Cartao>

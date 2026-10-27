@@ -17,6 +17,7 @@ import {
   salvarCategoria,
   salvarCentralChamados,
   salvarEmpresa,
+  salvarPush,
   salvarFuncao,
   salvarSetor,
   salvarSla,
@@ -42,7 +43,7 @@ export default async function ConfigGeral({
     supabase.from("categorias").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("status").select("*").eq("empresa_id", empresaId).order("ordem"),
   ]);
-  const { data: sla } = await supabase.from("empresas").select("sla_chamados, limite_unidades, chamados_central_ativo, chamados_central").eq("id", empresaId).single();
+  const { data: sla } = await supabase.from("empresas").select("sla_chamados, limite_unidades, chamados_central_ativo, chamados_central, push_tarefa, push_prazo").eq("id", empresaId).single();
   const { data: membrosAtivos } = await supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome");
   const unidadesAtivas = (unidades as Unidade[] | null)?.filter((u) => u.ativo).length ?? 0;
   const limiteUnidades: number = sla?.limite_unidades ?? 1;
@@ -217,6 +218,24 @@ export default async function ConfigGeral({
               {((sla?.chamados_central ?? []) as string[]).map((id) => membrosAtivos?.find((m) => m.id === id)?.nome).filter(Boolean).join(", ") || "Ninguém escolhido"}
             </p>
           )}
+          {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
+        </form>
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <h2 className="font-medium">Notificações no navegador</h2>
+        <p className="text-xs text-slate-500">
+          Quais avisos chegam como notificação no celular ou no computador de quem ligou em Minha conta. Não substitui o WhatsApp.
+        </p>
+        <form action={salvarPush.bind(null, e)} className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="push_tarefa" defaultChecked={sla?.push_tarefa ?? true} disabled={!pode("config.empresa")} />
+            Tarefa atribuída
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="push_prazo" defaultChecked={sla?.push_prazo ?? true} disabled={!pode("config.empresa")} />
+            Prazo venceu e a tarefa segue aberta
+          </label>
           {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
         </form>
       </Cartao>
