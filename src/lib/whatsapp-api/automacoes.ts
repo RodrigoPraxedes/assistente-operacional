@@ -71,7 +71,7 @@ export async function gerarResumosDoDia(agora = new Date()) {
 export async function ligarContatosAosColaboradores(empresaId: string) {
   const admin = createAdminClient();
   const [{ data: soltos }, { data: membros }, { data: ligados }] = await Promise.all([
-    admin.from("whatsapp_contatos").select("id, telefone").eq("empresa_id", empresaId).eq("ativo", true).is("membro_id", null),
+    admin.from("whatsapp_contatos").select("id, telefone").eq("empresa_id", empresaId).eq("ativo", true).eq("tipo", "pessoa").is("membro_id", null),
     admin.from("membros").select("id, telefone").eq("empresa_id", empresaId).eq("ativo", true),
     admin.from("whatsapp_contatos").select("membro_id").eq("empresa_id", empresaId).eq("ativo", true).not("membro_id", "is", null),
   ]);

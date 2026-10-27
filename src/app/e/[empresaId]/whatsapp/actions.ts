@@ -181,6 +181,59 @@ export async function salvarContato(empresaId: string, form: FormData) {
   voltar(empresaId, "/destinatarios", { ok: "Destinatário autorizado." });
 }
 
+// Grupo do WhatsApp como destinatário. O JID vem da lista da Evolution (ou é colado à mão).
+export async function salvarGrupo(empresaId: string, form: FormData) {
+  const { supabase, membro, pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/destinatarios", { erro: "Sem permissão." });
+  const jid = String(form.get("jid") ?? "").trim().toLowerCase();
+  const nome = String(form.get("nome") ?? "").trim();
+  if (!/^\d{8,20}(-\d{5,20})?@g\.us$/.test(jid))
+    voltar(empresaId, "/destinatarios", { erro: "Escolha um grupo da lista ou informe o código no formato 1203...@g.us." });
+  if (!nome) voltar(empresaId, "/destinatarios", { erro: "Informe o nome do grupo." });
+  const { error } = await supabase
+    .from("whatsapp_contatos")
+    .insert({ empresa_id: empresaId, tipo: "grupo", nome, telefone: jid, autorizado_por: membro.id });
+  if (error) voltar(empresaId, "/destinatarios", { erro: error.code === "23505" ? "Este grupo já está cadastrado." : error.message });
+  atualizar(empresaId);
+  voltar(empresaId, "/destinatarios", { ok: "Grupo autorizado." });
+}
+
+export async function renomearGrupo(empresaId: string, contatoId: string, form: FormData) {
+  const { supabase, pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/destinatarios", { erro: "Sem permissão." });
+  const nome = String(form.get("nome") ?? "").trim();
+  if (!nome) voltar(empresaId, "/destinatarios", { erro: "Informe o nome do grupo." });
+  const { error } = await supabase.from("whatsapp_contatos").update({ nome }).eq("id", contatoId).eq("empresa_id", empresaId).eq("tipo", "grupo");
+  if (error) voltar(empresaId, "/destinatarios", { erro: error.message });
+  atualizar(empresaId);
+  voltar(empresaId, "/destinatarios", { ok: "Grupo atualizado." });
+}
+
+// Regra "quando o check-list X for concluído, avisar o grupo Y"
+export async function criarRegraGrupo(empresaId: string, form: FormData) {
+  const { supabase, membro, pode } = await getContexto(empresaId);
+  if (!pode("whatsapp.gerenciar")) voltar(empresaId, "/destinatarios", { erro: "Sem permissão." });
+  const modeloId = String(form.get("modelo_id") ?? "");
+  const contatoId = String(form.get("contato_id") ?? "");
+  if (!modeloId || !contatoId) voltar(empresaId, "/destinatarios", { erro: "Escolha o check-list e o grupo." });
+  const { data: conexoes } = await supabase
+    .from("whatsapp_conexoes")
+    .select("id, provedor, unidade_id")
+    .eq("empresa_id", empresaId)
+    .order("created_at");
+  // número real da empresa toda primeiro; o envio ainda confere a unidade do check-list
+  const lista = conexoes ?? [];
+  const conexao =
+    lista.find((c) => c.provedor !== "simulacao" && !c.unidade_id) ?? lista.find((c) => c.provedor !== "simulacao") ?? lista[0];
+  if (!conexao) voltar(empresaId, "/destinatarios", { erro: "Conecte um número na aba Conexão primeiro." });
+  const { error } = await supabase
+    .from("whatsapp_gatilhos")
+    .insert({ empresa_id: empresaId, conexao_id: conexao.id, modelo_id: modeloId, contato_id: contatoId, criado_por: membro.id });
+  if (error) voltar(empresaId, "/destinatarios", { erro: error.code === "23505" ? "Esta regra já existe." : error.message });
+  atualizar(empresaId);
+  voltar(empresaId, "/destinatarios", { ok: "Regra criada: o grupo recebe o aviso quando o check-list for concluído." });
+}
+
 export async function alternarContato(empresaId: string, contatoId: string, ativo: boolean) {
   const { supabase, membro } = await getContexto(empresaId);
   const { error } = await supabase

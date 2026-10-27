@@ -1,5 +1,6 @@
 // "5521999998888" ou "5521999998888@s.whatsapp.net" → "+55 21 9****-8888"
 export function mascararNumero(valor: string | null | undefined): string | null {
+  if ((valor ?? "").endsWith("@g.us")) return "grupo";
   const n = (valor ?? "").split("@")[0].split(":")[0].replace(/\D/g, "");
   if (n.length < 8) return null;
   // Brasil: 55 + DDD + 8 ou 9 dígitos

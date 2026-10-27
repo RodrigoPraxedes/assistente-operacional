@@ -678,7 +678,10 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Só números autorizados recebem mensagens. Cadastre nome e WhatsApp, ligando ao colaborador quando for alguém da equipe.",
           "Em Automações, Autorizar a equipe pelo celular do cadastro autoriza todo mundo de uma vez.",
-          "Quem recebe o aviso de check-list concluído agora se escolhe dentro do próprio check-list, no campo Recebe o resultado. Aqui só aparecem, se existirem, as regras antigas de números de fora da equipe, com o botão Remover.",
+          "Quem recebe o aviso de check-list concluído agora se escolhe dentro do próprio check-list, no campo Recebe o resultado. Aqui ficam as regras de grupos e de números de fora da equipe, com o botão Remover.",
+          "Grupo do WhatsApp: em Autorizar grupo do WhatsApp, escolha o grupo na lista (aparecem os grupos em que o número conectado participa; sem lista, cole o código 1203...@g.us), dê um nome e toque em Autorizar grupo. O número conectado precisa estar no grupo.",
+          "Para o grupo receber o resultado de um check-list, use Avisar grupo quando o check-list for concluído: escolha o check-list e o grupo e toque em Criar regra. O grupo também aparece como destinatário em Avisos, para um aviso manual. Tarefas, lembretes e o resumo do dia continuam só para pessoas.",
+          "Cuidado: grupo grande recebendo muitas mensagens aumenta o risco de bloqueio do número na Evolution. Prefira poucos avisos por dia no grupo.",
           "Cada pessoa recebe um aviso só por check-list, mesmo estando numa regra antiga e em Recebe o resultado.",
           "Cadastrou errado? Toque no nome do destinatário, corrija o nome ou o número e salve. Número novo é autorizado na hora e o antigo deixa de receber.",
           "Funcionário saiu? Use Desativar (para de receber e o histórico fica) ou Excluir (apaga o cadastro e as regras antigas dele). Quem já recebeu avisos só pode ser desativado.",
