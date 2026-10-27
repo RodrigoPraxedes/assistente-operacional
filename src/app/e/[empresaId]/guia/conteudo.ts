@@ -258,6 +258,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Acompanhar",
         passos: [
           "Em Preenchidos recentemente fica cada envio, com quem preencheu, a hora e quantos itens deram \"Não\".",
+          "Para achar um preenchimento antigo, toque em Pesquisar antigos, ao lado de Preenchidos recentemente. Na tela Histórico de preenchimentos filtre por período (De/Até), check-list, unidade, quem preencheu e resultado (com problemas ou tudo OK) e toque em Pesquisar. A lista vem em páginas de 30; use Mais antigos para voltar no tempo e toque numa linha para ver as respostas.",
           "No quadro de Tarefas, o check-list do dia é concluído sozinho quando alguém preenche.",
           "Se ninguém preencher até 30 minutos depois do prazo, ele é encerrado como \"Não realizado no tempo\". Preencher por qualquer via (link, QR Code ou app) conclui a tarefa, mesmo com vários responsáveis (quem enviar primeiro vale para todos) e mesmo se o envio vier depois do cancelamento: ela volta para Concluído.",
         ],

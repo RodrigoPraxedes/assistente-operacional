@@ -143,7 +143,12 @@ export default async function PaginaChecklists({
 
       {pode("checklist.ver_execucoes") && (
         <section>
-          <h2 className="mb-2 font-medium">Preenchidos recentemente</h2>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h2 className="font-medium">Preenchidos recentemente</h2>
+            <Link href={`${base}/historico`} className="text-sm text-blue-600">
+              Pesquisar antigos ›
+            </Link>
+          </div>
           {(execucoes ?? []).length === 0 ? (
             <Vazio>Nenhum check-list preenchido ainda.</Vazio>
           ) : (
