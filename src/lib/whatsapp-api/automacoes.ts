@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hojeNoFuso, horaLocalParaUtc, soDigitos } from "@/lib/formato";
+import { provedorDe } from "@/lib/whatsapp-api";
 import { PERIODOS, type Periodo, type TipoEscala } from "@/lib/types";
 
 // Resumo do dia: uma mensagem por colaborador (com WhatsApp autorizado) no
@@ -258,6 +259,46 @@ function diaMes(iso: string, fuso: string) {
 // atrasado não manda lembrete de algo que já começou).
 const LEMBRETE_MAX_MIN = 720;
 
+// "Responsáveis: @5521999998888, Léo": quem está no grupo é marcado de verdade; quem não está
+// (ou se não deu para conferir) aparece só pelo nome do cadastro. A mensagem sai de qualquer jeito.
+async function linhaDosResponsaveis(
+  admin: ReturnType<typeof createAdminClient>,
+  empresaId: string,
+  conexaoId: string,
+  grupoContatoId: string,
+  responsaveis: string[],
+  cache: Map<string, string[] | null>,
+) {
+  if (!responsaveis.length) return null;
+  const { data: membros } = await admin.from("membros").select("id, nome, telefone").eq("empresa_id", empresaId).in("id", responsaveis);
+  if (!membros?.length) return null;
+  let doGrupo = cache.get(grupoContatoId);
+  if (doGrupo === undefined) {
+    doGrupo = null;
+    try {
+      const [{ data: con }, { data: contato }] = await Promise.all([
+        admin.from("whatsapp_conexoes").select("provedor, instancia").eq("id", conexaoId).maybeSingle(),
+        admin.from("whatsapp_contatos").select("telefone").eq("id", grupoContatoId).maybeSingle(),
+      ]);
+      if (con && contato) doGrupo = (await provedorDe(con.provedor).participantesDoGrupo?.(con.instancia, contato.telefone)) ?? null;
+    } catch {
+      doGrupo = null;
+    }
+    cache.set(grupoContatoId, doGrupo);
+  }
+  const ordem = new Map(responsaveis.map((id, i) => [id, i]));
+  const partes = [...membros]
+    .sort((a, b) => (ordem.get(a.id) ?? 0) - (ordem.get(b.id) ?? 0))
+    .map((m) => {
+      let tel = soDigitos(m.telefone);
+      if (tel.length === 10 || tel.length === 11) tel = `55${tel}`;
+      // o 9º dígito pode faltar de um lado ou do outro: compara pelos 8 finais e o DDD
+      const noGrupo = doGrupo?.find((n) => n.startsWith("55") && n.slice(2, 4) === tel.slice(2, 4) && n.slice(-8) === tel.slice(-8));
+      return noGrupo ? `@${noGrupo}` : m.nome;
+    });
+  return `*Responsáveis:* ${partes.join(", ")}`;
+}
+
 export async function gerarLembretesChecklist(agora = new Date()) {
   const admin = createAdminClient();
   const { data: configs } = await admin
@@ -310,6 +351,7 @@ export async function gerarLembretesChecklist(agora = new Date()) {
     const { data: gruposAtivos } = grupoIds.length
       ? await admin.from("whatsapp_contatos").select("id").in("id", grupoIds).eq("tipo", "grupo").eq("ativo", true)
       : { data: [] as { id: string }[] };
+    const participantes = new Map<string, string[] | null>();
     const gruposOk = new Set((gruposAtivos ?? []).map((g) => g.id));
 
     for (const t of pendentes) {
@@ -323,6 +365,7 @@ export async function gerarLembretesChecklist(agora = new Date()) {
       if (grupo) {
         const { data: conexao } = await admin.rpc("whatsapp_conexao_para", { p_empresa: c.empresa_id, p_unidade: t.unidade_id });
         if (conexao) {
+          const linhaResponsaveis = await linhaDosResponsaveis(admin, c.empresa_id, conexao as string, grupo, t.responsaveis, participantes);
           grupoPronto = true;
           const { data: id } = await admin.rpc("whatsapp_enfileirar_contato", {
             p_empresa: c.empresa_id,
@@ -332,6 +375,7 @@ export async function gerarLembretesChecklist(agora = new Date()) {
               `*Lembrete: ${t.origem === "contagem" ? "contagem" : "check-list"} às ${hora(t.ocorrencia_em, fuso)}* 📝`,
               "",
               `${t.origem === "contagem" ? t.titulo.replace(/^Contagem: /, "") : m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+              ...(linhaResponsaveis ? [linhaResponsaveis] : []),
               `*Quem estiver disponível* ${t.origem === "contagem" ? "faz a contagem" : "realiza"} e sinaliza no app como Concluído.`,
             ].join("\n"),
             p_origem: "lembrete",

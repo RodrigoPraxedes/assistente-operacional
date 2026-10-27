@@ -46,6 +46,8 @@ export interface ProvedorWhatsApp {
   enviarMensagem(envio: Envio): Promise<{ id: string }>;
   // grupos em que o número conectado participa (opcional: só a Evolution lista)
   listarGrupos?(instancia: string): Promise<{ jid: string; nome: string; participantes: number | null }[]>;
+  // números (só dígitos) que participam do grupo; null = não deu para saber
+  participantesDoGrupo?(instancia: string, jid: string): Promise<string[] | null>;
   // depois de um timeout: procura no provedor se a mensagem saiu (null = não achou)
   procurarEnviada(envio: Envio & { desde: Date; ate: Date }): Promise<string | null>;
 }
