@@ -840,6 +840,7 @@ export const SECOES: SecaoGuia[] = [
           "Manutenções abertas ou concluídas, com prestador, equipamento e há quantos dias estão abertas.",
           "Escala de um dia ou de um período, próximos alertas de datas, projetos e suas etapas.",
           "Equipe, prestadores e patrimônio (inclusive garantias que vão vencer).",
+          "Contagens: os valores digitados por data e turno (tem, meta, quanto faltava, quanto vai fazer e remessas), com filtro por contagem, item e quem contou. Só para quem vê os resultados das Contagens.",
           "Histórico de manutenção de um equipamento: trajetória (manutenções, trocas de unidade, venda), chamados com solução e custo, total gasto e ações recorrentes ligadas, com filtro por período e tipo de evento.",
         ],
       },
