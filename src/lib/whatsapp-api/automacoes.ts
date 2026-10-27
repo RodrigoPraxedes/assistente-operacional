@@ -301,12 +301,12 @@ export async function gerarLembretesChecklist(agora = new Date()) {
     const ids = (origem: string) => [...new Set(pendentes.filter((t) => t.origem === origem).map((t) => t.origem_id))];
     const [{ data: modelos }, { data: contagens }] = await Promise.all([
       admin.from("checklist_modelos").select("id, nome, lembrete_minutos, lembrete_grupo_id, lembrete_so_grupo").in("id", ids("checklist")),
-      admin.from("contagens").select("id, nome, lembrete_minutos").in("id", ids("contagem")),
+      admin.from("contagens").select("id, nome, lembrete_minutos, lembrete_grupo_id, lembrete_so_grupo").in("id", ids("contagem")),
     ]);
     type ModeloLembrete = { id: string; nome: string; lembrete_minutos: number; lembrete_grupo_id?: string | null; lembrete_so_grupo?: boolean };
     const modeloDe = new Map<string, ModeloLembrete>([...(modelos ?? []), ...(contagens ?? [])].map((m) => [m.id, m]));
-    // grupos ativos que recebem lembrete (só check-list)
-    const grupoIds = [...new Set((modelos ?? []).map((m) => m.lembrete_grupo_id).filter((g): g is string => !!g))];
+    // grupos ativos que recebem lembrete
+    const grupoIds = [...new Set([...(modelos ?? []), ...(contagens ?? [])].map((m) => m.lembrete_grupo_id).filter((g): g is string => !!g))];
     const { data: gruposAtivos } = grupoIds.length
       ? await admin.from("whatsapp_contatos").select("id").in("id", grupoIds).eq("tipo", "grupo").eq("ativo", true)
       : { data: [] as { id: string }[] };
@@ -318,7 +318,7 @@ export async function gerarLembretesChecklist(agora = new Date()) {
       const quando = new Date(t.ocorrencia_em);
       if (quando.getTime() - m.lembrete_minutos * 60_000 > agora.getTime()) continue;
 
-      const grupo = t.origem === "checklist" && m.lembrete_grupo_id && gruposOk.has(m.lembrete_grupo_id) ? m.lembrete_grupo_id : null;
+      const grupo = m.lembrete_grupo_id && gruposOk.has(m.lembrete_grupo_id) ? m.lembrete_grupo_id : null;
       let grupoPronto = false;
       if (grupo) {
         const { data: conexao } = await admin.rpc("whatsapp_conexao_para", { p_empresa: c.empresa_id, p_unidade: t.unidade_id });
@@ -329,10 +329,10 @@ export async function gerarLembretesChecklist(agora = new Date()) {
             p_conexao: conexao as string,
             p_contato: grupo,
             p_texto: [
-              `*Lembrete: check-list às ${hora(t.ocorrencia_em, fuso)}* 📝`,
+              `*Lembrete: ${t.origem === "contagem" ? "contagem" : "check-list"} às ${hora(t.ocorrencia_em, fuso)}* 📝`,
               "",
-              `${m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
-              "*Quem estiver disponível* realiza e sinaliza no app como Concluído.",
+              `${t.origem === "contagem" ? t.titulo.replace(/^Contagem: /, "") : m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+              `*Quem estiver disponível* ${t.origem === "contagem" ? "faz a contagem" : "realiza"} e sinaliza no app como Concluído.`,
             ].join("\n"),
             p_origem: "lembrete",
             p_origem_id: t.id,

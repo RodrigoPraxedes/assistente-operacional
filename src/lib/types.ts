@@ -529,6 +529,8 @@ export interface Contagem {
   recorrencia: string;
   tolerancia_minutos: number;
   lembrete_minutos: number;
+  lembrete_grupo_id: string | null;
+  lembrete_so_grupo: boolean;
   responsaveis: string[];
   resultado_membro_id: string | null;
   created_at: string;
