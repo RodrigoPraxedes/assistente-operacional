@@ -151,7 +151,13 @@ export const evolution: ProvedorWhatsApp = {
   },
 
   async enviarMensagem({ instancia, numero, texto }) {
-    const r = (await chamar("POST", caminho("message/sendText", instancia), { number: numero, text: texto })) as {
+    // em grupo, "@5521999998888" no texto vira marcação de verdade
+    const marcados = numero.endsWith("@g.us") ? [...new Set([...texto.matchAll(/@(\d{12,13})\b/g)].map((m) => m[1]))] : [];
+    const r = (await chamar("POST", caminho("message/sendText", instancia), {
+      number: numero,
+      text: texto,
+      ...(marcados.length ? { mentioned: marcados } : {}),
+    })) as {
       key?: { id?: string };
     } | null;
     const id = r?.key?.id;
@@ -172,6 +178,23 @@ export const evolution: ProvedorWhatsApp = {
         participantes: typeof g.size === "number" ? g.size : null,
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  },
+
+  async participantesDoGrupo(instancia, jid) {
+    const r = await chamar("GET", `${caminho("group/fetchAllGroups", instancia)}?getParticipants=true`);
+    const grupo = (Array.isArray(r) ? r : []).find((g) => (g as { id?: unknown }).id === jid) as
+      | { participants?: { id?: unknown; jid?: unknown; phoneNumber?: unknown }[] }
+      | undefined;
+    if (!grupo?.participants) return null;
+    // WhatsApp novo pode identificar o participante por "@lid": o número real vem em phoneNumber
+    const numeros = new Set<string>();
+    for (const p of grupo.participants)
+      for (const v of [p.id, p.jid, p.phoneNumber])
+        if (typeof v === "string" && !v.endsWith("@lid")) {
+          const n = v.split("@")[0].split(":")[0].replace(/\D/g, "");
+          if (n.length >= 10) numeros.add(n);
+        }
+    return [...numeros];
   },
 
   async procurarEnviada({ instancia, numero, texto, desde, ate }) {
