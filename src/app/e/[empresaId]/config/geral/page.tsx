@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Funcao, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
+import { PUSH_TIPOS } from "@/lib/push-tipos";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { SeletorPainel } from "@/components/seletor-painel";
@@ -43,7 +44,7 @@ export default async function ConfigGeral({
     supabase.from("categorias").select("*").eq("empresa_id", empresaId).order("nome"),
     supabase.from("status").select("*").eq("empresa_id", empresaId).order("ordem"),
   ]);
-  const { data: sla } = await supabase.from("empresas").select("sla_chamados, limite_unidades, chamados_central_ativo, chamados_central, push_tarefa, push_prazo").eq("id", empresaId).single();
+  const { data: sla } = await supabase.from("empresas").select("sla_chamados, limite_unidades, chamados_central_ativo, chamados_central, push_origens").eq("id", empresaId).single();
   const { data: membrosAtivos } = await supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome");
   const unidadesAtivas = (unidades as Unidade[] | null)?.filter((u) => u.ativo).length ?? 0;
   const limiteUnidades: number = sla?.limite_unidades ?? 1;
@@ -225,17 +226,21 @@ export default async function ConfigGeral({
       <Cartao className="space-y-3">
         <h2 className="font-medium">Notificações no navegador</h2>
         <p className="text-xs text-slate-500">
-          Quais avisos chegam como notificação no celular ou no computador de quem ligou em Minha conta. Não substitui o WhatsApp.
+          Os mesmos avisos do WhatsApp (Automações), também como notificação no celular ou no computador de quem ligou em Minha conta. Só chegam para quem tem WhatsApp autorizado e a automação correspondente ligada.
         </p>
         <form action={salvarPush.bind(null, e)} className="space-y-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="push_tarefa" defaultChecked={sla?.push_tarefa ?? true} disabled={!pode("config.empresa")} />
-            Tarefa atribuída
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="push_prazo" defaultChecked={sla?.push_prazo ?? true} disabled={!pode("config.empresa")} />
-            Prazo venceu e a tarefa segue aberta
-          </label>
+          {PUSH_TIPOS.map((t) => (
+            <label key={t.origem} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="push_origens"
+                value={t.origem}
+                defaultChecked={((sla?.push_origens ?? PUSH_TIPOS.map((x) => x.origem)) as string[]).includes(t.origem)}
+                disabled={!pode("config.empresa")}
+              />
+              {t.rotulo}
+            </label>
+          ))}
           {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
         </form>
       </Cartao>
