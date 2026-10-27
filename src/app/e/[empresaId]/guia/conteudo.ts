@@ -696,6 +696,7 @@ export const SECOES: SecaoGuia[] = [
           "Escreva o aviso, escolha o destinatário e salve como rascunho.",
           "Confira e toque em Confirmar e enviar. Sai uma única mensagem.",
           "A lista mostra o caminho de cada aviso: na fila, aceito, entregue e lido.",
+          "No alto de Avisos, o quadro Envios mostra quantas mensagens o número real enviou hoje, nos últimos 7 e 30 dias, por tipo de aviso (tarefa, lembretes, resumo do dia, check-list, manual…). Os dias seguem o fuso da empresa; o ensaio não conta. Em vermelho, as que falharam; entre parênteses, as que ainda aguardam.",
         ],
       },
       {
