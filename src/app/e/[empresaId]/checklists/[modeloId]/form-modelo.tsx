@@ -41,6 +41,7 @@ export function FormModelo({
   setores,
   categorias,
   membros,
+  grupos = [],
   copia = false,
 }: {
   empresaId: string;
@@ -52,6 +53,8 @@ export function FormModelo({
   setores: Opcao[];
   categorias: Opcao[];
   membros: Opcao[];
+  // grupos do WhatsApp autorizados (Destinatários)
+  grupos?: Opcao[];
 }) {
   const [estado, acao] = useActionState(salvarModelo.bind(null, empresaId), undefined);
   const [itens, setItens] = useState<ItemEditavel[]>(
@@ -131,6 +134,24 @@ export function FormModelo({
           <Campo rotulo="Lembrete antes (min)" dica="O responsável recebe no WhatsApp. 0 = sem lembrete.">
             <Input type="number" min={0} max={720} name="lembrete_minutos" defaultValue={modelo?.lembrete_minutos ?? 30} />
           </Campo>
+          {grupos.length > 0 && (
+            <div className="space-y-2 sm:col-span-3">
+              <Campo rotulo="Lembrete também para o grupo" dica="Quem estiver disponível no grupo realiza o check-list. Útil quando o responsável pode estar de folga.">
+                <Select name="lembrete_grupo_id" defaultValue={modelo?.lembrete_grupo_id ?? ""}>
+                  <option value="">Nenhum grupo</option>
+                  {grupos.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.nome}
+                    </option>
+                  ))}
+                </Select>
+              </Campo>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="lembrete_so_grupo" defaultChecked={modelo?.lembrete_so_grupo ?? false} />
+                Só o grupo recebe o lembrete (os responsáveis não)
+              </label>
+            </div>
+          )}
           <Campo rotulo="Repetir">
             <SeletorRecorrencia inicial={regra} />
           </Campo>

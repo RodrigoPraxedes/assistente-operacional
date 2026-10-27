@@ -22,7 +22,7 @@ export default async function EditarModelo({
   const baseId = origemId ?? modeloId;
   const semBase = novo && !origemId;
 
-  const [{ data: modelo }, { data: itens }, { data: unidades }, { data: setores }, { data: categorias }, { data: membros }] =
+  const [{ data: modelo }, { data: itens }, { data: unidades }, { data: setores }, { data: categorias }, { data: membros }, { data: grupos }] =
     await Promise.all([
       semBase
         ? Promise.resolve({ data: null })
@@ -34,6 +34,7 @@ export default async function EditarModelo({
       supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
       supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
       supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+      supabase.from("whatsapp_contatos").select("id, nome").eq("empresa_id", empresaId).eq("tipo", "grupo").eq("ativo", true).order("nome"),
     ]);
   if (!semBase && !modelo) notFound();
 
@@ -75,6 +76,7 @@ export default async function EditarModelo({
         setores={setores ?? []}
         categorias={categorias ?? []}
         membros={membros ?? []}
+        grupos={grupos ?? []}
       />
     </div>
   );

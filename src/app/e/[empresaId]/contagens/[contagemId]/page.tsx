@@ -18,7 +18,7 @@ export default async function EditarContagem({
   const { supabase } = await exigirPermissao(empresaId, "contagens.editar");
   const nova = contagemId === "novo";
 
-  const [{ data: contagem }, { data: itens }, { data: unidades }, { data: setores }, { data: membros }] = await Promise.all([
+  const [{ data: contagem }, { data: itens }, { data: unidades }, { data: setores }, { data: membros }, { data: grupos }] = await Promise.all([
     nova
       ? Promise.resolve({ data: null })
       : supabase.from("contagens").select("*").eq("id", contagemId).eq("empresa_id", empresaId).maybeSingle(),
@@ -28,6 +28,7 @@ export default async function EditarContagem({
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("membros").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
+    supabase.from("whatsapp_contatos").select("id, nome").eq("empresa_id", empresaId).eq("tipo", "grupo").eq("ativo", true).order("nome"),
   ]);
   if (!nova && !contagem) notFound();
 
@@ -61,6 +62,7 @@ export default async function EditarContagem({
         unidades={unidades ?? []}
         setores={setores ?? []}
         membros={membros ?? []}
+        grupos={grupos ?? []}
       />
     </div>
   );

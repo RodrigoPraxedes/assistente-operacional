@@ -51,6 +51,18 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
     if (!responsaveis.length) return { erro: "Escolha ao menos um responsável pela contagem" };
   }
 
+  let lembreteGrupo = txt("lembrete_grupo_id");
+  if (lembreteGrupo) {
+    const { data: grupo } = await supabase
+      .from("whatsapp_contatos")
+      .select("id")
+      .eq("id", lembreteGrupo)
+      .eq("empresa_id", empresaId)
+      .eq("tipo", "grupo")
+      .maybeSingle();
+    if (!grupo) lembreteGrupo = null;
+  }
+
   const dados = {
     nome,
     descricao: txt("descricao"),
@@ -68,6 +80,8 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
     recorrencia: regraValida(recorrencia) ? recorrencia : "FREQ=DAILY",
     tolerancia_minutos: inteiro("tolerancia_minutos", 30, 1440),
     lembrete_minutos: inteiro("lembrete_minutos", 30, 720),
+    lembrete_grupo_id: lembreteGrupo,
+    lembrete_so_grupo: !!lembreteGrupo && form.get("lembrete_so_grupo") === "on",
     responsaveis,
     resultado_membro_id: txt("resultado_membro_id"),
   };
