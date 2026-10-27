@@ -44,6 +44,8 @@ export interface ProvedorWhatsApp {
   configurarEventos(instancia: string, urlWebhook: string): Promise<void>;
   // devolve o id da mensagem no provedor (aceita ≠ entregue)
   enviarMensagem(envio: Envio): Promise<{ id: string }>;
+  // grupos em que o número conectado participa (opcional: só a Evolution lista)
+  listarGrupos?(instancia: string): Promise<{ jid: string; nome: string; participantes: number | null }[]>;
   // depois de um timeout: procura no provedor se a mensagem saiu (null = não achou)
   procurarEnviada(envio: Envio & { desde: Date; ate: Date }): Promise<string | null>;
 }

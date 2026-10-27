@@ -12,6 +12,7 @@ import { ErroProvedor, type EstadoConexao, type ProvedorWhatsApp, type StatusCon
 //   DELETE /instance/logout/{i}
 //   POST   /webhook/set/{i}                → { webhook: { enabled, url, headers, byEvents, base64, events } }
 //   POST   /message/sendText/{i}           → { number, text } ⇒ { key: { id }, status }
+//   GET    /group/fetchAllGroups/{i}?getParticipants=false → [{ id: "...@g.us", subject, size }]
 //   POST   /chat/findMessages/{i}          → { where, page, offset } ⇒ { messages: { records } }
 // Autenticação: header "apikey" (chave global, só no servidor).
 
@@ -159,13 +160,27 @@ export const evolution: ProvedorWhatsApp = {
     return { id };
   },
 
+  async listarGrupos(instancia) {
+    const r = await chamar("GET", `${caminho("group/fetchAllGroups", instancia)}?getParticipants=false`);
+    const lista = Array.isArray(r) ? r : [];
+    return lista
+      .map((g) => g as { id?: unknown; subject?: unknown; size?: unknown })
+      .filter((g) => typeof g.id === "string" && g.id.endsWith("@g.us"))
+      .map((g) => ({
+        jid: g.id as string,
+        nome: typeof g.subject === "string" && g.subject ? g.subject : "(grupo sem nome)",
+        participantes: typeof g.size === "number" ? g.size : null,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  },
+
   async procurarEnviada({ instancia, numero, texto, desde, ate }) {
     const r = (await chamar("POST", caminho("chat/findMessages", instancia), {
       where: { key: { fromMe: true }, messageTimestamp: { gte: desde.toISOString(), lte: ate.toISOString() } },
       page: 1,
       offset: 50,
     })) as { messages?: { records?: unknown[] } } | null;
-    const fim = numero.slice(-8);
+    const fim = numero.endsWith("@g.us") ? numero.split("@")[0] : numero.slice(-8);
     for (const reg of r?.messages?.records ?? []) {
       const m = reg as {
         key?: { id?: string; remoteJid?: string };
