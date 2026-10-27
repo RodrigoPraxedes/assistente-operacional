@@ -22,3 +22,22 @@ export async function trocarMinhaSenha(empresaId: string, form: FormData) {
   await supabase.rpc("minha_senha_trocada");
   redirect(`${caminho}?salvo=1`);
 }
+
+// Notificações push: cada aparelho guarda a própria inscrição (RLS limita ao próprio colaborador)
+export async function guardarPush(
+  empresaId: string,
+  s: { endpoint: string; p256dh: string; auth: string; aparelho: string },
+): Promise<{ erro?: string }> {
+  const { supabase, membro } = await getContexto(empresaId);
+  if (!s.endpoint.startsWith("https://") || !s.p256dh || !s.auth) return { erro: "Inscrição inválida." };
+  const { error } = await supabase.from("push_inscricoes").upsert(
+    { empresa_id: empresaId, membro_id: membro.id, endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth, aparelho: s.aparelho },
+    { onConflict: "endpoint" },
+  );
+  return error ? { erro: "Não foi possível guardar este aparelho." } : {};
+}
+
+export async function cancelarPush(empresaId: string, endpoint: string) {
+  const { supabase, membro } = await getContexto(empresaId);
+  await supabase.from("push_inscricoes").delete().eq("endpoint", endpoint).eq("membro_id", membro.id);
+}
