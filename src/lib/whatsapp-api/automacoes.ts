@@ -300,16 +300,49 @@ export async function gerarLembretesChecklist(agora = new Date()) {
 
     const ids = (origem: string) => [...new Set(pendentes.filter((t) => t.origem === origem).map((t) => t.origem_id))];
     const [{ data: modelos }, { data: contagens }] = await Promise.all([
-      admin.from("checklist_modelos").select("id, nome, lembrete_minutos").in("id", ids("checklist")),
+      admin.from("checklist_modelos").select("id, nome, lembrete_minutos, lembrete_grupo_id, lembrete_so_grupo").in("id", ids("checklist")),
       admin.from("contagens").select("id, nome, lembrete_minutos").in("id", ids("contagem")),
     ]);
-    const modeloDe = new Map([...(modelos ?? []), ...(contagens ?? [])].map((m) => [m.id, m]));
+    type ModeloLembrete = { id: string; nome: string; lembrete_minutos: number; lembrete_grupo_id?: string | null; lembrete_so_grupo?: boolean };
+    const modeloDe = new Map<string, ModeloLembrete>([...(modelos ?? []), ...(contagens ?? [])].map((m) => [m.id, m]));
+    // grupos ativos que recebem lembrete (só check-list)
+    const grupoIds = [...new Set((modelos ?? []).map((m) => m.lembrete_grupo_id).filter((g): g is string => !!g))];
+    const { data: gruposAtivos } = grupoIds.length
+      ? await admin.from("whatsapp_contatos").select("id").in("id", grupoIds).eq("tipo", "grupo").eq("ativo", true)
+      : { data: [] as { id: string }[] };
+    const gruposOk = new Set((gruposAtivos ?? []).map((g) => g.id));
 
     for (const t of pendentes) {
       const m = modeloDe.get(t.origem_id);
       if (!m || m.lembrete_minutos <= 0) continue;
       const quando = new Date(t.ocorrencia_em);
       if (quando.getTime() - m.lembrete_minutos * 60_000 > agora.getTime()) continue;
+
+      const grupo = t.origem === "checklist" && m.lembrete_grupo_id && gruposOk.has(m.lembrete_grupo_id) ? m.lembrete_grupo_id : null;
+      let grupoPronto = false;
+      if (grupo) {
+        const { data: conexao } = await admin.rpc("whatsapp_conexao_para", { p_empresa: c.empresa_id, p_unidade: t.unidade_id });
+        if (conexao) {
+          grupoPronto = true;
+          const { data: id } = await admin.rpc("whatsapp_enfileirar_contato", {
+            p_empresa: c.empresa_id,
+            p_conexao: conexao as string,
+            p_contato: grupo,
+            p_texto: [
+              `*Lembrete: check-list às ${hora(t.ocorrencia_em, fuso)}* 📝`,
+              "",
+              `${m.nome}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+              "*Quem estiver disponível* realiza e sinaliza no app como Concluído.",
+            ].join("\n"),
+            p_origem: "lembrete",
+            p_origem_id: t.id,
+            p_chave: `lembrete:${t.id}:grupo`,
+          });
+          if (id) total++;
+        }
+      }
+      // só o grupo: sem aviso aos responsáveis (se o grupo não pôde receber, eles recebem como sempre)
+      if (grupoPronto && m.lembrete_so_grupo) continue;
 
       // cada responsável recebe o seu lembrete (o primeiro mantém a chave antiga, para não repetir o que já saiu)
       for (const [i, responsavel] of t.responsaveis.entries()) {

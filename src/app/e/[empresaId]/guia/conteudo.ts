@@ -217,6 +217,7 @@ export const SECOES: SecaoGuia[] = [
           "Defina o horário preferencial, a tolerância (depois disso fica atrasado) e a repetição (todos os dias, a cada 2 ou 3 dias, dias úteis, às segundas, toda semana...). Se mudar o horário depois, a tarefa de hoje que ainda não foi iniciada vai para o novo horário, sem ficar duplicada.",
           "Escolha um ou mais responsáveis: cada um recebe a tarefa, o lembrete e aparece no resumo do dia, e puxa a equipe para preencher. Ao trocar os responsáveis, as tarefas abertas de hoje em diante passam para os novos.",
           "Em Lembrete antes, diga quantos minutos antes o responsável recebe o aviso no WhatsApp (0 = sem lembrete).",
+          "Em Lembrete também para o grupo (aparece quando há um grupo autorizado em WhatsApp › Destinatários), escolha o grupo dos líderes: ele recebe o lembrete do check-list e quem estiver disponível realiza. Marque Só o grupo recebe o lembrete se os responsáveis não devem ser avisados (útil quando podem estar de folga). Vale para check-lists, não para contagens.",
           "Em Recebe o resultado, escolha uma ou mais pessoas que recebem o resumo no WhatsApp quando o check-list é concluído (o aviso sai pelo número real da unidade). Quem só recebe o resultado não ganha a tarefa nem o lembrete.",
           "Marque se ele fica disponível no QR Code e quem pode preencher por lá: qualquer pessoa digitando o nome, ou só colaboradores com PIN.",
           "Adicione os itens. Cada um pode ser Sim/Não/Em processo, número ou texto.",

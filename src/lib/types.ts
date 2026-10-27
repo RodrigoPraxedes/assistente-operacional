@@ -146,6 +146,9 @@ export interface ChecklistModelo {
   whatsapp_destino: string | null;
   // minutos antes do horário em que o responsável recebe o lembrete (0 = sem lembrete)
   lembrete_minutos: number;
+  // grupo do WhatsApp que também recebe o lembrete; so_grupo = os responsáveis não recebem
+  lembrete_grupo_id: string | null;
+  lembrete_so_grupo: boolean;
   // quem recebe o resultado quando o check-list é concluído
   resultado_membro_id: string | null;
   // todos os que recebem o resultado (a primeira é resultado_membro_id)

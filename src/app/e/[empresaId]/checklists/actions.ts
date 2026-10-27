@@ -44,6 +44,17 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
   let telefone = soDigitos(destino?.telefone);
   if (telefone.length === 10 || telefone.length === 11) telefone = `55${telefone}`;
   const lembrete = Number(form.get("lembrete_minutos") ?? 30);
+  let lembreteGrupo = txt("lembrete_grupo_id");
+  if (lembreteGrupo) {
+    const { data: grupo } = await supabase
+      .from("whatsapp_contatos")
+      .select("id")
+      .eq("id", lembreteGrupo)
+      .eq("empresa_id", empresaId)
+      .eq("tipo", "grupo")
+      .maybeSingle();
+    if (!grupo) lembreteGrupo = null;
+  }
 
   const dados = {
     nome: txt("nome")!,
@@ -53,6 +64,8 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
     categoria_id: txt("categoria_id"),
     responsaveis,
     resultado_membros: resultados,
+    lembrete_grupo_id: lembreteGrupo,
+    lembrete_so_grupo: !!lembreteGrupo && form.get("lembrete_so_grupo") === "on",
     lembrete_minutos: Number.isInteger(lembrete) && lembrete >= 0 && lembrete <= 720 ? lembrete : 30,
     horario_preferencial: txt("horario_preferencial") ?? "08:00",
     tolerancia_minutos: Number(form.get("tolerancia_minutos") ?? 30) || 0,
