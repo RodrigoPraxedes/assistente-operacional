@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { linkWhatsApp } from "@/lib/whatsapp";
 import { enviarContagem } from "@/lib/contagem-envio";
-import { diaDaSemana, diaSeguinte, formatarQtd, metaDoDia, rotuloItem } from "@/lib/contagens";
+import { diaDaSemana, diaSeguinte, formatarQtd, metaDoDia, metasDoTurno, rotuloItem } from "@/lib/contagens";
 import { DIAS_SEMANA } from "@/lib/rotinas";
 import { Aviso, Campo, Input, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
@@ -20,6 +20,7 @@ export interface ContagemPreencher {
     nome: string;
     unidade_medida: string | null;
     metas: (number | null)[] | null;
+    metas_turnos?: Record<string, (number | null)[]> | null;
     meta_dia_seguinte?: boolean;
   }[];
 }
@@ -60,8 +61,12 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
   const numero = (s: string | undefined) => (s && s.trim() !== "" && !isNaN(Number(s.replace(",", "."))) ? Number(s.replace(",", ".")) : null);
   // dia da semana da meta do item: o de amanhã nos itens preparados com antecedência
   const diaMeta = (item: ContagemPreencher["itens"][number]) => (item.meta_dia_seguinte ? diaSeguinte(dia) : dia);
+  // meta do item no dia (e no turno escolhido, se ele tiver meta própria)
+  // (item com meta por turno espera o turno ser escolhido)
+  const metaItem = (item: ContagemPreencher["itens"][number]) =>
+    !contagem.usa_meta || (!turno && item.metas_turnos) ? null : metaDoDia(metasDoTurno(item, turno), diaMeta(item));
   const falta = (item: ContagemPreencher["itens"][number]) => {
-    const meta = contagem.usa_meta ? metaDoDia(item.metas, diaMeta(item)) : null;
+    const meta = metaItem(item);
     const q = numero(qtds[item.id]);
     return meta === null || q === null ? null : Math.max(meta - q, 0);
   };
@@ -169,7 +174,7 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
 
       <ol className="space-y-2">
         {contagem.itens.map((item) => {
-          const meta = contagem.usa_meta ? metaDoDia(item.metas, diaMeta(item)) : null;
+          const meta = metaItem(item);
           const f = falta(item);
           return (
             <li key={item.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-superficie p-3">

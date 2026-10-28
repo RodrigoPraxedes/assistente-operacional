@@ -11,6 +11,7 @@ interface ItemForm {
   nome: string;
   unidade_medida: string;
   metas: string[];
+  metas_turnos?: Record<string, string[]>;
   meta_dia_seguinte?: boolean;
 }
 
@@ -105,12 +106,18 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
     if (error) return { erro: error.message };
   }
   for (const [ordem, i] of itens.entries()) {
-    const metas = Array.from({ length: 7 }, (_, d) => numeroOuNulo(i.metas?.[d]));
+    const ler = (ms: string[] | undefined) => Array.from({ length: 7 }, (_, d) => numeroOuNulo(ms?.[d]));
+    // com 2+ turnos, cada turno guarda as suas metas (o que não foi mexido parte da meta única);
+    // a meta única fica com as do 1º turno
+    const metasTurnos = turnos.length > 1 ? Object.fromEntries(turnos.map((t) => [t, ler(i.metas_turnos?.[t] ?? i.metas)])) : null;
+    const metas = metasTurnos ? metasTurnos[turnos[0]] : ler(i.metas);
+    const temMeta = (ms: (number | null)[]) => ms.some((m) => m !== null);
     const linha = {
       nome: i.nome.trim().slice(0, 120),
       unidade_medida: i.unidade_medida?.trim().slice(0, 40) || null,
       ordem,
-      metas: metas.some((m) => m !== null) ? metas : null,
+      metas: temMeta(metas) ? metas : null,
+      metas_turnos: metasTurnos && Object.values(metasTurnos).some(temMeta) ? metasTurnos : null,
       meta_dia_seguinte: usaMeta && !!i.meta_dia_seguinte,
     };
     const { error } = i.id

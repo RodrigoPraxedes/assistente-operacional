@@ -122,3 +122,65 @@ export function totaisPorItem(registros: Registro[]) {
     }
   return { contado, falta, feito };
 }
+
+export interface PontoFluxo {
+  // o que foi contado no início do turno (a contagem mais recente, sem as remessas)
+  tem: number | null;
+  meta: number | null;
+  // o que entrou no turno: o que disseram que iam fazer (com as remessas) ou, sem esse campo, a sugestão
+  entrada: number | null;
+  // o que saiu no turno: tem + entrada − o que foi contado no turno seguinte
+  saida: number | null;
+}
+
+export interface DiaFluxo {
+  data: string;
+  // turno → item → ponto
+  turnos: Map<string, Map<string, PontoFluxo>>;
+}
+
+// Fluxo entre turnos: por dia e turno (na ordem da contagem), o saldo contado, a entrada,
+// e a saída até a contagem do turno seguinte (o "Tem" dele é o que sobrou). O último turno
+// do dia segue para o primeiro do dia seguinte. Devolve do dia mais novo ao mais antigo.
+export function fluxoPorTurno(registros: Registro[], turnos: string[]): DiaFluxo[] {
+  const dias = new Map<string, DiaFluxo>();
+  const ponto = (data: string, turno: string, item: string) => {
+    const d = dias.get(data) ?? { data, turnos: new Map() };
+    dias.set(data, d);
+    const t = d.turnos.get(turno) ?? new Map<string, PontoFluxo>();
+    d.turnos.set(turno, t);
+    const p = t.get(item) ?? { tem: null, meta: null, entrada: null, saida: null };
+    t.set(item, p);
+    return p;
+  };
+  // os registros vêm do mais novo ao mais antigo: a primeira contagem vista é a que vale
+  const visto = new Set<string>();
+  for (const r of registros) {
+    if (!r.turno || !turnos.includes(r.turno)) continue;
+    for (const [id, v] of r.valores) {
+      const p = ponto(r.data_ref, r.turno, id);
+      const entrada = v.vai_fazer ?? v.a_fazer;
+      if (entrada !== null) p.entrada = (p.entrada ?? 0) + entrada;
+      const chave = `${r.data_ref}|${r.turno}|${id}`;
+      if (!r.remessa && v.quantidade !== null && !visto.has(chave)) {
+        visto.add(chave);
+        p.tem = v.quantidade;
+        p.meta = v.meta;
+      }
+    }
+  }
+
+  const ordem = [...dias.values()].sort((a, b) => a.data.localeCompare(b.data));
+  // turno seguinte de cada (dia, turno): o próximo do mesmo dia ou o primeiro do dia seguinte
+  const seguinte = (data: string, k: number) =>
+    k + 1 < turnos.length ? dias.get(data)?.turnos.get(turnos[k + 1]) : dias.get(somarDias(data, 1))?.turnos.get(turnos[0]);
+  for (const d of ordem)
+    turnos.forEach((t, k) => {
+      const prox = seguinte(d.data, k);
+      for (const [id, p] of d.turnos.get(t) ?? []) {
+        const n = prox?.get(id);
+        if (p.tem !== null && n?.tem != null) p.saida = p.tem + (p.entrada ?? 0) - n.tem;
+      }
+    });
+  return ordem.reverse();
+}

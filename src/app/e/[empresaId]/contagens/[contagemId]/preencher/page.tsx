@@ -19,7 +19,7 @@ export default async function PreencherContagem({
 
   const [{ data: contagem }, { data: itens }] = await Promise.all([
     supabase.from("contagens").select("*").eq("id", contagemId).eq("empresa_id", empresaId).eq("ativo", true).maybeSingle(),
-    supabase.from("contagem_itens").select("id, nome, unidade_medida, metas, meta_dia_seguinte").eq("contagem_id", contagemId).eq("ativo", true).order("ordem"),
+    supabase.from("contagem_itens").select("id, nome, unidade_medida, metas, metas_turnos, meta_dia_seguinte").eq("contagem_id", contagemId).eq("ativo", true).order("ordem"),
   ]);
   if (!contagem) notFound();
 
