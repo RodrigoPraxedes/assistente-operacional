@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
-import { carregarResultados, lerFiltros, somarPorDia, totaisPorItem, type Valor } from "@/lib/contagem-resultados";
+import { carregarResultados, fluxoPorTurno, lerFiltros, somarPorDia, totaisPorItem, type Valor } from "@/lib/contagem-resultados";
 import { diaDaSemana, formatarQtd } from "@/lib/contagens";
 import { DIAS_SEMANA } from "@/lib/rotinas";
 import { formatarDia } from "@/lib/formato";
 import { Aviso, Botao, Input, Select, Titulo, Vazio, estilos } from "@/components/ui";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { excluirRegistro } from "../../actions";
+import { FluxoTurnos } from "./fluxo-turnos";
 
 const diaCurto = (data: string) => `${formatarDia(data).slice(0, 5)} ${DIAS_SEMANA[diaDaSemana(data) - 1].curto}`;
 
@@ -45,7 +46,7 @@ export default async function ResultadosContagem({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; contagemId: string }>;
-  searchParams: Promise<{ de?: string; ate?: string; turno?: string; quem?: string; visao?: string; erro?: string }>;
+  searchParams: Promise<{ de?: string; ate?: string; turno?: string; quem?: string; visao?: string; item?: string; erro?: string }>;
 }) {
   const { empresaId, contagemId } = await params;
   const sp = await searchParams;
@@ -55,17 +56,22 @@ export default async function ResultadosContagem({
 
   const filtros = lerFiltros(sp, empresa.fuso_horario);
   const porDia = sp.visao === "dia";
-  const dados = await carregarResultados(supabase, empresaId, contagemId, filtros);
+  // o fluxo precisa de todos os turnos e de todas as pessoas
+  const pedeFluxo = sp.visao === "fluxo";
+  const dados = await carregarResultados(supabase, empresaId, contagemId, pedeFluxo ? { ...filtros, turno: "", quem: "" } : filtros);
   if (!dados) notFound();
   const { contagem, itens, registros } = dados;
+  const fluxo = pedeFluxo && contagem.turnos.length > 1;
   const dias = porDia ? somarPorDia(registros) : [];
+  const diasFluxo = fluxo ? fluxoPorTurno(registros, contagem.turnos).map((d) => ({ ...d, rotulo: diaCurto(d.data) })) : [];
+  const itensFluxo = fluxo ? itens.filter((i) => !sp.item || i.id === sp.item) : [];
   const total = totaisPorItem(registros);
 
   const base = `/e/${empresaId}/contagens/${contagemId}/resultados`;
   const qs = new URLSearchParams({ de: filtros.de, ate: filtros.ate });
   if (filtros.turno) qs.set("turno", filtros.turno);
   if (filtros.quem) qs.set("quem", filtros.quem);
-  const aqui = `${base}?${qs}${porDia ? "&visao=dia" : ""}`;
+  const aqui = `${base}?${qs}${porDia ? "&visao=dia" : fluxo ? "&visao=fluxo" : ""}`;
   const usaMeta = contagem.usa_meta;
 
   return (
@@ -91,7 +97,7 @@ export default async function ResultadosContagem({
           <span className="block text-xs text-slate-500">Até</span>
           <Input type="date" name="ate" defaultValue={filtros.ate} className="w-auto" />
         </label>
-        {contagem.turnos.length > 0 && (
+        {contagem.turnos.length > 0 && !fluxo && (
           <label className="space-y-1">
             <span className="block text-xs text-slate-500">Turno</span>
             <Select name="turno" defaultValue={filtros.turno} className="w-auto">
@@ -102,15 +108,30 @@ export default async function ResultadosContagem({
             </Select>
           </label>
         )}
-        <label className="w-36 space-y-1">
-          <span className="block text-xs text-slate-500">Quem contou</span>
-          <Input name="quem" defaultValue={filtros.quem} placeholder="Nome" />
-        </label>
+        {fluxo ? (
+          <label className="space-y-1">
+            <span className="block text-xs text-slate-500">Item</span>
+            <Select name="item" defaultValue={sp.item ?? ""} className="w-auto">
+              <option value="">Todos os itens</option>
+              {itens.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.nome}
+                </option>
+              ))}
+            </Select>
+          </label>
+        ) : (
+          <label className="w-36 space-y-1">
+            <span className="block text-xs text-slate-500">Quem contou</span>
+            <Input name="quem" defaultValue={filtros.quem} placeholder="Nome" />
+          </label>
+        )}
         <label className="space-y-1">
           <span className="block text-xs text-slate-500">Ver</span>
-          <Select name="visao" defaultValue={porDia ? "dia" : ""} className="w-auto">
+          <Select name="visao" defaultValue={porDia ? "dia" : fluxo ? "fluxo" : ""} className="w-auto">
             <option value="">Cada envio</option>
             <option value="dia">Soma por dia</option>
+            {contagem.turnos.length > 1 && <option value="fluxo">Fluxo entre turnos</option>}
           </Select>
         </label>
         <Botao type="submit" variante="secundario">
@@ -118,15 +139,26 @@ export default async function ResultadosContagem({
         </Botao>
       </form>
 
-      <p className="text-xs text-slate-500">
+      {fluxo ? (
+        <p className="text-xs text-slate-500">
+          Por item e por dia, em cada turno: o que tinha na contagem (Tem), o que entrou ({contagem.rotulo_falta.toLowerCase()}, com as
+          remessas) e o que saiu até a contagem do turno seguinte. O Tem do turno seguinte é o que sobrou do anterior: em azul, quanto
+          ficou acima da meta daquele turno (dá para produzir menos antes); em vermelho, quanto faltou. O último turno segue para o
+          primeiro do dia seguinte.
+        </p>
+      ) : (
+        <p className="text-xs text-slate-500">
         {registros.length} envio(s) de {formatarDia(filtros.de)} a {formatarDia(filtros.ate)}.
         {usaMeta && " Em vermelho, quanto faltava para a meta."}
         {usaMeta && contagem.pede_vai_fazer && ` Em azul, quanto a pessoa disse que vai fazer (${contagem.rotulo_falta.toLowerCase()}).`}
         {porDia && " Na soma por dia, o número pequeno é a diferença para o dia anterior; o \"Tem\" de uma nova remessa não entra na soma, só o que vai fazer."}
-      </p>
+        </p>
+      )}
 
       {registros.length === 0 ? (
         <Vazio>Nenhuma contagem nesse período.</Vazio>
+      ) : fluxo ? (
+        <FluxoTurnos itens={itensFluxo} dias={diasFluxo} turnos={contagem.turnos} rotulo={contagem.rotulo_falta} />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-superficie">
           <table className="w-full text-left text-sm">

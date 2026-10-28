@@ -28,6 +28,15 @@ export function metaDoDia(metas: (number | null)[] | null | undefined, dia: numb
   return v === null || v === undefined ? null : Number(v);
 }
 
+// metas do item no turno: as do próprio turno, se houver; senão, a meta única do item
+export function metasDoTurno(
+  item: { metas: (number | null)[] | null; metas_turnos?: Record<string, (number | null)[]> | null },
+  turno: string | null | undefined,
+) {
+  const proprias = turno ? item.metas_turnos?.[turno] : undefined;
+  return Array.isArray(proprias) ? proprias : item.metas;
+}
+
 // 12 → "12", 2.5 → "2,5"; vazio → "—"
 export function formatarQtd(v: number | string | null | undefined) {
   if (v === null || v === undefined || v === "") return "—";

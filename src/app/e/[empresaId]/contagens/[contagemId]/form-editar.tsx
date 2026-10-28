@@ -16,11 +16,15 @@ type ItemEditavel = {
   nome: string;
   unidade_medida: string;
   metas: string[];
+  // com mais de um turno: as metas de cada turno (o turno sem entrada parte de `metas`)
+  metas_turnos: Record<string, string[]>;
   meta_dia_seguinte: boolean;
 };
 
+const texto = (v: number | null | undefined) => (v === null || v === undefined ? "" : String(v));
+
 let seq = 0;
-const novoItem = (): ItemEditavel => ({ chave: `novo-${++seq}`, nome: "", unidade_medida: "unidades", metas: Array(7).fill(""), meta_dia_seguinte: false });
+const novoItem = (): ItemEditavel => ({ chave: `novo-${++seq}`, nome: "", unidade_medida: "unidades", metas: Array(7).fill(""), metas_turnos: {}, meta_dia_seguinte: false });
 
 export function FormEditarContagem({
   empresaId,
@@ -57,11 +61,20 @@ export function FormEditarContagem({
           chave: i.id,
           nome: i.nome,
           unidade_medida: i.unidade_medida ?? "",
-          metas: Array.from({ length: 7 }, (_, d) => (i.metas?.[d] === null || i.metas?.[d] === undefined ? "" : String(i.metas[d]))),
+          metas: Array.from({ length: 7 }, (_, d) => texto(i.metas?.[d])),
+          metas_turnos: Object.fromEntries(
+            Object.entries(i.metas_turnos ?? {}).map(([t, ms]) => [t, Array.from({ length: 7 }, (_, d) => texto(ms?.[d]))]),
+          ),
           meta_dia_seguinte: i.meta_dia_seguinte ?? false,
         }))
       : [novoItem()],
   );
+
+  // com 2+ turnos, uma linha de metas por turno
+  const porTurno = turnos.length > 1;
+  const metasDe = (item: ItemEditavel, t: string | null) => (t === null ? item.metas : (item.metas_turnos[t] ?? item.metas));
+  const mudarMetas = (item: ItemEditavel, t: string | null, metas: string[]) =>
+    alterar(item.chave, t === null ? { metas } : { metas_turnos: { ...item.metas_turnos, [t]: metas } });
 
   const alterar = (chave: string, mudanca: Partial<ItemEditavel>) =>
     setItens((xs) => xs.map((x) => (x.chave === chave ? { ...x, ...mudanca } : x)));
@@ -226,6 +239,7 @@ export function FormEditarContagem({
           <h2 className="font-medium">Itens</h2>
           <p className="text-xs text-slate-500">
             Um por produto. {usaMeta && "Em cada dia, a quantidade que precisa ter; vazio = sem meta naquele dia."}
+            {usaMeta && porTurno && " Com mais de um turno, cada turno tem a sua linha de metas (ex.: o que precisa ter no Dia e na Noite)."}
           </p>
         </div>
         <div className="space-y-3">
@@ -251,25 +265,34 @@ export function FormEditarContagem({
                 </div>
               </div>
               {usaMeta && (
-                <div className="flex flex-wrap items-end gap-1 pl-5">
-                  {DIAS_SEMANA.map((d, k) => (
-                    <label key={d.n} className="w-14 text-center text-xs text-slate-500">
-                      {d.curto}
-                      <Input
-                        value={item.metas[k]}
-                        onChange={(e) => alterar(item.chave, { metas: item.metas.map((m, j) => (j === k ? e.target.value : m)) })}
-                        inputMode="decimal"
-                        className="px-1 text-center"
-                      />
-                    </label>
-                  ))}
-                  <button
-                    type="button"
-                    className="mb-2 ml-1 text-xs text-blue-600"
-                    onClick={() => alterar(item.chave, { metas: Array(7).fill(item.metas[0]) })}
-                  >
-                    Repetir Seg em todos
-                  </button>
+                <div className="space-y-1 overflow-x-auto pl-5">
+                  {(porTurno ? turnos : [null]).map((t, linha) => {
+                    const metas = metasDe(item, t);
+                    return (
+                      <div key={t ?? "unica"} className="flex items-end gap-1">
+                        {porTurno && <span className="mb-2 w-16 shrink-0 truncate text-xs font-medium text-slate-600">{t}</span>}
+                        {DIAS_SEMANA.map((d, k) => (
+                          <label key={d.n} className="w-14 shrink-0 text-center text-xs text-slate-500">
+                            {linha === 0 && d.curto}
+                            <Input
+                              value={metas[k]}
+                              onChange={(e) => mudarMetas(item, t, metas.map((m, j) => (j === k ? e.target.value : m)))}
+                              inputMode="decimal"
+                              className="px-1 text-center"
+                              aria-label={`Meta ${t ? `${t} ` : ""}${d.curto}`}
+                            />
+                          </label>
+                        ))}
+                        <button
+                          type="button"
+                          className="mb-2 ml-1 shrink-0 text-xs text-blue-600"
+                          onClick={() => mudarMetas(item, t, Array(7).fill(metas[0]))}
+                        >
+                          Repetir Seg em todos
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {usaMeta && (
