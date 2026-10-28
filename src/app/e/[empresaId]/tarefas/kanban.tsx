@@ -5,8 +5,10 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { ListChecks, MessageCircle } from "lucide-react";
 import { linkPreencher, viaFormulario } from "@/lib/checklist-link";
 import { formatarDataHora, utcParaLocalInput } from "@/lib/formato";
+import { trocarPorReduzidas } from "@/lib/foto";
 import { ORIGENS, type Status, type Tarefa } from "@/lib/types";
 import { Botao, Etiqueta, Input, Textarea } from "@/components/ui";
+import { adicionarFotos } from "../chamados/actions";
 import { moverTarefa, retornarTarefa } from "./actions";
 
 interface Props {
@@ -48,6 +50,7 @@ export function Kanban({
   const [tarefas, setTarefas] = useState(iniciais);
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [adiando, setAdiando] = useState<{ tarefa: Tarefa; statusId: string } | null>(null);
+  const [concluindo, setConcluindo] = useState<{ tarefa: Tarefa; statusId: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -167,6 +170,11 @@ export function Kanban({
     }
     if (tipoDe(statusId) === "adiado") {
       setAdiando({ tarefa, statusId });
+      return;
+    }
+    // chamado concluído pede data do ato, valor e solução (mesmo fluxo do cartão "Mudar status")
+    if (tarefa.origem === "chamado" && tipoDe(statusId) === "concluido") {
+      setConcluindo({ tarefa, statusId });
       return;
     }
     const anterior = tarefas;
@@ -417,7 +425,130 @@ export function Kanban({
           }}
         />
       )}
+      {concluindo && (
+        <DialogoConcluirChamado
+          tarefa={concluindo.tarefa}
+          fuso={fuso}
+          onCancelar={() => setConcluindo(null)}
+          onConfirmar={async (dados, fotos) => {
+            const { tarefa, statusId } = concluindo;
+            const r = await moverTarefa(empresaId, tarefa.id, statusId, undefined, "", dados.quando, {
+              descricao: dados.solucao,
+              custo: dados.custo,
+            });
+            if (r.erro) return r.erro;
+            if (fotos) await adicionarFotos(empresaId, tarefa.id, fotos);
+            setConcluindo(null);
+            aplicar(tarefa.id, statusId);
+            return null;
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function DialogoConcluirChamado({
+  tarefa,
+  fuso,
+  onCancelar,
+  onConfirmar,
+}: {
+  tarefa: Tarefa;
+  fuso: string;
+  onCancelar: () => void;
+  onConfirmar: (dados: { quando: string; custo: number | null; solucao: string }, fotos: FormData | null) => Promise<string | null>;
+}) {
+  const [quando, setQuando] = useState(() => utcParaLocalInput(new Date().toISOString(), fuso));
+  const [custo, setCusto] = useState("");
+  const [solucao, setSolucao] = useState("");
+  const [confirmar, setConfirmar] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  const fotosRef = useRef<HTMLInputElement>(null);
+  const faltando = [!custo.trim() && "o valor", !solucao.trim() && "a descrição da solução"].filter(Boolean) as string[];
+
+  async function gravar() {
+    setConfirmar(false);
+    setErro(null);
+    setSalvando(true);
+    const valor = Number(custo.replace(",", "."));
+    let fotos: FormData | null = null;
+    if (fotosRef.current?.files?.length) {
+      fotos = new FormData();
+      Array.from(fotosRef.current.files).forEach((x) => fotos!.append("fotos", x));
+    }
+    const e = await onConfirmar(
+      { quando, custo: custo.trim() && !Number.isNaN(valor) ? valor : null, solucao: solucao.trim() },
+      fotos,
+    );
+    setSalvando(false);
+    if (e) setErro(e);
+  }
+
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
+      <form
+        className="max-h-full w-full max-w-sm space-y-3 overflow-y-auto rounded-xl bg-superficie p-5 shadow-lg"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (faltando.length) setConfirmar(true);
+          else gravar();
+        }}
+      >
+        <h2 className="font-semibold">Concluir &quot;{tarefa.titulo}&quot;</h2>
+        {erro && <p className="text-sm text-red-600">{erro}</p>}
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium">Data e hora do ato</span>
+          <Input type="datetime-local" required value={quando} onChange={(e) => setQuando(e.target.value)} />
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium">Valor gasto (R$)</span>
+          <Input type="number" step="0.01" min="0" value={custo} onChange={(e) => setCusto(e.target.value)} />
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium">Solução do caso</span>
+          <Textarea rows={3} value={solucao} onChange={(e) => setSolucao(e.target.value)} placeholder="O que foi feito para resolver" />
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium">Foto (opcional)</span>
+          <input
+            ref={fotosRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="mt-1 block text-sm"
+            onChange={(e) => {
+              trocarPorReduzidas(e.currentTarget);
+            }}
+          />
+        </label>
+        {confirmar && (
+          <div className="space-y-2 rounded-lg bg-slate-100 p-3 text-sm">
+            <p className="font-medium">Salvar sem descrição de solução e valor?</p>
+            <p className="text-slate-600">Falta informar {faltando.join(" e ")}.</p>
+            <div className="flex justify-end gap-2">
+              <Botao type="button" variante="secundario" onClick={() => setConfirmar(false)}>
+                Voltar e preencher
+              </Botao>
+              <Botao type="button" onClick={gravar}>
+                Salvar assim mesmo
+              </Botao>
+            </div>
+          </div>
+        )}
+        {!confirmar && (
+          <div className="flex justify-end gap-2">
+            <Botao type="button" variante="secundario" onClick={onCancelar} disabled={salvando}>
+              Cancelar
+            </Botao>
+            <Botao type="submit" disabled={salvando}>
+              {salvando ? "Salvando…" : "Concluir"}
+            </Botao>
+          </div>
+        )}
+      </form>
+    </div>
   );
 }
 
