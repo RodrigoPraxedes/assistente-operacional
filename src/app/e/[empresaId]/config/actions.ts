@@ -53,7 +53,7 @@ export async function salvarPush(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const { error } = await supabase
     .from("empresas")
-    .update({ push_tarefa: form.get("push_tarefa") === "on", push_prazo: form.get("push_prazo") === "on" })
+    .update({ push_origens: form.getAll("push_origens").map(String) })
     .eq("id", empresaId);
   if (error) falhar(`/e/${empresaId}/config`, error.message);
   revalidatePath(`/e/${empresaId}/config`);

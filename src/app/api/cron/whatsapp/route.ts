@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { gerarAvisosPrazoVencido, gerarLembretesAcoes, gerarLembretesChecklist, gerarResumosDoDia } from "@/lib/whatsapp-api/automacoes";
 import { processarFila } from "@/lib/whatsapp-api/fila";
-import { gerarPushPrazoVencido, processarPush } from "@/lib/push";
+import { processarPush } from "@/lib/push";
 import { limparFotosAntigas } from "@/lib/limpar-fotos";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
   const agora = new Date();
   const fotos =
     agora.getUTCHours() === 6 && agora.getUTCMinutes() < 5 ? await limparFotosAntigas().catch(() => null) : null;
-  const pushPrazo = await gerarPushPrazoVencido().catch(() => null);
   const push = await processarPush().catch(() => null);
   const fila = await processarFila(12, 40_000).catch(() => null);
-  return NextResponse.json({ checklistsCancelados, escalasRepetidas, resumos, lembretes, lembretesAcoes, avisosPrazo, pushPrazo, push, fotos, fila });
+  return NextResponse.json({ checklistsCancelados, escalasRepetidas, resumos, lembretes, lembretesAcoes, avisosPrazo, push, fotos, fila });
 }

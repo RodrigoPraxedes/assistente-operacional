@@ -1,12 +1,12 @@
 import "server-only";
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ehMadrugada, ORIGENS_SEM_MADRUGADA } from "@/lib/whatsapp-api/fila";
 
-// Notificações push no navegador (Web Push). Chaves VAPID nas variáveis da
+// Notificações push no navegador (Web Push). Cada aviso automático do WhatsApp é
+// copiado para push_fila por um gatilho do banco (migration 74). Chaves VAPID nas variáveis da
 // Vercel: NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY e VAPID_SUBJECT.
 // Sem elas o push fica desligado em silêncio (o WhatsApp segue normal).
-
-const PRAZO_JANELA_HORAS = 6;
 
 export function pushConfigurado() {
   return !!(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
@@ -20,61 +20,6 @@ function configurar() {
   );
 }
 
-// Tarefa cujo prazo venceu e segue aberta: avisa quem é responsável (1x por prazo)
-export async function gerarPushPrazoVencido(agora = new Date()) {
-  if (!pushConfigurado()) return 0;
-  const admin = createAdminClient();
-  const { data: empresas } = await admin.from("empresas").select("id").eq("push_prazo", true);
-  let total = 0;
-  for (const e of empresas ?? []) {
-    const [{ data: tarefas }, { data: abertos }] = await Promise.all([
-      admin
-        .from("tarefas")
-        .select("id, titulo, prazo, responsaveis, origem, status_id")
-        .eq("empresa_id", e.id)
-        .not("origem", "in", "(checklist,contagem)")
-        .eq("privado", false)
-        .is("concluida_em", null)
-        .not("prazo", "is", null)
-        .lte("prazo", agora.toISOString())
-        .gt("prazo", new Date(agora.getTime() - PRAZO_JANELA_HORAS * 3_600_000).toISOString())
-        .returns<{ id: string; titulo: string; prazo: string; responsaveis: string[]; origem: string; status_id: string }[]>(),
-      admin.from("status").select("id").eq("empresa_id", e.id).in("tipo", ["aberto", "em_andamento", "adiado"]),
-    ]);
-    if (!tarefas?.length) continue;
-    const statusAberto = new Set((abertos ?? []).map((s) => s.id));
-
-    const donos = [...new Set(tarefas.flatMap((t) => t.responsaveis))];
-    if (!donos.length) continue;
-    const { data: inscritos } = await admin.from("push_inscricoes").select("membro_id").in("membro_id", donos);
-    const comAparelho = new Set((inscritos ?? []).map((i) => i.membro_id));
-
-    for (const t of tarefas) {
-      if (!statusAberto.has(t.status_id)) continue;
-      for (const membroId of t.responsaveis) {
-        if (!comAparelho.has(membroId)) continue;
-        const { data } = await admin
-          .from("push_fila")
-          .upsert(
-            {
-              empresa_id: e.id,
-              membro_id: membroId,
-              tipo: "prazo",
-              titulo: "Prazo venceu",
-              corpo: t.titulo,
-              url: `/e/${e.id}/${t.origem === "chamado" ? "chamados" : "tarefas"}/${t.id}`,
-              chave: `prazo:${t.id}:${new Date(t.prazo).getTime()}:${membroId}`,
-            },
-            { onConflict: "chave", ignoreDuplicates: true },
-          )
-          .select("id");
-        total += data?.length ?? 0;
-      }
-    }
-  }
-  return total;
-}
-
 // Envia os avisos da fila a todos os aparelhos da pessoa; aparelho que o
 // navegador diz não existir mais (404/410) é removido
 export async function processarPush(limite = 50) {
@@ -83,13 +28,20 @@ export async function processarPush(limite = 50) {
   const admin = createAdminClient();
   const { data: fila } = await admin
     .from("push_fila")
-    .select("id, membro_id, titulo, corpo, url, tipo")
+    .select("id, empresa_id, membro_id, titulo, corpo, url, tipo")
     .is("enviado_em", null)
     .order("criado_em")
     .limit(limite);
+  // como no WhatsApp, avisos de tarefa, conclusão e prazo esperam até as 8h da empresa
+  const { data: empresas } = await admin
+    .from("empresas")
+    .select("id, fuso_horario")
+    .in("id", [...new Set((fila ?? []).map((a) => a.empresa_id))]);
+  const fusoDe = new Map((empresas ?? []).map((e) => [e.id, e.fuso_horario as string]));
   let enviados = 0;
   let removidos = 0;
   for (const a of fila ?? []) {
+    if (ORIGENS_SEM_MADRUGADA.has(a.tipo) && ehMadrugada(fusoDe.get(a.empresa_id))) continue;
     // reserva antes de enviar: dois relógios ao mesmo tempo não mandam em dobro
     const { data: reservado } = await admin
       .from("push_fila")
