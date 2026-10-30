@@ -566,6 +566,7 @@ export const SECOES: SecaoGuia[] = [
           "O botão verde WhatsApp para o prestador abre uma mensagem pronta só com o que ele precisa: Olá com o nome dele, Segue chamado, O que, Descrição, Local, Setor e Prazo previsto (linhas vazias ficam de fora). Não leva prioridade nem link do app, porque o prestador é externo.",
           "Em Gestão (quem tem permissão) dá para corrigir o título e a descrição do chamado, além de prioridade, prazo, responsável, equipamento e custo.",
           "Registre o prestador que atendeu, o custo, novas fotos e comentários. Tudo fica no histórico.",
+          "No cartão Fotos, toque em Tirar foto para abrir a câmera do celular ou em Escolher da galeria. A foto é enviada e salva na hora, sem botão extra, e aparece na lista com o aviso Foto salva.",
         ],
       },
       {
