@@ -6,7 +6,7 @@ import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
 import { PRIORIDADES, type Chamado, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Textarea, Titulo } from "@/components/ui";
 import { comentarTarefa } from "../../tarefas/actions";
-import { adicionarFotos, atualizarChamado, delegarChamado } from "../actions";
+import { atualizarChamado, delegarChamado } from "../actions";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { SeletorPrestador } from "@/components/seletor-prestador";
 import { CampoFotos } from "./campo-fotos";
@@ -316,10 +316,7 @@ export default async function DetalheChamado({
         ) : (
           <p className="text-sm text-slate-500">Nenhuma foto.</p>
         )}
-        <form action={adicionarFotos.bind(null, empresaId, t.id)} className="flex flex-wrap items-center gap-2">
-          <CampoFotos />
-          <Botao variante="secundario">Enviar fotos</Botao>
-        </form>
+        <CampoFotos empresaId={empresaId} tarefaId={t.id} />
       </Cartao>
 
       <Cartao className="space-y-3">
