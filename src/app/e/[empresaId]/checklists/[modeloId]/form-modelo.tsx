@@ -12,7 +12,7 @@ import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 type Opcao = { id: string; nome: string };
 type ItemEditavel = Pick<
   ChecklistItem,
-  "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria" | "foto_obrigatoria_se_nao" | "permite_na" | "problema_quando" | "abre_chamado_se_nao" | "prioridade_chamado"
+  "texto" | "tipo_resposta" | "obrigatorio" | "permite_foto" | "foto_obrigatoria" | "foto_obrigatoria_se_nao" | "permite_na" | "problema_quando" | "instrucao" | "abre_chamado_se_nao" | "prioridade_chamado"
 > & {
   id?: string;
   chave: string;
@@ -29,6 +29,7 @@ const novoItem = (): ItemEditavel => ({
   foto_obrigatoria_se_nao: false,
   permite_na: true,
   problema_quando: "nao",
+  instrucao: null,
   abre_chamado_se_nao: false,
   prioridade_chamado: "media",
 });
@@ -268,6 +269,16 @@ export function FormModelo({
                   <option value="numero">Número</option>
                   <option value="texto">Texto</option>
                 </Select>
+              </div>
+              <div className="pl-6">
+                <Textarea
+                  value={item.instrucao ?? ""}
+                  onChange={(e) => alterar(item.chave, { instrucao: e.target.value })}
+                  rows={1}
+                  maxLength={600}
+                  placeholder="Instrução (opcional): como executar ou o que verificar. Aparece para quem preenche."
+                  className="text-xs"
+                />
               </div>
               <div className="flex flex-wrap items-center gap-4 pl-6 text-xs text-slate-600">
                 <label className="flex items-center gap-1">

@@ -173,6 +173,8 @@ export interface ChecklistItem {
   // mostra a opção N/A (não se aplica) nos itens Sim/Não
   permite_na: boolean;
   problema_quando: ProblemaQuando;
+  // orientação opcional de como executar / o que verificar
+  instrucao: string | null;
   abre_chamado_se_nao: boolean;
   prioridade_chamado: Prioridade;
   ativo: boolean;
