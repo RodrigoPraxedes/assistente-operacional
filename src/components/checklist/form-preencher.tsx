@@ -34,6 +34,7 @@ export interface ItemPreencher {
   foto_obrigatoria_se_nao: boolean;
   permite_na?: boolean;
   problema_quando?: "nao" | "sim" | "nunca";
+  instrucao?: string | null;
 }
 
 interface Props {
@@ -138,6 +139,7 @@ export function FormPreencher({ canal, empresaId, modeloId, unidadeId, token, mo
                 {n + 1}. {item.texto}
                 {item.obrigatorio && <span className="text-red-500"> *</span>}
               </p>
+              {item.instrucao && <p className="-mt-2 whitespace-pre-line text-xs text-slate-500">{item.instrucao}</p>}
 
               {item.tipo_resposta === "sim_nao" && (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

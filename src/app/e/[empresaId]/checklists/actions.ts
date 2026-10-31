@@ -18,6 +18,7 @@ interface ItemForm {
   foto_obrigatoria_se_nao: boolean;
   permite_na?: boolean;
   problema_quando?: ProblemaQuando;
+  instrucao?: string | null;
   abre_chamado_se_nao?: boolean;
   prioridade_chamado?: string;
 }
@@ -110,6 +111,7 @@ export async function salvarModelo(empresaId: string, _: { erro?: string } | und
       foto_obrigatoria: item.permite_foto && !!item.foto_obrigatoria,
       foto_obrigatoria_se_nao: regraNao && item.foto_obrigatoria_se_nao,
       problema_quando: problemaQuando,
+      instrucao: item.instrucao?.trim() || null,
       permite_na: item.permite_na ?? true,
       abre_chamado_se_nao: regraNao && !!item.abre_chamado_se_nao,
       prioridade_chamado: item.prioridade_chamado ?? "media",
