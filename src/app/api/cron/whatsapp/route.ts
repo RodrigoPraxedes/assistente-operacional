@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { gerarAvisosPrazoVencido, gerarLembretesAcoes, gerarLembretesChecklist, gerarResumosDoDia } from "@/lib/whatsapp-api/automacoes";
 import { processarFila } from "@/lib/whatsapp-api/fila";
 import { gerarPushPrazoVencido, processarPush } from "@/lib/push";
+import { retomarTarefasAdiadas } from "@/lib/retomar-adiadas";
 import { limparFotosAntigas } from "@/lib/limpar-fotos";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const { data: checklistsCancelados } = await admin.rpc("cancelar_checklists_atrasados");
   const { data: escalasRepetidas } = await admin.rpc("estender_escalas_repetidas");
+  const retomadas = await retomarTarefasAdiadas().catch(() => null);
   const resumos = await gerarResumosDoDia().catch(() => null);
   const lembretes = await gerarLembretesChecklist().catch(() => null);
   const lembretesAcoes = await gerarLembretesAcoes().catch(() => null);
@@ -34,5 +36,5 @@ export async function GET(request: NextRequest) {
   const pushPrazo = await gerarPushPrazoVencido().catch(() => null);
   const push = await processarPush().catch(() => null);
   const fila = await processarFila(12, 40_000).catch(() => null);
-  return NextResponse.json({ checklistsCancelados, escalasRepetidas, resumos, lembretes, lembretesAcoes, avisosPrazo, pushPrazo, push, fotos, fila });
+  return NextResponse.json({ checklistsCancelados, escalasRepetidas, retomadas, resumos, lembretes, lembretesAcoes, avisosPrazo, pushPrazo, push, fotos, fila });
 }
