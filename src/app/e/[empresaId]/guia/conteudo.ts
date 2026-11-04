@@ -616,7 +616,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Montar uma ficha no Atalaia (quem tem permissão)",
         passos: [
-          "Nova ficha › Montar no Atalaia: informe o título, a categoria (ou crie uma nova ali mesmo) e, se quiser, uma descrição.",
+          "Nova ficha › Montar no Atalaia: informe o título, a categoria e, se quiser, uma descrição. Para uma categoria que ainda não existe, escolha + Criar nova categoria no fim da lista e digite o nome.",
           "Foto (opcional): envie uma imagem do prato, do equipamento ou do resultado esperado. Ela é reduzida no aparelho antes de enviar para não pesar.",
           "Monte o conteúdo com blocos, na ordem que quiser. O nome de cada bloco é editável: Lista com quantidade (Ingredientes, Materiais, Peças), Especificações (Voltagem: 220 V, Rendimento: 10 porções), Passo a passo (Modo de preparo, Procedimento de limpeza) e Texto livre (Observações, Cuidados).",
           "Use as setas para mudar a ordem dos blocos e a lixeira para tirar um bloco. Linhas e blocos vazios são ignorados ao salvar.",

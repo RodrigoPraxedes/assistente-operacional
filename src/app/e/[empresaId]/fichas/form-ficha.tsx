@@ -79,22 +79,36 @@ export function CamposComuns({
       <Campo rotulo="Título">
         <Input name="titulo" required defaultValue={ficha?.titulo} placeholder="Ex.: Fritadeira elétrica — limpeza" />
       </Campo>
+      <SeletorCategoria categorias={categorias} inicial={ficha?.categoria_id ?? ""} />
+      <Campo rotulo="Descrição (opcional)" dica="Aparece na lista e ajuda a busca.">
+        <Textarea name="descricao" rows={3} defaultValue={ficha?.descricao ?? ""} />
+      </Campo>
+    </>
+  );
+}
+
+// Última opção da lista abre o campo para criar a categoria ali mesmo
+const NOVA = "__nova__";
+function SeletorCategoria({ categorias, inicial }: { categorias: { id: string; nome: string }[]; inicial: string }) {
+  const [valor, setValor] = useState(inicial);
+  return (
+    <>
       <Campo rotulo="Categoria">
-        <Select name="categoria_id" defaultValue={ficha?.categoria_id ?? ""}>
+        <Select name="categoria_id" value={valor} onChange={(e) => setValor(e.target.value)}>
           <option value="">Sem categoria</option>
           {categorias.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nome}
             </option>
           ))}
+          <option value={NOVA}>+ Criar nova categoria</option>
         </Select>
       </Campo>
-      <Campo rotulo="Ou crie uma categoria nova" dica="Se preencher, ela é criada e usada nesta ficha.">
-        <Input name="nova_categoria" placeholder="Ex.: Alimentos" />
-      </Campo>
-      <Campo rotulo="Descrição (opcional)" dica="Aparece na lista e ajuda a busca.">
-        <Textarea name="descricao" rows={3} defaultValue={ficha?.descricao ?? ""} />
-      </Campo>
+      {valor === NOVA && (
+        <Campo rotulo="Nome da nova categoria" dica="Ela é criada e usada nesta ficha.">
+          <Input name="nova_categoria" required autoFocus placeholder="Ex.: Alimentos" />
+        </Campo>
+      )}
     </>
   );
 }

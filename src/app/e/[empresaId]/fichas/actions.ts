@@ -38,6 +38,7 @@ export async function salvarFicha(empresaId: string, form: FormData) {
   }
 
   let categoria = txt(form, "categoria_id");
+  if (categoria === "__nova__") categoria = null;
   const nova = txt(form, "nova_categoria");
   if (nova) {
     const { data: existente } = await supabase
