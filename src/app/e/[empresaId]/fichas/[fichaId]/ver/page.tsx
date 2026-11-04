@@ -40,9 +40,14 @@ export default async function VerFicha({ params }: { params: Promise<{ empresaId
             <>
               <BotaoExportar />
               {pode("fichas.gerenciar") && (
-                <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/${fichaId}`}>
-                  Editar
-                </LinkBotao>
+                <>
+                  <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/nova?tipo=montada&de=${fichaId}`}>
+                    Duplicar
+                  </LinkBotao>
+                  <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/${fichaId}`}>
+                    Editar
+                  </LinkBotao>
+                </>
               )}
             </>
           }

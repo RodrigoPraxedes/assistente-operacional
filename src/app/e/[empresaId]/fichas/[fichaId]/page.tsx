@@ -47,9 +47,14 @@ export default async function EditarFicha({
         voltar={{ href: `/e/${empresaId}/fichas`, rotulo: "Fichas" }}
         acoes={
           montada && (
-            <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/${fichaId}/ver`}>
-              Ver ficha
-            </LinkBotao>
+            <>
+              <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/nova?tipo=montada&de=${fichaId}`}>
+                Duplicar
+              </LinkBotao>
+              <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/${fichaId}/ver`}>
+                Ver ficha
+              </LinkBotao>
+            </>
           )
         }
       >

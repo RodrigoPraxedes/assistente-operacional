@@ -14,13 +14,17 @@ interface Props {
   categorias: { id: string; nome: string }[];
   ficha?: { id: string; titulo: string; descricao: string | null; categoria_id: string | null; blocos: Bloco[] };
   fotoUrl?: string | null;
+  // "Duplicar": preenche uma ficha nova com o conteúdo de outra (a foto é copiada ao salvar)
+  modelo?: { titulo: string; descricao: string | null; categoria_id: string | null; blocos: Bloco[]; foto_path: string | null };
 }
 
 // Ficha montada no Atalaia: foto reduzida no navegador (vai direto ao Storage) + blocos.
-export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl }: Props) {
+export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, modelo }: Props) {
+  const base = ficha ?? modelo;
   const [blocos, setBlocos] = useState<Bloco[]>(
-    ficha?.blocos.length ? ficha.blocos : [blocoVazio("lista"), blocoVazio("passos")],
+    base?.blocos.length ? base.blocos : [blocoVazio("lista"), blocoVazio("passos")],
   );
+  const [fotoNova, setFotoNova] = useState(false);
   const [previa, setPrevia] = useState<string | null>(fotoUrl ?? null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -29,6 +33,8 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl }
     e.preventDefault();
     setErro(null);
     const form = new FormData(e.currentTarget);
+    const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    if (botao?.name) form.set(botao.name, botao.value);
     const arquivo = form.get("foto");
     form.delete("foto");
     form.set("blocos", JSON.stringify(blocos));
@@ -56,7 +62,8 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl }
       {erro && <Aviso>{erro}</Aviso>}
       <input type="hidden" name="tipo" value="montada" />
       {ficha && <input type="hidden" name="id" value={ficha.id} />}
-      <CamposComuns categorias={categorias} ficha={ficha} />
+      {modelo?.foto_path && !fotoNova && <input type="hidden" name="foto_origem" value={modelo.foto_path} />}
+      <CamposComuns categorias={categorias} ficha={base} />
 
       <div className="space-y-1">
         <p className="text-sm font-medium text-slate-700">Foto (opcional)</p>
@@ -72,10 +79,11 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl }
             accept="image/*"
             onChange={(e) => {
               const f = e.target.files?.[0];
+              setFotoNova(!!f);
               setPrevia(f ? URL.createObjectURL(f) : (fotoUrl ?? null));
             }}
           />
-          {ficha && fotoUrl && (
+          {fotoUrl && (
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" name="remover_foto" className="h-4 w-4" /> Remover a foto atual
             </label>
@@ -89,9 +97,15 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl }
         <EditorBlocos blocos={blocos} onChange={setBlocos} />
       </div>
 
-      <Botao type="submit" disabled={enviando}>
-        {enviando ? "Salvando..." : "Salvar ficha"}
-      </Botao>
+      <div className="flex flex-wrap gap-2">
+        <Botao type="submit" disabled={enviando}>
+          {enviando ? "Salvando..." : "Salvar ficha"}
+        </Botao>
+        <Botao type="submit" name="depois" value="duplicar" variante="secundario" disabled={enviando}>
+          Salvar e duplicar
+        </Botao>
+      </div>
+      <p className="text-xs text-slate-500">Salvar e duplicar guarda esta ficha e abre uma nova já preenchida com ela, para aproveitar procedimentos parecidos.</p>
     </form>
   );
 }
