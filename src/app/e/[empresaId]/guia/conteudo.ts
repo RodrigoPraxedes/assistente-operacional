@@ -620,7 +620,7 @@ export const SECOES: SecaoGuia[] = [
           "Nova ficha › Montar no Atalaia: informe o título, a categoria e, se quiser, uma descrição. Para uma categoria que ainda não existe, escolha + Criar nova categoria no fim da lista e digite o nome.",
           "Foto (opcional): envie uma imagem do prato, do equipamento ou do resultado esperado. Ela é reduzida no aparelho antes de enviar para não pesar.",
           "Monte o conteúdo com blocos, na ordem que quiser. O nome de cada bloco é editável: Lista com quantidade (Ingredientes, Materiais, Peças), Especificações (Voltagem: 220 V, Rendimento: 10 porções), Passo a passo (Modo de preparo, Procedimento de limpeza) e Texto livre (Observações, Cuidados).",
-          "Use as setas para mudar a ordem dos blocos e a lixeira para tirar um bloco. Linhas e blocos vazios são ignorados ao salvar.",
+          "Use as setas ao lado do nome do bloco para mudar a ordem dos blocos e a lixeira para tirar um bloco. Cada item, especificação ou passo também tem setas para subir ou descer dentro do bloco, e o X para tirar a linha. Linhas e blocos vazios são ignorados ao salvar.",
           "Para mudar depois, toque em Editar na lista ou dentro da ficha.",
           "Para aproveitar um procedimento parecido, toque em Salvar e duplicar: a ficha é salva e abre uma nova já preenchida com ela (título \"Cópia de...\", mesma categoria, foto e blocos). Ajuste o que muda e salve. Numa ficha já pronta, use o botão Duplicar, dentro da ficha ou na edição.",
           "Os campos do passo a passo e do texto livre crescem conforme você escreve, para ler o texto inteiro.",

@@ -66,11 +66,28 @@ export function EditorBlocos({ blocos, onChange }: { blocos: Bloco[]; onChange: 
   );
 }
 
-function Remover({ onClick }: { onClick: () => void }) {
+const botaoLinha =
+  "flex h-9 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-30";
+
+// Subir, descer e tirar uma linha (item, especificação ou passo); no passo, em coluna no celular
+function Controles<T>({ itens, j, set, vertical }: { itens: T[]; j: number; set: (i: T[]) => void; vertical?: boolean }) {
+  const mover = (d: -1 | 1) => {
+    const novo = [...itens];
+    [novo[j], novo[j + d]] = [novo[j + d], novo[j]];
+    set(novo);
+  };
   return (
-    <button type="button" className={botaoIcone} onClick={onClick} aria-label="Tirar linha" title="Tirar linha">
-      <X className="h-4 w-4" aria-hidden />
-    </button>
+    <div className={`flex shrink-0 ${vertical ? "flex-col sm:flex-row" : "items-center"}`}>
+      <button type="button" className={botaoLinha} onClick={() => mover(-1)} disabled={j === 0} aria-label="Subir linha" title="Subir">
+        <ArrowUp className="h-4 w-4" aria-hidden />
+      </button>
+      <button type="button" className={botaoLinha} onClick={() => mover(1)} disabled={j === itens.length - 1} aria-label="Descer linha" title="Descer">
+        <ArrowDown className="h-4 w-4" aria-hidden />
+      </button>
+      <button type="button" className={botaoLinha} onClick={() => set(itens.filter((_, k) => k !== j))} aria-label="Tirar linha" title="Tirar linha">
+        <X className="h-4 w-4" aria-hidden />
+      </button>
+    </div>
   );
 }
 
@@ -87,7 +104,7 @@ function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Blo
           <div key={j} className="flex items-start gap-2">
             <span className="mt-2.5 w-6 shrink-0 text-right text-sm font-semibold text-slate-500">{j + 1}.</span>
             <Textarea rows={2} value={p} onChange={(e) => set(b.itens.map((x, k) => (k === j ? e.target.value : x)))} aria-label={`Passo ${j + 1}`} className="field-sizing-content min-h-16 min-w-0 flex-1" />
-            <Remover onClick={() => set(b.itens.filter((_, k) => k !== j))} />
+            <Controles itens={b.itens} j={j} set={set} vertical />
           </div>
         ))}
         <button type="button" className={botaoAdd} onClick={() => set([...b.itens, ""])}>
@@ -102,12 +119,12 @@ function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Blo
     return (
       <div className="space-y-2">
         {b.itens.map((it, j) => (
-          <div key={j} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.5rem] items-center gap-2">
-            <Input value={it.nome} placeholder="Ex.: Voltagem" aria-label="Nome"
+          <div key={j} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <Input value={it.nome} placeholder="Ex.: Voltagem" aria-label="Nome" className="col-span-2 sm:col-span-1"
               onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, nome: e.target.value } : x)))} />
             <Input value={it.valor} placeholder="Ex.: 220 V" aria-label="Valor"
               onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, valor: e.target.value } : x)))} />
-            <Remover onClick={() => set(b.itens.filter((_, k) => k !== j))} />
+            <Controles itens={b.itens} j={j} set={set} />
           </div>
         ))}
         <button type="button" className={botaoAdd} onClick={() => set([...b.itens, { nome: "", valor: "" }])}>
@@ -121,14 +138,14 @@ function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Blo
   return (
     <div className="space-y-2">
       {b.itens.map((it, j) => (
-        <div key={j} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.5rem] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_2.5rem]">
+        <div key={j} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_auto]">
           <Input value={it.nome} placeholder="Item" aria-label="Item" className="col-span-3 sm:col-span-1"
             onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, nome: e.target.value } : x)))} />
           <Input value={it.quantidade} placeholder="Qtd." aria-label="Quantidade"
             onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, quantidade: e.target.value } : x)))} />
           <Input value={it.unidade} placeholder="Unid." aria-label="Unidade"
             onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, unidade: e.target.value } : x)))} />
-          <Remover onClick={() => set(b.itens.filter((_, k) => k !== j))} />
+          <Controles itens={b.itens} j={j} set={set} />
         </div>
       ))}
       <button type="button" className={botaoAdd} onClick={() => set([...b.itens, { nome: "", quantidade: "", unidade: "" }])}>
