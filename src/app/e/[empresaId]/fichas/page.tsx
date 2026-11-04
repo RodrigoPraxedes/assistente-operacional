@@ -1,15 +1,19 @@
-import { Download, ExternalLink, FileText } from "lucide-react";
+import Link from "next/link";
+import { Download, ExternalLink, FileText, NotebookText } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
 import { formatarData } from "@/lib/formato";
 import { Aviso, Cartao, Etiqueta, Input, LinkBotao, Select, Titulo, Vazio, Botao } from "@/components/ui";
+import { textoDosBlocos, type Bloco } from "./blocos";
 
 interface Ficha {
   id: string;
   titulo: string;
   descricao: string | null;
   categoria_id: string | null;
-  arquivo_path: string;
-  nome_arquivo: string;
+  tipo: "pdf" | "montada";
+  arquivo_path: string | null;
+  nome_arquivo: string | null;
+  blocos: Bloco[];
   tamanho_bytes: number | null;
   updated_at: string;
 }
@@ -39,11 +43,11 @@ export default async function Fichas({
   const lista = (fichas ?? []).filter(
     (f) =>
       (!filtros.categoria || (filtros.categoria === "sem" ? !f.categoria_id : f.categoria_id === filtros.categoria)) &&
-      (!busca || norm(`${f.titulo} ${f.descricao ?? ""} ${nomeCat.get(f.categoria_id ?? "") ?? ""}`).includes(busca)),
+      (!busca || norm(`${f.titulo} ${f.descricao ?? ""} ${nomeCat.get(f.categoria_id ?? "") ?? ""} ${textoDosBlocos(f.blocos ?? [])}`).includes(busca)),
   );
 
-  // links assinados (1 h) para abrir e para baixar
-  const caminhos = lista.map((f) => f.arquivo_path);
+  // links assinados (1 h) para abrir e para baixar os PDFs
+  const caminhos = lista.flatMap((f) => (f.tipo === "pdf" && f.arquivo_path ? [f.arquivo_path] : []));
   const [{ data: abrir }, { data: baixar }] = caminhos.length
     ? await Promise.all([
         supabase.storage.from("fichas").createSignedUrls(caminhos, 3600),
@@ -91,13 +95,17 @@ export default async function Fichas({
       </form>
 
       {lista.length === 0 ? (
-        <Vazio>{fichas?.length ? "Nenhuma ficha com esse filtro." : "Nenhuma ficha ainda. Envie o primeiro PDF em Nova ficha."}</Vazio>
+        <Vazio>{fichas?.length ? "Nenhuma ficha com esse filtro." : "Nenhuma ficha ainda. Toque em Nova ficha para enviar um PDF ou montar uma ficha aqui."}</Vazio>
       ) : (
         <ul className="space-y-2">
           {lista.map((f) => (
             <li key={f.id}>
               <Cartao className="flex flex-wrap items-center gap-3 p-3">
-                <FileText className="h-6 w-6 shrink-0 text-blue-600" aria-hidden />
+                {f.tipo === "montada" ? (
+                  <NotebookText className="h-6 w-6 shrink-0 text-blue-600" aria-label="Ficha montada no Atalaia" />
+                ) : (
+                  <FileText className="h-6 w-6 shrink-0 text-blue-600" aria-label="PDF" />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-slate-900">{f.titulo}</p>
                   {f.descricao && <p className="line-clamp-2 text-sm text-slate-600">{f.descricao}</p>}
@@ -109,7 +117,15 @@ export default async function Fichas({
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {urlAbrir.get(f.arquivo_path) && (
+                  {f.tipo === "montada" && (
+                    <Link
+                      href={`/e/${empresaId}/fichas/${f.id}/ver`}
+                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      <ExternalLink className="h-4 w-4" aria-hidden /> Abrir
+                    </Link>
+                  )}
+                  {f.arquivo_path && urlAbrir.get(f.arquivo_path) && (
                     <a
                       href={urlAbrir.get(f.arquivo_path) ?? undefined}
                       target="_blank"
@@ -119,7 +135,7 @@ export default async function Fichas({
                       <ExternalLink className="h-4 w-4" aria-hidden /> Abrir
                     </a>
                   )}
-                  {urlBaixar.get(f.arquivo_path) && (
+                  {f.arquivo_path && urlBaixar.get(f.arquivo_path) && (
                     <a
                       href={urlBaixar.get(f.arquivo_path) ?? undefined}
                       className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-blue-600 hover:bg-slate-100"

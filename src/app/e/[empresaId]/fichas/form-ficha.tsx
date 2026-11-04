@@ -10,7 +10,7 @@ interface Props {
   empresaId: string;
   acao: (form: FormData) => Promise<void>;
   categorias: { id: string; nome: string }[];
-  ficha?: { id: string; titulo: string; descricao: string | null; categoria_id: string | null; nome_arquivo: string };
+  ficha?: { id: string; titulo: string; descricao: string | null; categoria_id: string | null; nome_arquivo: string | null };
 }
 
 // O PDF vai direto do navegador para o Storage (a Server Action aceita só 4 MB); depois a ficha é registrada.
@@ -50,7 +50,32 @@ export function FormFicha({ empresaId, acao, categorias, ficha }: Props) {
   return (
     <form onSubmit={enviar} className="space-y-4">
       {erro && <Aviso>{erro}</Aviso>}
+      <input type="hidden" name="tipo" value="pdf" />
       {ficha && <input type="hidden" name="id" value={ficha.id} />}
+      <CamposComuns categorias={categorias} ficha={ficha} />
+      <Campo
+        rotulo={ficha ? "Trocar o PDF (opcional)" : "Arquivo PDF"}
+        dica={ficha ? `Atual: ${ficha.nome_arquivo ?? "—"}. Até 10 MB.` : "Até 10 MB."}
+      >
+        <Input type="file" name="pdf" accept="application/pdf,.pdf" />
+      </Campo>
+      <Botao type="submit" disabled={enviando}>
+        {enviando ? "Salvando..." : "Salvar ficha"}
+      </Botao>
+    </form>
+  );
+}
+
+// Título, categoria e descrição: iguais na ficha em PDF e na montada
+export function CamposComuns({
+  categorias,
+  ficha,
+}: {
+  categorias: { id: string; nome: string }[];
+  ficha?: { titulo: string; descricao: string | null; categoria_id: string | null };
+}) {
+  return (
+    <>
       <Campo rotulo="Título">
         <Input name="titulo" required defaultValue={ficha?.titulo} placeholder="Ex.: Fritadeira elétrica — limpeza" />
       </Campo>
@@ -70,15 +95,6 @@ export function FormFicha({ empresaId, acao, categorias, ficha }: Props) {
       <Campo rotulo="Descrição (opcional)" dica="Aparece na lista e ajuda a busca.">
         <Textarea name="descricao" rows={3} defaultValue={ficha?.descricao ?? ""} />
       </Campo>
-      <Campo
-        rotulo={ficha ? "Trocar o PDF (opcional)" : "Arquivo PDF"}
-        dica={ficha ? `Atual: ${ficha.nome_arquivo}. Até 10 MB.` : "Até 10 MB."}
-      >
-        <Input type="file" name="pdf" accept="application/pdf,.pdf" />
-      </Campo>
-      <Botao type="submit" disabled={enviando}>
-        {enviando ? "Salvando..." : "Salvar ficha"}
-      </Botao>
-    </form>
+    </>
   );
 }
