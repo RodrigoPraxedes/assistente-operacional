@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
-import { formatarData } from "@/lib/formato";
 import { Cartao, Etiqueta, LinkBotao, Titulo } from "@/components/ui";
 import type { Bloco } from "../../blocos";
+import { carimbo } from "../../carimbo";
 import { BotaoExportar } from "./botao-exportar";
 
 // Leitura da ficha montada no Atalaia: feita para o celular e para imprimir.
@@ -11,7 +11,7 @@ export default async function VerFicha({ params }: { params: Promise<{ empresaId
   const { supabase, pode, empresa } = await getContexto(empresaId);
   const { data: ficha } = await supabase
     .from("fichas")
-    .select("id, tipo, titulo, descricao, foto_path, blocos, updated_at, ficha_categorias(nome)")
+    .select("id, tipo, titulo, descricao, foto_path, blocos, created_at, updated_at, ficha_categorias(nome), criador:membros!fichas_criado_por_fkey(nome)")
     .eq("id", fichaId)
     .eq("empresa_id", empresaId)
     .maybeSingle<{
@@ -21,8 +21,10 @@ export default async function VerFicha({ params }: { params: Promise<{ empresaId
       descricao: string | null;
       foto_path: string | null;
       blocos: Bloco[];
+      created_at: string;
       updated_at: string;
       ficha_categorias: { nome: string } | null;
+      criador: { nome: string } | null;
     }>();
   if (!ficha || ficha.tipo !== "montada") notFound();
   const fotoUrl = ficha.foto_path
@@ -55,7 +57,7 @@ export default async function VerFicha({ params }: { params: Promise<{ empresaId
           <h2 className="text-2xl font-semibold text-slate-900">{ficha.titulo}</h2>
           {ficha.descricao && <p className="whitespace-pre-line text-slate-600">{ficha.descricao}</p>}
           <p className="text-xs text-slate-500">
-            {empresa.nome} · atualizada em {formatarData(ficha.updated_at, empresa.fuso_horario)}
+            {empresa.nome} · {carimbo(ficha, empresa.fuso_horario)}
           </p>
         </header>
 
