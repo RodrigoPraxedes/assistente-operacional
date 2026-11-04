@@ -76,7 +76,7 @@ function Remover({ onClick }: { onClick: () => void }) {
 
 function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Bloco) => void }) {
   if (b.tipo === "texto") {
-    return <Textarea rows={4} value={b.texto} onChange={(e) => onChange({ ...b, texto: e.target.value })} aria-label={b.titulo} />;
+    return <Textarea rows={4} className="field-sizing-content min-h-24" value={b.texto} onChange={(e) => onChange({ ...b, texto: e.target.value })} aria-label={b.titulo} />;
   }
 
   if (b.tipo === "passos") {
@@ -86,7 +86,7 @@ function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Blo
         {b.itens.map((p, j) => (
           <div key={j} className="flex items-start gap-2">
             <span className="mt-2.5 w-6 shrink-0 text-right text-sm font-semibold text-slate-500">{j + 1}.</span>
-            <Textarea rows={2} value={p} onChange={(e) => set(b.itens.map((x, k) => (k === j ? e.target.value : x)))} aria-label={`Passo ${j + 1}`} className="min-w-0 flex-1" />
+            <Textarea rows={2} value={p} onChange={(e) => set(b.itens.map((x, k) => (k === j ? e.target.value : x)))} aria-label={`Passo ${j + 1}`} className="field-sizing-content min-h-16 min-w-0 flex-1" />
             <Remover onClick={() => set(b.itens.filter((_, k) => k !== j))} />
           </div>
         ))}

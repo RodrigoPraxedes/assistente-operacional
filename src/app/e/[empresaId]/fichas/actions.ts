@@ -23,9 +23,19 @@ export async function salvarFicha(empresaId: string, form: FormData) {
   const path = montada ? null : txt(form, "arquivo_path");
   if (path && (!path.startsWith(`${empresaId}/`) || !path.endsWith(".pdf"))) falhar("Arquivo inválido");
   if (!montada && !id && !path) falhar("Escolha o arquivo PDF");
-  const foto = montada ? txt(form, "foto_path") : null;
+  let foto = montada ? txt(form, "foto_path") : null;
   if (foto && !foto.startsWith(`${empresaId}/fotos/`)) falhar("Foto inválida");
   const removerFoto = montada && form.get("remover_foto") === "on";
+  const duplicar = montada && form.get("depois") === "duplicar";
+
+  // cópia de outra ficha: a foto da original é copiada para um arquivo próprio
+  const origem = montada && !foto && !removerFoto ? txt(form, "foto_origem") : null;
+  if (origem && origem.startsWith(`${empresaId}/fotos/`)) {
+    const ext = origem.split(".").pop() ?? "jpg";
+    const copia = `${empresaId}/fotos/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("fichas").copy(origem, copia);
+    if (!error) foto = copia;
+  }
 
   let blocos: Bloco[] = [];
   if (montada) {
@@ -78,6 +88,7 @@ export async function salvarFicha(empresaId: string, form: FormData) {
   };
   const novos = [path, foto].filter((p): p is string => !!p);
 
+  let salvaId = id;
   if (id) {
     const { data: antiga } = await supabase.from("fichas").select("arquivo_path, foto_path").eq("id", id).maybeSingle();
     const { error } = await supabase.from("fichas").update(dados).eq("id", id);
@@ -91,15 +102,20 @@ export async function salvarFicha(empresaId: string, form: FormData) {
     ].filter((p): p is string => !!p);
     if (sobras.length) await supabase.storage.from("fichas").remove(sobras);
   } else {
-    const { error } = await supabase
+    const { data: nova, error } = await supabase
       .from("fichas")
-      .insert({ ...dados, empresa_id: empresaId, criado_por: membro.id });
+      .insert({ ...dados, empresa_id: empresaId, criado_por: membro.id })
+      .select("id")
+      .single();
     if (error) {
       if (novos.length) await supabase.storage.from("fichas").remove(novos);
       falhar(error.message);
     }
+    salvaId = nova!.id as string;
   }
   revalidatePath(base);
+  // "Salvar e duplicar": abre uma ficha nova já preenchida com esta
+  if (duplicar) redirect(`${base}/nova?tipo=montada&de=${salvaId}&salvo=1`);
   redirect(`${base}?salvo=1`);
 }
 

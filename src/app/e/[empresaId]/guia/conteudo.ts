@@ -608,7 +608,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Consultar uma ficha",
         passos: [
-          "Digite na busca (título, descrição, categoria ou o conteúdo da ficha) e/ou escolha uma categoria, depois toque em Filtrar.",
+          "Digite na busca (título, descrição, categoria ou o conteúdo da ficha) e/ou escolha uma categoria: a lista filtra na hora, sem botão.",
           "Ficha em PDF: toque em Abrir para ver numa nova aba ou em Baixar para salvar no aparelho.",
           "Ficha montada no Atalaia: toque em Abrir para ler. Exportar PDF abre a impressão só com a ficha; escolha Salvar como PDF para gerar o arquivo.",
           "Cada ficha traz o carimbo de quem a criou e quando (ex.: Criada por Rodrigo em 04/11/2026), e a data da última atualização quando foi editada depois. O carimbo também sai no PDF exportado.",
@@ -622,6 +622,8 @@ export const SECOES: SecaoGuia[] = [
           "Monte o conteúdo com blocos, na ordem que quiser. O nome de cada bloco é editável: Lista com quantidade (Ingredientes, Materiais, Peças), Especificações (Voltagem: 220 V, Rendimento: 10 porções), Passo a passo (Modo de preparo, Procedimento de limpeza) e Texto livre (Observações, Cuidados).",
           "Use as setas para mudar a ordem dos blocos e a lixeira para tirar um bloco. Linhas e blocos vazios são ignorados ao salvar.",
           "Para mudar depois, toque em Editar na lista ou dentro da ficha.",
+          "Para aproveitar um procedimento parecido, toque em Salvar e duplicar: a ficha é salva e abre uma nova já preenchida com ela (título \"Cópia de...\", mesma categoria, foto e blocos). Ajuste o que muda e salve. Numa ficha já pronta, use o botão Duplicar, dentro da ficha ou na edição.",
+          "Os campos do passo a passo e do texto livre crescem conforme você escreve, para ler o texto inteiro.",
         ],
       },
       {

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Download, ExternalLink, FileText, NotebookText } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
-import { Aviso, Cartao, Etiqueta, Input, LinkBotao, Select, Titulo, Vazio, Botao } from "@/components/ui";
+import { Aviso, Cartao, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
 import { textoDosBlocos, type Bloco } from "./blocos";
 import { carimbo } from "./carimbo";
+import { FiltrosFichas } from "./filtros-fichas";
 
 interface Ficha {
   id: string;
@@ -78,23 +79,11 @@ export default async function Fichas({
       {filtros.salvo && <Aviso tipo="sucesso">Ficha salva.</Aviso>}
       {filtros.excluida && <Aviso tipo="sucesso">Ficha apagada.</Aviso>}
 
-      <form className="flex flex-wrap items-end gap-2">
-        <Input name="busca" defaultValue={filtros.busca ?? ""} placeholder="Buscar fichas" className="w-48 flex-1" />
-        <Select name="categoria" defaultValue={filtros.categoria ?? ""} className="w-auto" aria-label="Categoria">
-          <option value="">Todas as categorias</option>
-          {(categorias ?? [])
-            .filter((c) => c.ativo || c.id === filtros.categoria)
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          <option value="sem">Sem categoria</option>
-        </Select>
-        <Botao type="submit" variante="secundario">
-          Filtrar
-        </Botao>
-      </form>
+      <FiltrosFichas
+        busca={filtros.busca ?? ""}
+        categoria={filtros.categoria ?? ""}
+        categorias={(categorias ?? []).filter((c) => c.ativo || c.id === filtros.categoria)}
+      />
 
       {lista.length === 0 ? (
         <Vazio>{fichas?.length ? "Nenhuma ficha com esse filtro." : "Nenhuma ficha ainda. Toque em Nova ficha para enviar um PDF ou montar uma ficha aqui."}</Vazio>
