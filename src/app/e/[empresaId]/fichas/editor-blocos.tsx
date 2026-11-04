@@ -86,7 +86,7 @@ function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Blo
         {b.itens.map((p, j) => (
           <div key={j} className="flex items-start gap-2">
             <span className="mt-2.5 w-6 shrink-0 text-right text-sm font-semibold text-slate-500">{j + 1}.</span>
-            <Textarea rows={2} value={p} onChange={(e) => set(b.itens.map((x, k) => (k === j ? e.target.value : x)))} aria-label={`Passo ${j + 1}`} className="flex-1" />
+            <Textarea rows={2} value={p} onChange={(e) => set(b.itens.map((x, k) => (k === j ? e.target.value : x)))} aria-label={`Passo ${j + 1}`} className="min-w-0 flex-1" />
             <Remover onClick={() => set(b.itens.filter((_, k) => k !== j))} />
           </div>
         ))}
@@ -102,10 +102,10 @@ function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Blo
     return (
       <div className="space-y-2">
         {b.itens.map((it, j) => (
-          <div key={j} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-            <Input value={it.nome} placeholder="Nome (ex.: Voltagem)" aria-label="Nome" className="min-w-0 flex-1 basis-32"
+          <div key={j} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.5rem] items-center gap-2">
+            <Input value={it.nome} placeholder="Ex.: Voltagem" aria-label="Nome"
               onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, nome: e.target.value } : x)))} />
-            <Input value={it.valor} placeholder="Valor (ex.: 220 V)" aria-label="Valor" className="min-w-0 flex-1 basis-32"
+            <Input value={it.valor} placeholder="Ex.: 220 V" aria-label="Valor"
               onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, valor: e.target.value } : x)))} />
             <Remover onClick={() => set(b.itens.filter((_, k) => k !== j))} />
           </div>
@@ -121,12 +121,12 @@ function ConteudoBloco({ bloco: b, onChange }: { bloco: Bloco; onChange: (b: Blo
   return (
     <div className="space-y-2">
       {b.itens.map((it, j) => (
-        <div key={j} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-          <Input value={it.nome} placeholder="Item" aria-label="Item" className="min-w-0 basis-full sm:flex-1 sm:basis-auto"
+        <div key={j} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.5rem] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_2.5rem]">
+          <Input value={it.nome} placeholder="Item" aria-label="Item" className="col-span-3 sm:col-span-1"
             onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, nome: e.target.value } : x)))} />
-          <Input value={it.quantidade} placeholder="Qtd." aria-label="Quantidade" className="w-24 flex-1 sm:flex-none"
+          <Input value={it.quantidade} placeholder="Qtd." aria-label="Quantidade"
             onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, quantidade: e.target.value } : x)))} />
-          <Input value={it.unidade} placeholder="Unid." aria-label="Unidade" className="w-24 flex-1 sm:flex-none"
+          <Input value={it.unidade} placeholder="Unid." aria-label="Unidade"
             onChange={(e) => set(b.itens.map((x, k) => (k === j ? { ...x, unidade: e.target.value } : x)))} />
           <Remover onClick={() => set(b.itens.filter((_, k) => k !== j))} />
         </div>
