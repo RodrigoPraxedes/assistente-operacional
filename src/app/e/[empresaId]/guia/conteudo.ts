@@ -608,7 +608,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Consultar uma ficha",
         passos: [
-          "Digite na busca (título, descrição, categoria ou o conteúdo da ficha) e/ou escolha uma categoria, depois toque em Filtrar.",
+          "Digite na busca (título, descrição, categoria ou o conteúdo da ficha) e/ou escolha uma categoria: a lista filtra na hora, sem botão.",
           "Ficha em PDF: toque em Abrir para ver numa nova aba ou em Baixar para salvar no aparelho.",
           "Ficha montada no Atalaia: toque em Abrir para ler. Exportar PDF abre a impressão só com a ficha; escolha Salvar como PDF para gerar o arquivo.",
           "Cada ficha traz o carimbo de quem a criou e quando (ex.: Criada por Rodrigo em 04/11/2026), e a data da última atualização quando foi editada depois. O carimbo também sai no PDF exportado.",
