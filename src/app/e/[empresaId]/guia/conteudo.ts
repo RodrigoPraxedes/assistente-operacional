@@ -7,6 +7,7 @@ import {
   CalendarSync,
   ChartGantt,
   ClipboardList,
+  FileText,
   LayoutDashboard,
   ListChecks,
   MessageCircle,
@@ -594,6 +595,33 @@ export const SECOES: SecaoGuia[] = [
         ],
       },
     ],
+  },
+  {
+    slug: "fichas",
+    titulo: "Fichas",
+    icone: FileText,
+    resumo: "Biblioteca de PDFs para consulta rápida na operação.",
+    tela: "/fichas",
+    paraQue:
+      "Fichas guardam em PDF as orientações que a equipe precisa consultar na hora: especificações, características, materiais e procedimentos de um produto, equipamento, alimento ou serviço. O PDF é feito fora do app e enviado para cá; fica separado por categorias e pode ser aberto no celular.",
+    topicos: [
+      {
+        titulo: "Consultar uma ficha",
+        passos: [
+          "Digite na busca (título, descrição ou categoria) e/ou escolha uma categoria, depois toque em Filtrar.",
+          "Toque em Abrir para ver o PDF numa nova aba ou em Baixar para salvar no aparelho.",
+        ],
+      },
+      {
+        titulo: "Enviar e organizar (quem tem permissão)",
+        passos: [
+          "Nova ficha: informe o título, escolha a categoria (ou crie uma nova ali mesmo), escreva uma descrição se quiser e escolha o PDF, de até 10 MB.",
+          "Editar muda título, categoria e descrição; em Trocar o PDF, envie um arquivo novo para substituir o atual. Apagar ficha remove o PDF de vez.",
+          "Categorias: crie, renomeie ou tire de uso. Uma categoria fora de uso some do filtro e do cadastro, mas as fichas continuam nela.",
+        ],
+      },
+    ],
+    dicas: ["Os PDFs ficam guardados sem prazo: não entram na limpeza automática de 30 dias das fotos."],
   },
   {
     slug: "escalas",
