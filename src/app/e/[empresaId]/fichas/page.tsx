@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Download, ExternalLink, FileText, NotebookText } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
-import { formatarData } from "@/lib/formato";
 import { Aviso, Cartao, Etiqueta, Input, LinkBotao, Select, Titulo, Vazio, Botao } from "@/components/ui";
 import { textoDosBlocos, type Bloco } from "./blocos";
+import { carimbo } from "./carimbo";
 
 interface Ficha {
   id: string;
@@ -15,7 +15,9 @@ interface Ficha {
   nome_arquivo: string | null;
   blocos: Bloco[];
   tamanho_bytes: number | null;
+  created_at: string;
   updated_at: string;
+  criador: { nome: string } | null;
 }
 
 const tamanho = (b: number | null) => (b ? (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`) : "");
@@ -34,7 +36,7 @@ export default async function Fichas({
   const gerencia = pode("fichas.gerenciar");
 
   const [{ data: fichas }, { data: categorias }] = await Promise.all([
-    supabase.from("fichas").select("*").eq("empresa_id", empresaId).order("titulo").returns<Ficha[]>(),
+    supabase.from("fichas").select("*, criador:membros!fichas_criado_por_fkey(nome)").eq("empresa_id", empresaId).order("titulo").returns<Ficha[]>(),
     supabase.from("ficha_categorias").select("id, nome, ativo").eq("empresa_id", empresaId).order("nome"),
   ]);
   const nomeCat = new Map((categorias ?? []).map((c) => [c.id, c.nome]));
@@ -112,7 +114,12 @@ export default async function Fichas({
                   <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     {f.categoria_id && <Etiqueta>{nomeCat.get(f.categoria_id) ?? "—"}</Etiqueta>}
                     <span>
-                      {[tamanho(f.tamanho_bytes), `atualizada em ${formatarData(f.updated_at, empresa.fuso_horario)}`].filter(Boolean).join(" · ")}
+                      {[
+                        tamanho(f.tamanho_bytes),
+                        carimbo(f, empresa.fuso_horario),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </p>
                 </div>
