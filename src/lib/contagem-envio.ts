@@ -49,6 +49,6 @@ export async function enviarContagem(_: EstadoContagem, form: FormData): Promise
         });
   if (error) return { erro: error.message };
   // com "Recebe o resultado" preenchido o banco já enfileirou o aviso; o botão manual vira plano B
-  const { data: contagem } = await createAdminClient().from("contagens").select("resultado_membro_id").eq("id", contagemId).maybeSingle();
-  return { ok: true, automatico: !!contagem?.resultado_membro_id };
+  const { data: contagem } = await createAdminClient().from("contagens").select("resultado_membro_id, resultado_grupo_id").eq("id", contagemId).maybeSingle();
+  return { ok: true, automatico: !!(contagem?.resultado_membro_id || contagem?.resultado_grupo_id) };
 }
