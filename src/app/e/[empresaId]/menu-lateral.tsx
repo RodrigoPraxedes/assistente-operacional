@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Marca } from "@/components/marca";
 import { telaDesligada } from "@/lib/modulos";
 import icone from "@/app/icon.png";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   AlarmClock,
@@ -59,6 +59,8 @@ interface Item {
 // No computador pode ser recolhido para só os ícones (fica salvo no cookie `menu`).
 export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsApp, desligados, tema: temaInicial, recolhido: recolhidoInicial }: Props) {
   const pathname = usePathname();
+  // Manutenções › Ações recorrentes é a lista de Ações filtrada (?manutencao=1)
+  const naManutencao = useSearchParams().get("manutencao") === "1";
   const [aberto, setAberto] = useState(false);
   const [recolhido, setRecolhido] = useState(recolhidoInicial);
 
@@ -89,7 +91,10 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
   ];
   // módulos desligados em Configurações › Geral › Módulos somem do menu
   const itens = todos.filter((i) => !telaDesligada(i.href.slice(base.length), desligados));
-  const atual = itens.find((i) => [i.ativoEm ?? i.href].flat().some((p) => pathname.startsWith(p)));
+  const atual =
+    naManutencao && pathname.startsWith(`${base}/acoes`)
+      ? itens.find((i) => i.href === `${base}/chamados`)
+      : itens.find((i) => [i.ativoEm ?? i.href].flat().some((p) => pathname.startsWith(p)));
 
   // fecha a gaveta ao navegar
   useEffect(() => setAberto(false), [pathname]);

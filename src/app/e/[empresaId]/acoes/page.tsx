@@ -104,14 +104,16 @@ export default async function PaginaAcoes({
   const categoriasManutencao = new Set((categorias ?? []).filter((c) => c.manutencao).map((c) => c.id));
   const ehManutencao = (a: Acao) =>
     !!a.equipamento_id || (!!a.categoria_id && categoriasManutencao.has(a.categoria_id));
-  const categoriasDoFiltro = soManutencao
-    ? (categorias ?? []).filter((c) => c.manutencao)
-    : (categorias ?? []);
+  const vencManutencao = (al: Alerta) => !!al.categoria_id && categoriasManutencao.has(al.categoria_id);
+  // as de manutenção moram em Manutenções › Ações recorrentes; a lista geral mostra as outras
+  const categoriasDoFiltro = (categorias ?? []).filter((c) => c.manutencao === soManutencao);
+  const naManutencao =
+    ((acoes ?? []) as Acao[]).filter(ehManutencao).length + ((alertas ?? []) as Alerta[]).filter(vencManutencao).length;
 
   const linhas = ((acoes ?? []) as Acao[])
     .filter(
       (a) =>
-        (!soManutencao || ehManutencao(a)) &&
+        ehManutencao(a) === soManutencao &&
         (!termo ||
           normalizar(`${a.nome} ${a.descricao ?? ""} ${equipamento.get(a.equipamento_id ?? "") ?? ""}`).includes(termo)) &&
         (!setor || a.setor_id === setor) &&
@@ -138,7 +140,7 @@ export default async function PaginaAcoes({
   const vencimentos = ((alertas ?? []) as Alerta[])
     .filter(
       (al) =>
-        (!soManutencao || (!!al.categoria_id && categoriasManutencao.has(al.categoria_id))) &&
+        vencManutencao(al) === soManutencao &&
         (!termo || normalizar(`${al.nome} ${al.descricao ?? ""}`).includes(termo)) &&
         (!setor || al.setor_id === setor) &&
         (!categoria || al.categoria_id === categoria),
@@ -202,12 +204,22 @@ export default async function PaginaAcoes({
           <Link href={`/e/${empresaId}/acoes`} className="text-blue-700">
             Ações
           </Link>
-          : o que mudar aqui muda lá.
+          : é lá que você cria uma ação nova (de manutenção, escolha uma categoria de manutenção ou um equipamento).
         </p>
       ) : (
         <p className="text-sm text-slate-500">
           Tudo o que precisa ser lembrado: ações que repetem e viram tarefa no dia marcado, e
           ações com vencimento, que criam tarefas alguns dias antes da data (marcadas com Vencimento).
+          {naManutencao > 0 && (
+            <>
+              {" "}
+              As {naManutencao} de manutenção ficam em{" "}
+              <Link href={`/e/${empresaId}/acoes?manutencao=1`} className="text-blue-700">
+                Manutenções › Ações recorrentes
+              </Link>
+              .
+            </>
+          )}
         </p>
       )}
 
