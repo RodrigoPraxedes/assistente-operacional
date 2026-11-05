@@ -104,7 +104,12 @@ export async function salvarCategoria(empresaId: string, form: FormData) {
   const { supabase } = await getContexto(empresaId);
   const { error } = await supabase
     .from("categorias")
-    .insert({ empresa_id: empresaId, nome: txt(form, "nome"), cor: txt(form, "cor") || "#64748b" });
+    .insert({
+      empresa_id: empresaId,
+      nome: txt(form, "nome"),
+      cor: txt(form, "cor") || "#64748b",
+      manutencao: form.get("manutencao") === "on",
+    });
   if (error)
     falhar(`/e/${empresaId}/config`, error.code === "23505" ? "Já existe uma categoria com esse nome" : error.message);
   revalidatePath(`/e/${empresaId}/config`);
@@ -115,7 +120,7 @@ export async function editarCategoria(empresaId: string, categoriaId: string, fo
   const { supabase } = await getContexto(empresaId);
   const { error } = await supabase
     .from("categorias")
-    .update({ nome: txt(form, "nome"), cor: txt(form, "cor") || "#64748b" })
+    .update({ nome: txt(form, "nome"), cor: txt(form, "cor") || "#64748b", manutencao: form.get("manutencao") === "on" })
     .eq("id", categoriaId);
   if (error)
     falhar(`/e/${empresaId}/config`, error.code === "23505" ? "Já existe uma categoria com esse nome" : error.message);

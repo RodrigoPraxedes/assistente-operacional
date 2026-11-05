@@ -32,6 +32,7 @@ export interface Categoria {
   empresa_id: string;
   nome: string;
   cor: string;
+  manutencao: boolean;
 }
 
 export interface Status {

@@ -536,7 +536,7 @@ export const SECOES: SecaoGuia[] = [
     resumo: "Chamados de conserto, prestadores de serviço e patrimônio.",
     tela: "/chamados",
     paraQue:
-      "Aqui ficam os chamados de manutenção (algo quebrou ou precisa de reparo), com prioridade, prazo, fotos, custo e histórico. Pelos botões no alto você chega aos Prestadores e ao Patrimônio.",
+      "Aqui ficam os chamados de manutenção (algo quebrou ou precisa de reparo), com prioridade, prazo, fotos, custo e histórico. Pelos botões no alto você chega aos Prestadores, ao Patrimônio e às Ações recorrentes de manutenção.",
     topicos: [
       {
         titulo: "Abrir um chamado",
@@ -569,6 +569,14 @@ export const SECOES: SecaoGuia[] = [
           "Em Gestão (quem tem permissão) dá para corrigir o título e a descrição do chamado, além de prioridade, prazo, responsável, equipamento e custo.",
           "Registre o prestador que atendeu, o custo, novas fotos e comentários. Tudo fica no histórico.",
           "No cartão Fotos, toque em Tirar foto para abrir a câmera do celular ou em Escolher da galeria. A foto é enviada e salva na hora, sem botão extra, e aparece na lista com o aviso Foto salva.",
+        ],
+      },
+      {
+        titulo: "Ações recorrentes (preventiva)",
+        passos: [
+          "Em Manutenções › Ações recorrentes ficam as manutenções que se repetem: troca de filtro, limpeza da caixa d'água, revisão do ar-condicionado.",
+          "Entram ali as ações das categorias marcadas como De manutenção (Configurações › Geral › Categorias: toque na categoria e marque a caixa) e as ações ligadas a um equipamento do patrimônio.",
+          "Não é um cadastro à parte: é a mesma lista de Ações, só que filtrada. Criar, editar ou pausar aqui muda a ação em Ações também. A seta no alto volta para Manutenções.",
         ],
       },
       {
@@ -798,7 +806,7 @@ export const SECOES: SecaoGuia[] = [
           "Notificações no navegador: escolha quais avisos viram notificação no celular ou no computador (tarefa atribuída e prazo vencido). Cada pessoa liga no próprio aparelho em Minha conta.",
           "Recebedor central de chamados: chave que faz todo chamado novo cair em quem você escolher, que depois delega ao responsável.",
           "Funções: quem responde por cada atividade, sem citar a pessoa (Caixa, Cozinheiro, Líder de salão...). Servem para as Rotinas e podem ser ligadas a cada colaborador. Clique no nome para ativar ou desativar; excluir deixa colaboradores e rotinas dela sem função.",
-          "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado).",
+          "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado). Marque De manutenção nas categorias de manutenção: as ações delas aparecem também em Manutenções › Ações recorrentes, e a etiqueta ganha uma chave inglesa.",
         ],
       },
       {

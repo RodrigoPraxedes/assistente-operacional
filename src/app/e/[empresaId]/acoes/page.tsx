@@ -16,10 +16,13 @@ export default async function PaginaAcoes({
     q?: string;
     setor?: string;
     categoria?: string;
+    manutencao?: string;
   }>;
 }) {
   const { empresaId } = await params;
-  const { salvo, q, setor, categoria } = await searchParams;
+  const { salvo, q, setor, categoria, manutencao } = await searchParams;
+  // Manutenções › Ações recorrentes: só as de categoria "de manutenção" ou ligadas a um equipamento
+  const soManutencao = manutencao === "1";
   const { supabase, empresa, pode } = await getContexto(empresaId);
 
   const [
@@ -45,7 +48,7 @@ export default async function PaginaAcoes({
       .order("nome"),
     supabase
       .from("categorias")
-      .select("id, nome")
+      .select("id, nome, manutencao")
       .eq("empresa_id", empresaId)
       .order("nome"),
     supabase.from("equipamentos").select("id, nome").eq("empresa_id", empresaId),
@@ -89,9 +92,17 @@ export default async function PaginaAcoes({
   const termo = normalizar((q ?? "").trim());
   const filtrando = !!(termo || setor || categoria);
 
+  const categoriasManutencao = new Set((categorias ?? []).filter((c) => c.manutencao).map((c) => c.id));
+  const ehManutencao = (a: Acao) =>
+    !!a.equipamento_id || (!!a.categoria_id && categoriasManutencao.has(a.categoria_id));
+  const categoriasDoFiltro = soManutencao
+    ? (categorias ?? []).filter((c) => c.manutencao)
+    : (categorias ?? []);
+
   const linhas = ((acoes ?? []) as Acao[])
     .filter(
       (a) =>
+        (!soManutencao || ehManutencao(a)) &&
         (!termo ||
           normalizar(`${a.nome} ${a.descricao ?? ""} ${equipamento.get(a.equipamento_id ?? "") ?? ""}`).includes(termo)) &&
         (!setor || a.setor_id === setor) &&
@@ -111,7 +122,7 @@ export default async function PaginaAcoes({
 
   // um grupo por categoria (na ordem alfabética); as sem categoria vão por último
   const grupos = [
-    ...(categorias ?? []).map((c) => ({
+    ...categoriasDoFiltro.map((c) => ({
       chave: c.id,
       titulo: c.nome,
       itens: linhas.filter((l) => l.a.categoria_id === c.id),
@@ -122,7 +133,7 @@ export default async function PaginaAcoes({
       itens: linhas.filter(
         (l) =>
           !l.a.categoria_id ||
-          !categorias?.some((c) => c.id === l.a.categoria_id),
+          !categoriasDoFiltro.some((c) => c.id === l.a.categoria_id),
       ),
     },
   ].filter((g) => g.itens.length > 0);
@@ -130,6 +141,7 @@ export default async function PaginaAcoes({
   return (
     <div className="space-y-4">
       <Titulo
+        voltar={soManutencao ? { href: `/e/${empresaId}/chamados`, rotulo: "Manutenções" } : undefined}
         acoes={
           <>
             <LinkBotao variante="secundario" href={`/e/${empresaId}/acoes/semana`}>
@@ -141,24 +153,41 @@ export default async function PaginaAcoes({
           </>
         }
       >
-        Ações recorrentes
+        {soManutencao ? "Ações recorrentes de manutenção" : "Ações recorrentes"}
       </Titulo>
       {salvo && <Aviso tipo="sucesso">Ação salva.</Aviso>}
-      <p className="text-sm text-slate-500">
-        Cada ocorrência vira uma tarefa no Kanban, que aparece no dia marcado
-        para o responsável.
-      </p>
+      {soManutencao ? (
+        <p className="text-sm text-slate-500">
+          As ações das categorias marcadas como De manutenção (em Configurações › Geral) e as
+          ligadas a um equipamento do patrimônio. O cadastro é o mesmo de{" "}
+          <Link href={`/e/${empresaId}/acoes`} className="text-blue-700">
+            Ações
+          </Link>
+          : o que mudar aqui muda lá.
+        </p>
+      ) : (
+        <p className="text-sm text-slate-500">
+          Cada ocorrência vira uma tarefa no Kanban, que aparece no dia marcado
+          para o responsável.
+        </p>
+      )}
 
       <FiltrosAcoes
         q={q ?? ""}
         setor={setor ?? ""}
         categoria={categoria ?? ""}
         setores={setores ?? []}
-        categorias={categorias ?? []}
+        categorias={categoriasDoFiltro}
+        fixos={soManutencao ? { manutencao: "1" } : undefined}
       />
 
       {linhas.length === 0 && filtrando ? (
         <Vazio>Nenhuma ação encontrada com esses filtros.</Vazio>
+      ) : linhas.length === 0 && soManutencao ? (
+        <Vazio>
+          Nenhuma ação de manutenção. Marque uma categoria como De manutenção em
+          Configurações › Geral, ou ligue a ação a um equipamento do patrimônio.
+        </Vazio>
       ) : linhas.length === 0 ? (
         <Vazio>
           Nenhuma ação cadastrada. Ex.: limpeza da caixa d&apos;água a cada 6

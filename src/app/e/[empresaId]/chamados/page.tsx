@@ -72,6 +72,9 @@ export default async function PaginaChamados({
             <LinkBotao variante="secundario" href={`/e/${empresaId}/patrimonio`}>
               Patrimônio
             </LinkBotao>
+            <LinkBotao variante="secundario" href={`/e/${empresaId}/acoes?manutencao=1`}>
+              Ações recorrentes
+            </LinkBotao>
             {pode("chamados.abrir") && <LinkBotao href={`/e/${empresaId}/chamados/novo`}>Abrir chamado</LinkBotao>}
           </>
         }
