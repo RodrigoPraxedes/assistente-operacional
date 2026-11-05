@@ -68,7 +68,7 @@ export default async function VerFicha({ params }: { params: Promise<{ empresaId
 
         {fotoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={fotoUrl} alt={ficha.titulo} className="max-h-96 w-full rounded-xl border border-slate-200 object-contain print:max-h-72" />
+          <img src={fotoUrl} alt={ficha.titulo} className="aspect-square w-full max-w-sm rounded-xl border border-slate-200 object-cover print:max-w-56" />
         )}
 
         {ficha.blocos.map((b, i) => (

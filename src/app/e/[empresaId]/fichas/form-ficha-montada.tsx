@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { reduzirFoto } from "@/lib/foto";
+import { fotoQuadrada } from "@/lib/foto";
 import { Aviso, Botao, Input } from "@/components/ui";
 import { blocoVazio, type Bloco } from "./blocos";
 import { EditorBlocos } from "./editor-blocos";
@@ -44,7 +44,7 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
         setEnviando(false);
         return setErro("Escolha uma imagem (JPG, PNG ou foto do celular).");
       }
-      const foto = await reduzirFoto(arquivo, 1600, 0.75);
+      const foto = await fotoQuadrada(arquivo);
       const ext = foto.type === "image/jpeg" ? "jpg" : (foto.type.split("/")[1] ?? "jpg");
       const path = `${empresaId}/fotos/${crypto.randomUUID()}.${ext}`;
       const { error } = await createClient().storage.from("fichas").upload(path, foto, { contentType: foto.type });
@@ -70,7 +70,7 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
         <div className="space-y-2">
           {previa && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={previa} alt="" className="max-h-56 rounded-lg border border-slate-200 object-contain" />
+            <img src={previa} alt="Prévia da foto, recortada em quadrado" className="aspect-square w-48 rounded-lg border border-slate-200 object-cover" />
           )}
           <Input
             type="file"
@@ -89,7 +89,7 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
             </label>
           )}
         </div>
-        <p className="text-xs text-slate-500">É reduzida antes de enviar para não pesar.</p>
+        <p className="text-xs text-slate-500">A foto fica quadrada (o centro dela é mantido) e é comprimida antes de enviar. A prévia mostra o enquadramento final.</p>
       </div>
 
       <div>
