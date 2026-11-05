@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wrench } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
 import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Funcao, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
@@ -319,23 +320,28 @@ export default async function ConfigGeral({
 
       <Cartao className="space-y-3">
         <h2 className="font-medium">Categorias</h2>
-        <p className="text-xs text-slate-500">Funcionam como etiquetas para filtrar (ex.: Delivery, Manutenção, Financeiro). Toque numa categoria para mudar o nome ou a cor sem perder o que já está ligado a ela.</p>
+        <p className="text-xs text-slate-500">Funcionam como etiquetas para filtrar (ex.: Delivery, Manutenção, Financeiro). Toque numa categoria para mudar o nome ou a cor sem perder o que já está ligado a ela. As marcadas como De manutenção (com a chave inglesa) levam as ações recorrentes delas para Manutenções › Ações recorrentes.</p>
         <div className="flex flex-wrap gap-2">
           {(categorias as Categoria[] | null)?.map((c) => (
             <span key={c.id} className="flex items-start gap-1">
               {pode("config.setores") ? (
                 <details className="group">
                   <summary className="cursor-pointer list-none" title="Editar">
-                    <Etiqueta cor={c.cor}>{c.nome}</Etiqueta>
+                    <Etiqueta cor={c.cor}>{c.manutencao && <Wrench className="mr-1 h-3 w-3" aria-label="De manutenção" />}
+                    {c.nome}</Etiqueta>
                   </summary>
-                  <form action={editarCategoria.bind(null, e, c.id)} className="mt-2 flex gap-2">
+                  <form action={editarCategoria.bind(null, e, c.id)} className="mt-2 flex flex-wrap items-center gap-2">
                     <input type="color" name="cor" defaultValue={c.cor} className="h-9 w-9 rounded" />
-                    <Input name="nome" defaultValue={c.nome} required />
+                    <Input name="nome" defaultValue={c.nome} required className="w-auto flex-1" />
+                    <label className="flex items-center gap-1 text-xs text-slate-600">
+                      <input type="checkbox" name="manutencao" defaultChecked={c.manutencao} /> De manutenção
+                    </label>
                     <Botao variante="secundario">Salvar</Botao>
                   </form>
                 </details>
               ) : (
-                <Etiqueta cor={c.cor}>{c.nome}</Etiqueta>
+                <Etiqueta cor={c.cor}>{c.manutencao && <Wrench className="mr-1 h-3 w-3" aria-label="De manutenção" />}
+                    {c.nome}</Etiqueta>
               )}
               {pode("config.setores") && (
                 <form action={excluirCategoria.bind(null, e, c.id)}>
@@ -346,9 +352,12 @@ export default async function ConfigGeral({
           ))}
         </div>
         {pode("config.setores") && (
-          <form action={salvarCategoria.bind(null, e)} className="flex gap-2">
+          <form action={salvarCategoria.bind(null, e)} className="flex flex-wrap items-center gap-2">
             <input type="color" name="cor" defaultValue="#64748b" className="h-9 w-9 rounded" />
-            <Input name="nome" placeholder="Nova categoria" required />
+            <Input name="nome" placeholder="Nova categoria" required className="w-auto flex-1" />
+            <label className="flex items-center gap-1 text-xs text-slate-600">
+              <input type="checkbox" name="manutencao" /> De manutenção
+            </label>
             <Botao variante="secundario">Adicionar</Botao>
           </form>
         )}

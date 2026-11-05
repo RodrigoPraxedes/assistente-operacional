@@ -14,12 +14,15 @@ export function FiltrosAcoes({
   categoria,
   setores,
   categorias,
+  fixos,
 }: {
   q: string;
   setor: string;
   categoria: string;
   setores: Opcao[];
   categorias: Opcao[];
+  // parâmetros que a tela mantém sempre (ex.: manutencao=1)
+  fixos?: Record<string, string>;
 }) {
   const router = useRouter();
   const caminho = usePathname();
@@ -32,7 +35,7 @@ export function FiltrosAcoes({
   useEffect(() => () => clearTimeout(espera.current), []);
 
   function aplicar(novo: { q?: string; setor?: string; categoria?: string }) {
-    const p = new URLSearchParams();
+    const p = new URLSearchParams(fixos);
     const v = { q: texto, setor, categoria, ...novo };
     if (v.q.trim()) p.set("q", v.q);
     if (v.setor) p.set("setor", v.setor);
@@ -88,7 +91,7 @@ export function FiltrosAcoes({
         </Select>
       )}
       {(q || setor || categoria) && (
-        <Link href={caminho} className="px-2 py-2 text-sm text-slate-500">
+        <Link href={fixos ? `${caminho}?${new URLSearchParams(fixos)}` : caminho} className="px-2 py-2 text-sm text-slate-500">
           Limpar
         </Link>
       )}
