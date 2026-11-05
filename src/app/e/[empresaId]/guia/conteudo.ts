@@ -2,7 +2,6 @@ import {
   AlarmClock,
   BookOpen,
   Bot,
-  CalendarClock,
   CalendarDays,
   CalendarSync,
   ChartGantt,
@@ -106,7 +105,7 @@ export const SECOES: SecaoGuia[] = [
           "Hoje em números: tarefas atrasadas, que vencem hoje, em andamento e concluídas hoje. Toque num número para abrir a lista dessas tarefas.",
           "Check-lists de hoje: quantos foram feitos, quantos estão pendentes e quantos não foram realizados no tempo, mais os itens respondidos \"Não\".",
           "Manutenções em aberto: total por status e por prioridade, e as abertas há mais tempo (em vermelho a partir de 7 dias).",
-          "Próximos 7 dias: alertas de datas e etapas de projetos que vencem na semana.",
+          "Próximos 7 dias: ações com vencimento e etapas de projetos que vencem na semana.",
           "Escalados hoje: quem trabalha em cada turno e quem está de folga, férias ou falta.",
           "Tarefas no prazo nos últimos 30 dias: a porcentagem concluída até o prazo, por pessoa e por setor.",
         ],
@@ -134,7 +133,7 @@ export const SECOES: SecaoGuia[] = [
     resumo: "O quadro único com tudo o que precisa ser feito.",
     tela: "/tarefas",
     paraQue:
-      "Todas as tarefas da empresa ficam aqui, venham de onde vierem: avulsas, check-lists, ações recorrentes, alertas, manutenções e projetos. Cada coluna é um status (Solicitado, Em andamento, Concluído, Adiado, Cancelado...).",
+      "Todas as tarefas da empresa ficam aqui, venham de onde vierem: avulsas, check-lists, ações (recorrentes e com vencimento), manutenções e projetos. Cada coluna é um status (Solicitado, Em andamento, Concluído, Adiado, Cancelado...).",
     topicos: [
       {
         titulo: "Criar uma tarefa",
@@ -144,7 +143,7 @@ export const SECOES: SecaoGuia[] = [
           "Escolha um ou mais responsáveis. Dá para puxar um setor inteiro ou todas as pessoas de uma vez.",
           "Em Avisar também (ciente), escolha quem só precisa ficar sabendo: a pessoa recebe a tarefa no WhatsApp e enxerga o cartão, mas não é responsável, não conta nas partes e não conclui.",
           "Com 2 ou mais responsáveis, a chave Todos os responsáveis precisam concluir decide: desligada (padrão), qualquer um conclui e a tarefa fecha para todos; ligada, cada um marca a sua parte.",
-          "Quem pode atribuir: o Gestor escolhe qualquer pessoa; o Líder de setor só vê colaboradores (e ele mesmo) na lista, e o mesmo vale para ações e alertas. Colaborador não cria tarefas, mas todos abrem chamado de manutenção.",
+          "Quem pode atribuir: o Gestor escolhe qualquer pessoa; o Líder de setor só vê colaboradores (e ele mesmo) na lista, e o mesmo vale para as ações. Colaborador não cria tarefas, mas todos abrem chamado de manutenção.",
           "Defina o prazo, a unidade, o setor e a categoria.",
           "Marque Exigir foto para concluir se quiser uma prova do serviço feito.",
           "Escolha se ela é pública (toda a equipe com acesso vê) ou privada (só você e os responsáveis veem) e toque em Criar tarefa.",
@@ -348,15 +347,16 @@ export const SECOES: SecaoGuia[] = [
     slug: "acoes",
     titulo: "Ações",
     icone: Repeat,
-    resumo: "Tarefas que se repetem: limpeza, pagamentos, revisões.",
+    resumo: "O que precisa ser lembrado: tarefas que se repetem e datas que vencem.",
     tela: "/acoes",
     paraQue:
-      "Ações recorrentes são tarefas que voltam sempre, como limpar a caixa d'água a cada 6 meses ou pagar o aluguel todo dia 10. Cada ocorrência vira uma tarefa no quadro no dia marcado.",
+      "Ações são o que a operação não pode esquecer. Há dois tipos, na mesma lista: a ação que repete e vira tarefa no dia marcado (limpar a caixa d'água a cada 4 meses, pagar o aluguel todo dia 10) e a ação com vencimento, que cria tarefas alguns dias antes de uma data importante (licença sanitária, recarga de extintores, Dia das Mães).",
     topicos: [
       {
         titulo: "Criar uma ação",
         passos: [
-          "Toque em Nova ação e dê um nome.",
+          "Toque em Nova ação. No alto, escolha o tipo: Tarefa no dia (repete e vira tarefa no dia marcado) ou Avisos antes do vencimento (veja o tópico Ação com vencimento). Os passos abaixo são do primeiro tipo.",
+          "Dê um nome.",
           "Escolha a repetição (uma vez só, todos os dias, a cada 2, 3, 4, 10 ou 15 dias, um dia fixo da semana como às segundas ou aos sábados, toda semana, todo mês, a cada 3, 4, 5 ou 6 meses, todo ano...), o horário e a data inicial. \"A cada N dias\" conta a partir da data inicial; os dias da semana valem independente dela.",
           "Para algo fora da lista, escolha Personalizar...: informe \"a cada N dias, semanas, meses ou anos\"; na repetição semanal marque os dias da semana; na mensal escolha entre o mesmo dia do mês ou um dia da semana do mês (por exemplo, na 2ª terça-feira ou na última sexta-feira).",
           "Se quiser, defina uma data final. Vazio = repete sem fim.",
@@ -365,6 +365,18 @@ export const SECOES: SecaoGuia[] = [
           "Em Prazo, escolha a hora em que cada ocorrência vence (como na tarefa avulsa) e, se passar da meia-noite, quantos dias depois. A tela mostra o resultado, por exemplo \"Cada ocorrência vence às 18:00\". Depois desse momento a tarefa aparece como atrasada.",
           "Escolha os responsáveis, quem só fica ciente (recebe o aviso e o lembrete, sem precisar concluir), a chave Todos os responsáveis precisam concluir, a unidade, o setor, a categoria e a visibilidade. Com Todas as unidades, cada unidade recebe a sua tarefa.",
           "Toque em Salvar ação.",
+        ],
+      },
+      {
+        titulo: "Ação com vencimento (avisos antes)",
+        passos: [
+          "Em Nova ação, escolha Avisos antes do vencimento e escreva o que vence ou acontece.",
+          "Informe a data do vencimento e se ela se repete (todo ano, a cada 6 meses...), o horário em que as tarefas aparecem e o responsável padrão.",
+          "Em Avisos, diga quantos dias antes cada tarefa deve ser criada e o que precisa ser feito. Ex.: 30 dias antes, \"Pedir orçamento\"; 7 dias antes, \"Confirmar o serviço\". Cada aviso tem seus responsáveis e, se quiser, pessoas em Avisar também (ciente). Avisos com o mesmo texto e o mesmo prazo geram uma tarefa só.",
+          "Na antecedência marcada, a tarefa aparece no quadro. O prazo dela é a própria data do vencimento.",
+          "Na lista de Ações, essas ações levam a etiqueta Vencimento e mostram a data e quantos dias faltam: vermelho até 7 dias, laranja até 30. Elas ficam na categoria escolhida, junto das outras ações.",
+          "Para parar sem apagar, mude a situação para Inativo. Excluir não apaga as tarefas já criadas.",
+          "O tipo é escolhido só na criação. Para trocar, crie a ação do outro tipo e exclua a antiga.",
         ],
       },
       {
@@ -452,35 +464,6 @@ export const SECOES: SecaoGuia[] = [
     ],
     dicas: [
       "Para o aviso de uma atividade chegar à pessoa com prazo, crie também uma Ação com o mesmo horário.",
-    ],
-  },
-  {
-    slug: "alertas",
-    titulo: "Alertas",
-    icone: CalendarClock,
-    resumo: "Datas que não podem passar: alvará, AVCB, contratos.",
-    tela: "/alertas",
-    paraQue:
-      "Um alerta guarda uma data importante e cria tarefas com antecedência para alguém agir a tempo. Ex.: 30 dias antes do vencimento do alvará, criar a tarefa \"Pedir renovação ao despachante\".",
-    topicos: [
-      {
-        titulo: "Criar um alerta",
-        passos: [
-          "Toque em Novo alerta e escreva o que vence ou acontece.",
-          "Escolha a data e se ela se repete (todo ano, a cada 6 meses...).",
-          "Defina o horário em que as tarefas aparecem e o responsável padrão.",
-          "Em Avisos, diga quantos dias antes cada tarefa deve ser criada e o que precisa ser feito. Dá para ter vários avisos, cada um com seus responsáveis e, se quiser, pessoas em Avisar também (ciente), que ficam sabendo sem ser responsáveis. Avisos com o mesmo texto e o mesmo prazo geram uma tarefa só.",
-          "Toque em Salvar alerta.",
-        ],
-      },
-      {
-        titulo: "Como funciona",
-        passos: [
-          "Na antecedência marcada, a tarefa aparece no quadro. O prazo dela é a própria data do alerta.",
-          "Na lista, cada alerta mostra quantos dias faltam: vermelho até 7 dias, laranja até 30.",
-          "Para parar sem apagar, mude a situação para Inativo. Excluir não apaga as tarefas já criadas.",
-        ],
-      },
     ],
   },
   {
@@ -575,7 +558,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Ações recorrentes (preventiva)",
         passos: [
           "Em Manutenções › Ações recorrentes ficam as manutenções que se repetem: troca de filtro, limpeza da caixa d'água, revisão do ar-condicionado.",
-          "Entram ali as ações das categorias marcadas como De manutenção (Configurações › Geral › Categorias: toque na categoria e marque a caixa) e as ações ligadas a um equipamento do patrimônio.",
+          "Entram ali as ações das categorias marcadas como De manutenção (Configurações › Geral › Categorias: toque na categoria e marque a caixa), inclusive as com vencimento (ex.: certificado de potabilidade), e as ações ligadas a um equipamento do patrimônio.",
           "Não é um cadastro à parte: é a mesma lista de Ações, só que filtrada. Criar, editar ou pausar aqui muda a ação em Ações também. A seta no alto volta para Manutenções.",
         ],
       },
@@ -692,7 +675,7 @@ export const SECOES: SecaoGuia[] = [
     resumo: "A sua semana no app e no Google Agenda do celular.",
     tela: "/agenda",
     paraQue:
-      "A Agenda junta numa semana as suas tarefas, o que está programado (check-lists, ações e alertas) e os seus turnos e folgas. Também leva tudo isso para o Google Agenda ou o calendário do iPhone.",
+      "A Agenda junta numa semana as suas tarefas, o que está programado (check-lists e ações) e os seus turnos e folgas. Também leva tudo isso para o Google Agenda ou o calendário do iPhone.",
     topicos: [
       {
         titulo: "Ver a semana",

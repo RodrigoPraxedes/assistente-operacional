@@ -5,6 +5,7 @@ import { hojeNoFuso } from "@/lib/formato";
 import type { Acao } from "@/lib/types";
 import { Aviso, Titulo } from "@/components/ui";
 import { FormAcao } from "./form-acao";
+import { TipoDeAcao } from "../tipo-de-acao";
 
 export default async function EditarAcao({
   params,
@@ -15,7 +16,7 @@ export default async function EditarAcao({
 }) {
   const { empresaId, acaoId } = await params;
   const { erro, copiar } = await searchParams;
-  const { supabase, empresa, membro } = await exigirPermissao(empresaId, "acoes.editar");
+  const { supabase, empresa, membro, pode } = await exigirPermissao(empresaId, "acoes.editar");
   const novo = acaoId === "novo";
   // modelo para "criar nova a partir desta": busca a ação de origem
   const origemId = novo ? copiar : undefined;
@@ -37,7 +38,10 @@ export default async function EditarAcao({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações recorrentes" }}>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações" }}>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
+      {novo && !origemId && (
+        <TipoDeAcao empresaId={empresaId} atual="acao" podeAcao podeVencimento={pode("alertas.editar")} />
+      )}
       {erro && <Aviso>{erro}</Aviso>}
       {origemId && (
         <p className="text-xs text-slate-500">Nova ação com as configurações de “{acao!.nome}”. Ajuste o nome e o que mudar e salve.</p>

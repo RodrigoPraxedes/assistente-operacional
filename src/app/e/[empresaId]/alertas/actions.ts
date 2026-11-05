@@ -127,12 +127,12 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
   }
 
   revalidatePath(`/e/${empresaId}/alertas`);
-  redirect(`/e/${empresaId}/alertas?salvo=1`);
+  redirect(`/e/${empresaId}/acoes?salvo=1`);
 }
 
 export async function excluirAlerta(empresaId: string, alertaId: string) {
   const { supabase } = await getContexto(empresaId);
   const { error } = await supabase.from("alertas").delete().eq("id", alertaId);
   if (error) redirect(`/e/${empresaId}/alertas/${alertaId}?erro=${encodeURIComponent(error.message)}`);
-  redirect(`/e/${empresaId}/alertas`);
+  redirect(`/e/${empresaId}/acoes`);
 }

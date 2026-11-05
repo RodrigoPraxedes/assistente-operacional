@@ -86,7 +86,7 @@ export function FormAlerta({
         </Campo>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo rotulo="Data">
+          <Campo rotulo="Data do vencimento">
             <Input type="date" name="data_evento" defaultValue={alerta?.data_evento ?? hoje} required />
           </Campo>
           <Campo rotulo="Repetir">
@@ -200,7 +200,7 @@ export function FormAlerta({
               setores={setores}
               valor={a.responsaveis}
               onChange={(ids) => mudar(i, { responsaveis: ids })}
-              vazio="Responsável padrão do alerta"
+              vazio="Responsável padrão"
             />
             <SeletorResponsaveis
               rotulo="Avisar também (ciente)"
@@ -223,13 +223,13 @@ export function FormAlerta({
 
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <div className="flex justify-between">
-        <BotaoEnviar>Salvar alerta</BotaoEnviar>
+        <BotaoEnviar>Salvar ação</BotaoEnviar>
         {alerta && (
           <Botao
             type="button"
             variante="perigo"
             onClick={() =>
-              confirm("Excluir este alerta? As tarefas já criadas continuam no Kanban.") &&
+              confirm("Excluir esta ação? As tarefas já criadas continuam no Kanban.") &&
               excluirAlerta(empresaId, alerta.id)
             }
           >

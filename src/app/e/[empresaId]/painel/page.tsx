@@ -494,7 +494,7 @@ export default async function PaginaPainel({
                 <li key={a.id}>
                   <Link href={`${base}/alertas/${a.id}`} className="flex items-center justify-between gap-2 px-1 py-2 text-sm hover:bg-slate-100">
                     <span className="min-w-0 truncate">
-                      <Etiqueta>Alerta</Etiqueta> {a.nome}
+                      <Etiqueta>Vencimento</Etiqueta> {a.nome}
                     </span>
                     <span className={`shrink-0 text-xs ${faltam <= 1 ? "font-medium text-blue-700" : "text-slate-500"}`}>
                       {faltam === 0 ? "hoje" : faltam === 1 ? "amanhã" : formatarData(proxima.toISOString(), fuso)}
