@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Marca } from "@/components/marca";
+import { telaDesligada } from "@/lib/modulos";
 import icone from "@/app/icon.png";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
@@ -42,6 +43,7 @@ interface Props {
   veConfig: boolean;
   veAdmin: boolean;
   veWhatsApp: boolean;
+  desligados: string[];
   tema: Tema;
   recolhido: boolean;
 }
@@ -55,7 +57,7 @@ interface Item {
 
 // Menu à esquerda em todas as telas. Abaixo de 900 px vira gaveta aberta pelo botão Menu.
 // No computador pode ser recolhido para só os ícones (fica salvo no cookie `menu`).
-export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsApp, tema: temaInicial, recolhido: recolhidoInicial }: Props) {
+export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsApp, desligados, tema: temaInicial, recolhido: recolhidoInicial }: Props) {
   const pathname = usePathname();
   const [aberto, setAberto] = useState(false);
   const [recolhido, setRecolhido] = useState(recolhidoInicial);
@@ -68,7 +70,7 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const gaveta = useRef<HTMLElement>(null);
 
-  const itens: Item[] = [
+  const todos: Item[] = [
     { href: `${base}/painel`, rotulo: "Painel", icone: LayoutDashboard },
     { href: `${base}/tarefas`, rotulo: "Tarefas", icone: SquareKanban },
     { href: `${base}/checklists`, rotulo: "Check-lists", icone: ListChecks },
@@ -85,6 +87,8 @@ export function MenuLateral({ base, empresa, membro, veConfig, veAdmin, veWhatsA
     { href: `${base}/guia`, rotulo: "Guia", icone: BookOpen },
     ...(veAdmin ? [{ href: "/admin", rotulo: "Admin Master", icone: ShieldCheck }] : []),
   ];
+  // módulos desligados em Configurações › Geral › Módulos somem do menu
+  const itens = todos.filter((i) => !telaDesligada(i.href.slice(base.length), desligados));
   const atual = itens.find((i) => [i.ativoEm ?? i.href].flat().some((p) => pathname.startsWith(p)));
 
   // fecha a gaveta ao navegar

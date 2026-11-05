@@ -790,6 +790,7 @@ export const SECOES: SecaoGuia[] = [
           "Recebedor central de chamados: chave que faz todo chamado novo cair em quem você escolher, que depois delega ao responsável.",
           "Funções: quem responde por cada atividade, sem citar a pessoa (Caixa, Cozinheiro, Líder de salão...). Servem para as Rotinas e podem ser ligadas a cada colaborador. Clique no nome para ativar ou desativar; excluir deixa colaboradores e rotinas dela sem função.",
           "Setores (valem para todas as unidades) e categorias (etiquetas para filtrar; toque na categoria para mudar o nome ou a cor, e tudo que já usa essa categoria continua ligado). Marque De manutenção nas categorias de manutenção: as ações delas aparecem também em Manutenções › Ações recorrentes, e a etiqueta ganha uma chave inglesa.",
+          "Módulos: ligue só o que a empresa usa (Contagens, Rotinas, Escalas, Projeto e Fichas). Desligado, o módulo some do menu, do Guia e do Painel, e as contagens saem da central do QR Code; os dados ficam guardados e voltam ao ligar de novo. O que já estiver agendado continua rodando: inative antes, se quiser parar.",
         ],
       },
       {

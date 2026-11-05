@@ -9,6 +9,7 @@ export interface Empresa {
   nome: string;
   fuso_horario: string;
   situacao: SituacaoEmpresa;
+  modulos_desligados: string[];
 }
 
 export interface Unidade {
