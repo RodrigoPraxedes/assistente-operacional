@@ -410,7 +410,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Procurar uma ação",
         passos: [
-          "A lista vem separada por categoria, cada uma com seu título; as ações sem categoria ficam no fim, em Sem categoria.",
+          "A lista vem separada por categoria, cada uma com seu título; as ações sem categoria ficam no fim, em Sem categoria. As ações de manutenção (categorias marcadas como De manutenção ou ligadas a um equipamento) não entram aqui: ficam em Manutenções › Ações recorrentes, e o texto no alto traz o link.",
           "Na parte de cima, digite parte do nome (ou da descrição) no campo de pesquisa: a lista filtra enquanto você digita.",
           "Escolha um setor e/ou uma categoria: a lista muda na hora, sem botão. Limpar volta à lista completa.",
         ],
@@ -559,7 +559,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Em Manutenções › Ações recorrentes ficam as manutenções que se repetem: troca de filtro, limpeza da caixa d'água, revisão do ar-condicionado.",
           "Entram ali as ações das categorias marcadas como De manutenção (Configurações › Geral › Categorias: toque na categoria e marque a caixa), inclusive as com vencimento (ex.: certificado de potabilidade), e as ações ligadas a um equipamento do patrimônio.",
-          "Não é um cadastro à parte: é a mesma lista de Ações, só que filtrada. Criar, editar ou pausar aqui muda a ação em Ações também. A seta no alto volta para Manutenções.",
+          "Essas ações ficam só aqui: a lista geral de Ações mostra as outras e um link com quantas estão em Manutenções. Para criar uma nova, toque em Nova ação aqui mesmo: o formulário já vem com a primeira categoria de manutenção escolhida (dá para trocar ou ligar a um equipamento) e, ao salvar, você volta para Manutenções. Vale para os dois tipos, Tarefa no dia e Avisos antes do vencimento. A seta no alto volta para Manutenções.",
         ],
       },
       {

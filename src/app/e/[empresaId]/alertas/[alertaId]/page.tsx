@@ -12,10 +12,11 @@ export default async function EditarAlerta({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; alertaId: string }>;
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; manutencao?: string }>;
 }) {
   const { empresaId, alertaId } = await params;
-  const { erro } = await searchParams;
+  const { erro, manutencao: m } = await searchParams;
+  const manutencao = m === "1";
   const { supabase, empresa, membro, pode } = await exigirPermissao(empresaId, "alertas.editar");
   const novo = alertaId === "novo";
 
@@ -35,7 +36,7 @@ export default async function EditarAlerta({
       : supabase.from("alerta_avisos").select("*").eq("alerta_id", alertaId).order("dias_antes", { ascending: false }),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
-    supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
+    supabase.from("categorias").select("id, nome, manutencao").eq("empresa_id", empresaId).order("nome"),
     supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
   if (!novo && !alerta) notFound();
@@ -45,9 +46,9 @@ export default async function EditarAlerta({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações" }}>{novo ? "Nova ação" : `Editar: ${alerta!.nome}`}</Titulo>
+      <Titulo voltar={manutencao ? { href: `/e/${empresaId}/acoes?manutencao=1`, rotulo: "Manutenções" } : { href: `/e/${empresaId}/acoes`, rotulo: "Ações" }}>{novo ? "Nova ação" : `Editar: ${alerta!.nome}`}</Titulo>
       {novo && (
-        <TipoDeAcao empresaId={empresaId} atual="vencimento" podeAcao={pode("acoes.editar")} podeVencimento />
+        <TipoDeAcao empresaId={empresaId} atual="vencimento" podeAcao={pode("acoes.editar")} podeVencimento manutencao={manutencao} />
       )}
       {erro && <Aviso>{erro}</Aviso>}
       {!novo && (
@@ -60,7 +61,10 @@ export default async function EditarAlerta({
         hoje={hoje}
         unidades={unidades ?? []}
         setores={setores ?? []}
-        categorias={categorias ?? []}
+        categorias={(categorias ?? []).map(({ id, nome }) => ({ id, nome }))}
+        manutencao={manutencao}
+        // nova ação aberta de Manutenções já vem na primeira categoria de manutenção
+        categoriaPadrao={novo && manutencao ? (categorias ?? []).find((c) => c.manutencao)?.id : undefined}
         membros={await membrosAtribuiveis(
           supabase,
           empresaId,

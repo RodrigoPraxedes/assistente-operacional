@@ -34,6 +34,8 @@ export function FormAlerta({
   unidades,
   setores,
   categorias,
+  manutencao = false,
+  categoriaPadrao,
   membros,
   podeMudarPrivado,
 }: {
@@ -45,6 +47,8 @@ export function FormAlerta({
   unidades: Opcao[];
   setores: Opcao[];
   categorias: Opcao[];
+  manutencao?: boolean;
+  categoriaPadrao?: string;
   membros: (Opcao & { setor_id: string | null })[];
 }) {
   const [estado, acaoForm] = useActionState(salvarAlerta.bind(null, empresaId), undefined);
@@ -70,6 +74,7 @@ export function FormAlerta({
   return (
     <form action={acaoForm} className="space-y-4">
       {alerta && <input type="hidden" name="id" value={alerta.id} />}
+      {manutencao && <input type="hidden" name="manutencao" value="1" />}
       <input type="hidden" name="avisos" value={JSON.stringify(avisos)} />
 
       <Cartao className="space-y-4">
@@ -135,7 +140,7 @@ export function FormAlerta({
             </Select>
           </Campo>
           <Campo rotulo="Categoria">
-            <Select name="categoria_id" defaultValue={alerta?.categoria_id ?? ""}>
+            <Select name="categoria_id" defaultValue={alerta?.categoria_id ?? categoriaPadrao ?? ""}>
               <option value="">—</option>
               {categorias.map((c) => (
                 <option key={c.id} value={c.id}>
