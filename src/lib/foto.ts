@@ -17,6 +17,26 @@ export async function reduzirFoto(arquivo: File, lado = 1024, qualidade = 0.7): 
   }
 }
 
+// Enquadramento quadrado (1:1): corta o centro da foto e reduz para lado x lado em JPEG
+export async function fotoQuadrada(arquivo: File, lado = 1080, qualidade = 0.72): Promise<File> {
+  if (!arquivo.type.startsWith("image/")) return arquivo;
+  try {
+    const bitmap = await createImageBitmap(arquivo);
+    const corte = Math.min(bitmap.width, bitmap.height);
+    const sx = (bitmap.width - corte) / 2;
+    const sy = (bitmap.height - corte) / 2;
+    const saida = Math.min(lado, corte);
+    const canvas = document.createElement("canvas");
+    canvas.width = saida;
+    canvas.height = saida;
+    canvas.getContext("2d")!.drawImage(bitmap, sx, sy, corte, corte, 0, 0, saida, saida);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", qualidade));
+    return blob ? new File([blob], "foto.jpg", { type: "image/jpeg" }) : arquivo;
+  } catch {
+    return arquivo;
+  }
+}
+
 // Substitui os arquivos escolhidos num <input type="file"> pelas versões reduzidas
 export async function trocarPorReduzidas(input: HTMLInputElement) {
   const arquivos = Array.from(input.files ?? []);
