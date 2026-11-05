@@ -64,6 +64,18 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
     if (!grupo) lembreteGrupo = null;
   }
 
+  let resultadoGrupo = txt("resultado_grupo_id");
+  if (resultadoGrupo) {
+    const { data: grupo } = await supabase
+      .from("whatsapp_contatos")
+      .select("id")
+      .eq("id", resultadoGrupo)
+      .eq("empresa_id", empresaId)
+      .eq("tipo", "grupo")
+      .maybeSingle();
+    if (!grupo) resultadoGrupo = null;
+  }
+
   const dados = {
     nome,
     descricao: txt("descricao"),
@@ -85,6 +97,7 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
     lembrete_so_grupo: !!lembreteGrupo && form.get("lembrete_so_grupo") === "on",
     responsaveis,
     resultado_membro_id: txt("resultado_membro_id"),
+    resultado_grupo_id: resultadoGrupo,
   };
 
   let contagemId = id;

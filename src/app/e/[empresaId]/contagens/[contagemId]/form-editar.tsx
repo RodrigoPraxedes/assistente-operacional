@@ -230,6 +230,18 @@ export function FormEditarContagem({
                 ))}
               </Select>
             </Campo>
+            {grupos.length > 0 && (
+              <Campo rotulo="Grupo que recebe o resultado" dica="O mesmo resumo da contagem vai para este grupo do WhatsApp assim que ela é enviada">
+                <Select name="resultado_grupo_id" defaultValue={contagem?.resultado_grupo_id ?? ""}>
+                  <option value="">Nenhum grupo</option>
+                  {grupos.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.nome}
+                    </option>
+                  ))}
+                </Select>
+              </Campo>
+            )}
           </>
         )}
       </Cartao>

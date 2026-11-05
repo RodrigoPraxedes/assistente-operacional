@@ -537,6 +537,8 @@ export interface Contagem {
   lembrete_so_grupo: boolean;
   responsaveis: string[];
   resultado_membro_id: string | null;
+  // grupo do WhatsApp que também recebe o resultado
+  resultado_grupo_id: string | null;
   created_at: string;
 }
 
