@@ -17,14 +17,24 @@ export async function reduzirFoto(arquivo: File, lado = 1024, qualidade = 0.7): 
   }
 }
 
-// Enquadramento quadrado (1:1): corta o centro da foto e reduz para lado x lado em JPEG
-export async function fotoQuadrada(arquivo: File, lado = 1080, qualidade = 0.72): Promise<File> {
+// Recorte escolhido à mão, em frações da foto: x e y = canto superior esquerdo
+// (fração da largura e da altura), lado = fração do menor lado da foto
+export interface Recorte {
+  x: number;
+  y: number;
+  lado: number;
+}
+
+// Enquadramento quadrado (1:1): corta o centro da foto (ou o recorte escolhido) e reduz para lado x lado em JPEG
+export async function fotoQuadrada(arquivo: File, recorte?: Recorte | null, lado = 1080, qualidade = 0.72): Promise<File> {
   if (!arquivo.type.startsWith("image/")) return arquivo;
   try {
     const bitmap = await createImageBitmap(arquivo);
-    const corte = Math.min(bitmap.width, bitmap.height);
-    const sx = (bitmap.width - corte) / 2;
-    const sy = (bitmap.height - corte) / 2;
+    const menor = Math.min(bitmap.width, bitmap.height);
+    const corte = recorte ? Math.min(menor, Math.max(1, recorte.lado * menor)) : menor;
+    const limitar = (v: number, max: number) => Math.min(Math.max(0, v), max);
+    const sx = recorte ? limitar(recorte.x * bitmap.width, bitmap.width - corte) : (bitmap.width - corte) / 2;
+    const sy = recorte ? limitar(recorte.y * bitmap.height, bitmap.height - corte) : (bitmap.height - corte) / 2;
     const saida = Math.min(lado, corte);
     const canvas = document.createElement("canvas");
     canvas.width = saida;

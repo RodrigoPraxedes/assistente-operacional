@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { fotoQuadrada } from "@/lib/foto";
+import { fotoQuadrada, type Recorte } from "@/lib/foto";
+import { EnquadrarFoto } from "./enquadrar-foto";
 import { Aviso, Botao, Input } from "@/components/ui";
 import { blocoVazio, type Bloco } from "./blocos";
 import { EditorBlocos } from "./editor-blocos";
@@ -26,6 +27,8 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
   );
   const [fotoNova, setFotoNova] = useState(false);
   const [previa, setPrevia] = useState<string | null>(fotoUrl ?? null);
+  const recorte = useRef<Recorte | null>(null);
+  const guardarRecorte = useCallback((r: Recorte) => (recorte.current = r), []);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -44,7 +47,7 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
         setEnviando(false);
         return setErro("Escolha uma imagem (JPG, PNG ou foto do celular).");
       }
-      const foto = await fotoQuadrada(arquivo);
+      const foto = await fotoQuadrada(arquivo, recorte.current);
       const ext = foto.type === "image/jpeg" ? "jpg" : (foto.type.split("/")[1] ?? "jpg");
       const path = `${empresaId}/fotos/${crypto.randomUUID()}.${ext}`;
       const { error } = await createClient().storage.from("fichas").upload(path, foto, { contentType: foto.type });
@@ -68,9 +71,10 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
       <div className="space-y-1">
         <p className="text-sm font-medium text-slate-700">Foto (opcional)</p>
         <div className="space-y-2">
-          {previa && (
+          {previa && fotoNova && <EnquadrarFoto key={previa} src={previa} onChange={guardarRecorte} />}
+          {previa && !fotoNova && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={previa} alt="Prévia da foto, recortada em quadrado" className="aspect-square w-48 rounded-lg border border-slate-200 object-cover" />
+            <img src={previa} alt="Foto atual da ficha" className="aspect-square w-48 rounded-lg border border-slate-200 object-cover" />
           )}
           <Input
             type="file"
@@ -80,6 +84,7 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
             onChange={(e) => {
               const f = e.target.files?.[0];
               setFotoNova(!!f);
+              recorte.current = null;
               setPrevia(f ? URL.createObjectURL(f) : (fotoUrl ?? null));
             }}
           />
@@ -89,7 +94,7 @@ export function FormFichaMontada({ empresaId, acao, categorias, ficha, fotoUrl, 
             </label>
           )}
         </div>
-        <p className="text-xs text-slate-500">A foto fica quadrada (o centro dela é mantido) e é comprimida antes de enviar. A prévia mostra o enquadramento final.</p>
+        <p className="text-xs text-slate-500">A foto fica quadrada e é comprimida antes de enviar. Ao escolher uma foto, arraste-a dentro do quadro e use o zoom para enquadrar: o que aparece no quadro é o que fica salvo.</p>
       </div>
 
       <div>
