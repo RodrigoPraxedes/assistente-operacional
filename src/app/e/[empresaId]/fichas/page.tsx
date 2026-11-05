@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Download, ExternalLink, FileText, NotebookText } from "lucide-react";
 import { getContexto } from "@/lib/contexto";
-import { Aviso, Cartao, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
+import { Aviso, Cartao, LinkBotao, Titulo, Vazio } from "@/components/ui";
 import { textoDosBlocos, type Bloco } from "./blocos";
 import { carimbo } from "./carimbo";
 import { FiltrosFichas } from "./filtros-fichas";
@@ -49,6 +49,12 @@ export default async function Fichas({
       (!busca || norm(`${f.titulo} ${f.descricao ?? ""} ${nomeCat.get(f.categoria_id ?? "") ?? ""} ${textoDosBlocos(f.blocos ?? [])}`).includes(busca)),
   );
 
+  // um grupo por categoria (ordem alfabética), como em Ações; sem categoria por último
+  const grupos = [
+    ...(categorias ?? []).map((c) => ({ chave: c.id, titulo: c.nome, itens: lista.filter((f) => f.categoria_id === c.id) })),
+    { chave: "sem", titulo: "Sem categoria", itens: lista.filter((f) => !f.categoria_id || !nomeCat.has(f.categoria_id)) },
+  ].filter((g) => g.itens.length);
+
   // links assinados (1 h) para abrir e para baixar os PDFs
   const caminhos = lista.flatMap((f) => (f.tipo === "pdf" && f.arquivo_path ? [f.arquivo_path] : []));
   const [{ data: abrir }, { data: baixar }] = caminhos.length
@@ -88,67 +94,73 @@ export default async function Fichas({
       {lista.length === 0 ? (
         <Vazio>{fichas?.length ? "Nenhuma ficha com esse filtro." : "Nenhuma ficha ainda. Toque em Nova ficha para enviar um PDF ou montar uma ficha aqui."}</Vazio>
       ) : (
-        <ul className="space-y-2">
-          {lista.map((f) => (
-            <li key={f.id}>
-              <Cartao className="flex flex-wrap items-center gap-3 p-3">
-                {f.tipo === "montada" ? (
-                  <NotebookText className="h-6 w-6 shrink-0 text-blue-600" aria-label="Ficha montada no Atalaia" />
-                ) : (
-                  <FileText className="h-6 w-6 shrink-0 text-blue-600" aria-label="PDF" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-slate-900">{f.titulo}</p>
-                  {f.descricao && <p className="line-clamp-2 text-sm text-slate-600">{f.descricao}</p>}
-                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    {f.categoria_id && <Etiqueta>{nomeCat.get(f.categoria_id) ?? "—"}</Etiqueta>}
-                    <span>
-                      {[
-                        tamanho(f.tamanho_bytes),
-                        carimbo(f, empresa.fuso_horario),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {f.tipo === "montada" && (
-                    <Link
-                      href={`/e/${empresaId}/fichas/${f.id}/ver`}
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700"
-                    >
-                      <ExternalLink className="h-4 w-4" aria-hidden /> Abrir
-                    </Link>
-                  )}
-                  {f.arquivo_path && urlAbrir.get(f.arquivo_path) && (
-                    <a
-                      href={urlAbrir.get(f.arquivo_path) ?? undefined}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700"
-                    >
-                      <ExternalLink className="h-4 w-4" aria-hidden /> Abrir
-                    </a>
-                  )}
-                  {f.arquivo_path && urlBaixar.get(f.arquivo_path) && (
-                    <a
-                      href={urlBaixar.get(f.arquivo_path) ?? undefined}
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-blue-600 hover:bg-slate-100"
-                    >
-                      <Download className="h-4 w-4" aria-hidden /> Baixar
-                    </a>
-                  )}
-                  {gerencia && (
-                    <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/${f.id}`}>
-                      Editar
-                    </LinkBotao>
-                  )}
-                </div>
-              </Cartao>
-            </li>
-          ))}
-        </ul>
+        grupos.map((g) => (
+          <section key={g.chave} className="space-y-2">
+            <h2 className="text-sm font-semibold text-slate-700">
+              {g.titulo} <span className="font-normal text-slate-500">({g.itens.length})</span>
+            </h2>
+            <ul className="space-y-2">
+              {g.itens.map((f) => (
+                <li key={f.id}>
+                  <Cartao className="flex flex-wrap items-center gap-3 p-3">
+                    {f.tipo === "montada" ? (
+                      <NotebookText className="h-6 w-6 shrink-0 text-blue-600" aria-label="Ficha montada no Atalaia" />
+                    ) : (
+                      <FileText className="h-6 w-6 shrink-0 text-blue-600" aria-label="PDF" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-slate-900">{f.titulo}</p>
+                      {f.descricao && <p className="line-clamp-2 text-sm text-slate-600">{f.descricao}</p>}
+                      <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span>
+                          {[
+                            tamanho(f.tamanho_bytes),
+                            carimbo(f, empresa.fuso_horario),
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {f.tipo === "montada" && (
+                        <Link
+                          href={`/e/${empresaId}/fichas/${f.id}/ver`}
+                          className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700"
+                        >
+                          <ExternalLink className="h-4 w-4" aria-hidden /> Abrir
+                        </Link>
+                      )}
+                      {f.arquivo_path && urlAbrir.get(f.arquivo_path) && (
+                        <a
+                          href={urlAbrir.get(f.arquivo_path) ?? undefined}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700"
+                        >
+                          <ExternalLink className="h-4 w-4" aria-hidden /> Abrir
+                        </a>
+                      )}
+                      {f.arquivo_path && urlBaixar.get(f.arquivo_path) && (
+                        <a
+                          href={urlBaixar.get(f.arquivo_path) ?? undefined}
+                          className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-blue-600 hover:bg-slate-100"
+                        >
+                          <Download className="h-4 w-4" aria-hidden /> Baixar
+                        </a>
+                      )}
+                      {gerencia && (
+                        <LinkBotao variante="secundario" href={`/e/${empresaId}/fichas/${f.id}`}>
+                          Editar
+                        </LinkBotao>
+                      )}
+                    </div>
+                  </Cartao>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
       )}
     </div>
   );
