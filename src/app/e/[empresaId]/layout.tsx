@@ -25,6 +25,7 @@ export default async function LayoutEmpresa({
         veConfig={veConfig}
         veAdmin={admin}
         veWhatsApp={pode("whatsapp.gerenciar") || pode("whatsapp.avisos")}
+        desligados={empresa.modulos_desligados ?? []}
         tema={tema === "claro" || tema === "escuro" ? tema : "auto"}
         recolhido={jar.get("menu")?.value === "recolhido"}
       />

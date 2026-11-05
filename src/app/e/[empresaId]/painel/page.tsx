@@ -51,7 +51,7 @@ export default async function PaginaPainel({
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
-  const { supabase, empresa, membro, pode, escopo } = await getContexto(empresaId);
+  const { supabase, empresa, membro, pode, escopo, ligado } = await getContexto(empresaId);
   const fuso = empresa.fuso_horario;
 
   // quem só vê as próprias tarefas fica sempre em "Meu painel"
@@ -112,8 +112,8 @@ export default async function PaginaPainel({
     { data: execucoesComNao },
     { data: chamados },
     { data: alertas },
-    { data: etapas },
-    { data: escalas },
+    { data: etapasTodas },
+    { data: escalasTodas },
     { data: ultimos30 },
     { data: membros },
     { data: setores },
@@ -260,6 +260,10 @@ export default async function PaginaPainel({
     : { data: [] as { id: string; nome: string }[] };
   const nomeEquip = new Map((equipsPainel ?? []).map((e) => [e.id, e.nome]));
   const diasAberto = (iso: string) => Math.floor((agoraMs - new Date(iso).getTime()) / DIA);
+
+  // módulos desligados (Configurações › Geral › Módulos) não aparecem no Painel
+  const etapas = ligado("planos") ? etapasTodas : [];
+  const escalas = ligado("escalas") ? escalasTodas : [];
 
   // 4. próximos 7 dias: alertas (data do evento) e etapas de projetos
   const hojeUtc = Date.UTC(h.y, h.m - 1, h.d);
@@ -522,6 +526,7 @@ export default async function PaginaPainel({
         </Bloco>
 
         {/* 5. escala de hoje */}
+        {ligado("escalas") && (
         <Bloco titulo="Escalados hoje" link={{ href: `${base}/escalas`, rotulo: "Ver escala" }}>
           {turnosHoje.length === 0 && ausentes.length === 0 ? (
             <Nada>Ninguém escalado para hoje.</Nada>
@@ -553,6 +558,7 @@ export default async function PaginaPainel({
             </div>
           )}
         </Bloco>
+        )}
       </div>
 
       {/* 6. últimos 30 dias */}

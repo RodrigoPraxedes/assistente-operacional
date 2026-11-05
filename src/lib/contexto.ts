@@ -3,6 +3,7 @@ import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Empresa, Escopo, Membro } from "@/lib/types";
+import type { ModuloOpcional } from "@/lib/modulos";
 
 // Carrega quem é o usuário dentro da empresa da URL e o que ele pode fazer.
 // As regras de verdade estão no banco (RLS); isto aqui só decide o que mostrar.
@@ -18,7 +19,7 @@ export const getContexto = cache(async (empresaId: string) => {
   // lista completa de permissões (para dono/admin), em vez de uma consulta
   // depois da outra
   const [{ data: empresa }, { data: membroComPerfil }, { data: todas }] = await Promise.all([
-    supabase.from("empresas").select("id, nome, fuso_horario, situacao").eq("id", empresaId).maybeSingle(),
+    supabase.from("empresas").select("id, nome, fuso_horario, situacao, modulos_desligados").eq("id", empresaId).maybeSingle(),
     supabase
       .from("membros")
       .select("*, perfis(perfil_permissoes(permissao, escopo))")
@@ -53,6 +54,8 @@ export const getContexto = cache(async (empresaId: string) => {
     membro: membro as Membro,
     pode: (chave: string) => permissoes.has(chave),
     escopo: (chave: string) => permissoes.get(chave) ?? null,
+    // módulo opcional ligado nesta empresa (Configurações › Geral › Módulos)
+    ligado: (modulo: ModuloOpcional) => !(empresa.modulos_desligados ?? []).includes(modulo),
   };
 });
 

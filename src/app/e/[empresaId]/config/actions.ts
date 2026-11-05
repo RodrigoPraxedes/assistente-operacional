@@ -6,6 +6,7 @@ import { getContexto } from "@/lib/contexto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { soDigitos } from "@/lib/formato";
 import type { Escopo } from "@/lib/types";
+import { MODULOS_OPCIONAIS } from "@/lib/modulos";
 
 const txt = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 const opcional = (f: FormData, k: string) => txt(f, k) || null;
@@ -45,6 +46,15 @@ export async function salvarCentralChamados(empresaId: string, form: FormData) {
     .from("empresas")
     .update({ chamados_central_ativo: ativo, chamados_central: recebedores })
     .eq("id", empresaId);
+  if (error) falhar(`/e/${empresaId}/config`, error.message);
+  revalidatePath(`/e/${empresaId}`, "layout");
+}
+
+export async function salvarModulos(empresaId: string, form: FormData) {
+  const { supabase } = await getContexto(empresaId);
+  // caixa marcada = módulo ligado; guarda a lista dos desligados
+  const desligados = MODULOS_OPCIONAIS.map((m) => m.chave).filter((c) => form.get(c) !== "on");
+  const { error } = await supabase.from("empresas").update({ modulos_desligados: desligados }).eq("id", empresaId);
   if (error) falhar(`/e/${empresaId}/config`, error.message);
   revalidatePath(`/e/${empresaId}`, "layout");
 }

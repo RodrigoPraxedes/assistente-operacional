@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Titulo } from "@/components/ui";
+import { getContexto } from "@/lib/contexto";
+import { telaDesligada } from "@/lib/modulos";
 import { SECOES } from "./conteudo";
 
 // Guia: manual do usuário com uma página por seção do menu
 export default async function PaginaGuia({ params }: { params: Promise<{ empresaId: string }> }) {
   const { empresaId } = await params;
+  const { empresa } = await getContexto(empresaId);
+  // seções de módulos desligados na empresa ficam de fora
+  const secoes = SECOES.filter((s) => !telaDesligada(s.tela, empresa.modulos_desligados ?? []));
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -16,7 +21,7 @@ export default async function PaginaGuia({ params }: { params: Promise<{ empresa
       </p>
 
       <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-superficie shadow-sm">
-        {SECOES.map((s) => {
+        {secoes.map((s) => {
           const Icone = s.icone;
           return (
             <li key={s.slug}>

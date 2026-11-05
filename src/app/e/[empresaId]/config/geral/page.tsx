@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wrench } from "lucide-react";
+import { MODULOS_OPCIONAIS } from "@/lib/modulos";
 import { getContexto } from "@/lib/contexto";
 import { ORIGENS, PRIORIDADES, TIPOS_STATUS, type Categoria, type Funcao, type Setor, type Status, type TipoStatus, type Unidade } from "@/lib/types";
 import { BotaoConfirmar } from "@/components/botao-confirmar";
@@ -18,6 +19,7 @@ import {
   salvarCategoria,
   salvarCentralChamados,
   salvarEmpresa,
+  salvarModulos,
   salvarPush,
   salvarFuncao,
   salvarSetor,
@@ -219,6 +221,32 @@ export default async function ConfigGeral({
               {((sla?.chamados_central ?? []) as string[]).map((id) => membrosAtivos?.find((m) => m.id === id)?.nome).filter(Boolean).join(", ") || "Ninguém escolhido"}
             </p>
           )}
+          {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
+        </form>
+      </Cartao>
+
+      <Cartao className="space-y-3">
+        <h2 id="modulos" className="scroll-mt-4 font-medium">Módulos</h2>
+        <p className="text-xs text-slate-500">
+          Ligue só o que a empresa usa. Desligar tira o módulo do menu, das telas e do Painel; os dados ficam guardados e
+          voltam ao ligar de novo. O que já estiver agendado (ex.: contagem com horário) continua: inative antes, se quiser parar.
+        </p>
+        <form action={salvarModulos.bind(null, e)} className="space-y-3">
+          {MODULOS_OPCIONAIS.map((m) => (
+            <label key={m.chave} className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name={m.chave}
+                defaultChecked={!(empresa.modulos_desligados ?? []).includes(m.chave)}
+                disabled={!pode("config.empresa")}
+                className="mt-1"
+              />
+              <span>
+                {m.rotulo}
+                <span className="block text-xs text-slate-500">{m.descricao}</span>
+              </span>
+            </label>
+          ))}
           {pode("config.empresa") && <Botao variante="secundario">Salvar</Botao>}
         </form>
       </Cartao>
