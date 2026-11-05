@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { descreverRecorrencia, proximaOcorrencia, proximaPorConclusao } from "@/lib/recorrencia";
-import { formatarData, formatarDataHora } from "@/lib/formato";
-import type { Acao } from "@/lib/types";
+import { formatarData, formatarDataHora, hojeNoFuso } from "@/lib/formato";
+import type { Acao, Alerta, AlertaAviso } from "@/lib/types";
 import { Aviso, Etiqueta, LinkBotao, Titulo, Vazio } from "@/components/ui";
 import { FiltrosAcoes } from "./filtros";
 
@@ -32,6 +32,8 @@ export default async function PaginaAcoes({
     { data: setores },
     { data: categorias },
     { data: equipamentos },
+    { data: alertas },
+    { data: avisos },
   ] = await Promise.all([
     supabase
       .from("acoes")
@@ -52,6 +54,13 @@ export default async function PaginaAcoes({
       .eq("empresa_id", empresaId)
       .order("nome"),
     supabase.from("equipamentos").select("id, nome").eq("empresa_id", empresaId),
+    // ações com avisos antes do vencimento (os antigos Alertas)
+    supabase.from("alertas").select("*").eq("empresa_id", empresaId).order("nome"),
+    supabase
+      .from("alerta_avisos")
+      .select("alerta_id, dias_antes")
+      .eq("empresa_id", empresaId)
+      .order("dias_antes", { ascending: false }),
   ]);
 
   // ações que contam a partir da conclusão: a próxima depende da última tarefa encerrada
@@ -120,12 +129,38 @@ export default async function PaginaAcoes({
         (x.proxima?.getTime() ?? Infinity) - (y.proxima?.getTime() ?? Infinity),
     );
 
+  // ações com vencimento: a próxima data e quantos dias faltam
+  const h = hojeNoFuso(fuso);
+  const hoje = Date.UTC(h.y, h.m - 1, h.d);
+  const diasAntes = new Map<string, number[]>();
+  for (const v of (avisos ?? []) as Pick<AlertaAviso, "alerta_id" | "dias_antes">[])
+    diasAntes.set(v.alerta_id, [...(diasAntes.get(v.alerta_id) ?? []), v.dias_antes]);
+  const vencimentos = ((alertas ?? []) as Alerta[])
+    .filter(
+      (al) =>
+        (!soManutencao || (!!al.categoria_id && categoriasManutencao.has(al.categoria_id))) &&
+        (!termo || normalizar(`${al.nome} ${al.descricao ?? ""}`).includes(termo)) &&
+        (!setor || al.setor_id === setor) &&
+        (!categoria || al.categoria_id === categoria),
+    )
+    .map((al) => {
+      const proxima = al.ativo
+        ? proximaOcorrencia({ regra: al.recorrencia, horario: al.horario, inicio: al.data_evento, fuso })
+        : null;
+      const d = proxima ? hojeNoFuso(fuso, proxima) : null;
+      const faltam = d ? Math.round((Date.UTC(d.y, d.m - 1, d.d) - hoje) / 86_400_000) : null;
+      return { al, proxima, faltam, dias: diasAntes.get(al.id) ?? [] };
+    })
+    .sort((x, y) => (x.proxima?.getTime() ?? Infinity) - (y.proxima?.getTime() ?? Infinity));
+  const total = linhas.length + vencimentos.length;
+
   // um grupo por categoria (na ordem alfabética); as sem categoria vão por último
   const grupos = [
     ...categoriasDoFiltro.map((c) => ({
       chave: c.id,
       titulo: c.nome,
       itens: linhas.filter((l) => l.a.categoria_id === c.id),
+      venc: vencimentos.filter((v) => v.al.categoria_id === c.id),
     })),
     {
       chave: "sem",
@@ -135,8 +170,12 @@ export default async function PaginaAcoes({
           !l.a.categoria_id ||
           !categoriasDoFiltro.some((c) => c.id === l.a.categoria_id),
       ),
+      venc: vencimentos.filter(
+        (v) => !v.al.categoria_id || !categoriasDoFiltro.some((c) => c.id === v.al.categoria_id),
+      ),
     },
-  ].filter((g) => g.itens.length > 0);
+  ].filter((g) => g.itens.length + g.venc.length > 0);
+  const podeNova = pode("acoes.editar") || pode("alertas.editar");
 
   return (
     <div className="space-y-4">
@@ -147,13 +186,13 @@ export default async function PaginaAcoes({
             <LinkBotao variante="secundario" href={`/e/${empresaId}/acoes/semana`}>
               Ver semana
             </LinkBotao>
-            {pode("acoes.editar") && (
-              <LinkBotao href={`/e/${empresaId}/acoes/novo`}>Nova ação</LinkBotao>
+            {podeNova && (
+              <LinkBotao href={`/e/${empresaId}/${pode("acoes.editar") ? "acoes" : "alertas"}/novo`}>Nova ação</LinkBotao>
             )}
           </>
         }
       >
-        {soManutencao ? "Ações recorrentes de manutenção" : "Ações recorrentes"}
+        {soManutencao ? "Ações recorrentes de manutenção" : "Ações"}
       </Titulo>
       {salvo && <Aviso tipo="sucesso">Ação salva.</Aviso>}
       {soManutencao ? (
@@ -167,8 +206,8 @@ export default async function PaginaAcoes({
         </p>
       ) : (
         <p className="text-sm text-slate-500">
-          Cada ocorrência vira uma tarefa no Kanban, que aparece no dia marcado
-          para o responsável.
+          Tudo o que precisa ser lembrado: ações que repetem e viram tarefa no dia marcado, e
+          ações com vencimento, que criam tarefas alguns dias antes da data (marcadas com Vencimento).
         </p>
       )}
 
@@ -181,14 +220,14 @@ export default async function PaginaAcoes({
         fixos={soManutencao ? { manutencao: "1" } : undefined}
       />
 
-      {linhas.length === 0 && filtrando ? (
+      {total === 0 && filtrando ? (
         <Vazio>Nenhuma ação encontrada com esses filtros.</Vazio>
-      ) : linhas.length === 0 && soManutencao ? (
+      ) : total === 0 && soManutencao ? (
         <Vazio>
           Nenhuma ação de manutenção. Marque uma categoria como De manutenção em
           Configurações › Geral, ou ligue a ação a um equipamento do patrimônio.
         </Vazio>
-      ) : linhas.length === 0 ? (
+      ) : total === 0 ? (
         <Vazio>
           Nenhuma ação cadastrada. Ex.: limpeza da caixa d&apos;água a cada 6
           meses, pagar aluguel todo dia 10.
@@ -199,10 +238,53 @@ export default async function PaginaAcoes({
             <h2 className="text-sm font-semibold text-slate-700">
               {g.titulo}{" "}
               <span className="font-normal text-slate-500">
-                ({g.itens.length})
+                ({g.itens.length + g.venc.length})
               </span>
             </h2>
             <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-superficie">
+              {g.venc.map(({ al, proxima, faltam, dias }) => (
+                <li
+                  key={al.id}
+                  className={`flex flex-wrap items-center justify-between gap-2 p-3 text-sm ${al.ativo ? "" : "opacity-60"}`}
+                >
+                  <div>
+                    {pode("alertas.editar") ? (
+                      <Link href={`/e/${empresaId}/alertas/${al.id}`} className="font-medium text-blue-700">
+                        {al.nome}
+                      </Link>
+                    ) : (
+                      <span className="font-medium">{al.nome}</span>
+                    )}{" "}
+                    <Etiqueta cor="#2563eb">Vencimento</Etiqueta>
+                    {al.privado && (
+                      <>
+                        {" "}
+                        <Etiqueta>Privada</Etiqueta>
+                      </>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      {descreverRecorrencia(al.recorrencia)} ·{" "}
+                      {al.unidade_id ? unidade.get(al.unidade_id) : "Empresa toda"}
+                      {dias.length > 0 &&
+                        ` · avisos ${dias.map((d) => (d === 0 ? "no dia" : `${d}d`)).join(", ")} antes`}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs">
+                    {!al.ativo ? (
+                      <Etiqueta>Inativa</Etiqueta>
+                    ) : proxima && faltam !== null ? (
+                      <div className="space-y-1">
+                        <p className="text-slate-600">Vence {formatarData(proxima.toISOString(), fuso)}</p>
+                        <Etiqueta cor={faltam <= 7 ? "#dc2626" : faltam <= 30 ? "#d97706" : "#16a34a"}>
+                          {faltam === 0 ? "Hoje" : faltam === 1 ? "Amanhã" : `Faltam ${faltam} dias`}
+                        </Etiqueta>
+                      </div>
+                    ) : (
+                      <Etiqueta>Já passou</Etiqueta>
+                    )}
+                  </div>
+                </li>
+              ))}
               {g.itens.map(({ a, proxima, aguardando }) => (
                 <li
                   key={a.id}

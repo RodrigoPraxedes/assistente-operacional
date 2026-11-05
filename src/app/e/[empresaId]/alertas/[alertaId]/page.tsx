@@ -5,6 +5,7 @@ import { hojeNoFuso } from "@/lib/formato";
 import type { Alerta, AlertaAviso } from "@/lib/types";
 import { Aviso, Titulo } from "@/components/ui";
 import { FormAlerta } from "./form-alerta";
+import { TipoDeAcao } from "../../acoes/tipo-de-acao";
 
 export default async function EditarAlerta({
   params,
@@ -15,7 +16,7 @@ export default async function EditarAlerta({
 }) {
   const { empresaId, alertaId } = await params;
   const { erro } = await searchParams;
-  const { supabase, empresa, membro } = await exigirPermissao(empresaId, "alertas.editar");
+  const { supabase, empresa, membro, pode } = await exigirPermissao(empresaId, "alertas.editar");
   const novo = alertaId === "novo";
 
   const [
@@ -44,7 +45,10 @@ export default async function EditarAlerta({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Titulo voltar={{ href: `/e/${empresaId}/alertas`, rotulo: "Alertas de datas" }}>{novo ? "Novo alerta" : `Editar: ${alerta!.nome}`}</Titulo>
+      <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações" }}>{novo ? "Nova ação" : `Editar: ${alerta!.nome}`}</Titulo>
+      {novo && (
+        <TipoDeAcao empresaId={empresaId} atual="vencimento" podeAcao={pode("acoes.editar")} podeVencimento />
+      )}
       {erro && <Aviso>{erro}</Aviso>}
       {!novo && (
         <p className="text-xs text-slate-500">Mudanças valem para as próximas tarefas. Nas já criadas, só os responsáveis acompanham (enquanto estiverem abertas).</p>
