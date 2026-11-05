@@ -55,6 +55,8 @@ export function FormAcao({
   unidades,
   setores,
   categorias,
+  manutencao = false,
+  categoriaPadrao,
   equipamentos,
   membros,
   podeMudarPrivado,
@@ -68,6 +70,8 @@ export function FormAcao({
   unidades: Opcao[];
   setores: Opcao[];
   categorias: Opcao[];
+  manutencao?: boolean;
+  categoriaPadrao?: string;
   equipamentos: Opcao[];
   membros: (Opcao & { setor_id: string | null })[];
 }) {
@@ -84,6 +88,7 @@ export function FormAcao({
     <form action={acaoForm} className="space-y-4">
       <input ref={continuar} type="hidden" name="continuar" defaultValue="" />
       {acao && <input type="hidden" name="id" value={acao.id} />}
+      {manutencao && <input type="hidden" name="manutencao" value="1" />}
       <Cartao className="space-y-4">
         <Campo rotulo="Nome da ação">
           <Input name="nome" defaultValue={modelo ? `Cópia de ${modelo.nome}` : base?.nome} autoFocus={!!modelo} onFocus={(e) => modelo && e.currentTarget.select()} placeholder="Ex.: Limpeza da caixa d'água" required />
@@ -164,7 +169,7 @@ export function FormAcao({
             </Select>
           </Campo>
           <Campo rotulo="Categoria">
-            <Select name="categoria_id" defaultValue={base?.categoria_id ?? ""}>
+            <Select name="categoria_id" defaultValue={base?.categoria_id ?? categoriaPadrao ?? ""}>
               <option value="">—</option>
               {categorias.map((c) => (
                 <option key={c.id} value={c.id}>

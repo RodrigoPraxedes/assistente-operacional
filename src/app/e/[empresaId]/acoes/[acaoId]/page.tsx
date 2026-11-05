@@ -12,10 +12,11 @@ export default async function EditarAcao({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; acaoId: string }>;
-  searchParams: Promise<{ erro?: string; copiar?: string }>;
+  searchParams: Promise<{ erro?: string; copiar?: string; manutencao?: string }>;
 }) {
   const { empresaId, acaoId } = await params;
-  const { erro, copiar } = await searchParams;
+  const { erro, copiar, manutencao: m } = await searchParams;
+  const manutencao = m === "1";
   const { supabase, empresa, membro, pode } = await exigirPermissao(empresaId, "acoes.editar");
   const novo = acaoId === "novo";
   // modelo para "criar nova a partir desta": busca a ação de origem
@@ -27,7 +28,7 @@ export default async function EditarAcao({
       : supabase.from("acoes").select("*").eq("id", origemId ?? acaoId).eq("empresa_id", empresaId).maybeSingle(),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
-    supabase.from("categorias").select("id, nome").eq("empresa_id", empresaId).order("nome"),
+    supabase.from("categorias").select("id, nome, manutencao").eq("empresa_id", empresaId).order("nome"),
     supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("equipamentos").select("id, nome, ativo").eq("empresa_id", empresaId).order("nome"),
   ]);
@@ -38,9 +39,9 @@ export default async function EditarAcao({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Titulo voltar={{ href: `/e/${empresaId}/acoes`, rotulo: "Ações" }}>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
+      <Titulo voltar={manutencao ? { href: `/e/${empresaId}/acoes?manutencao=1`, rotulo: "Manutenções" } : { href: `/e/${empresaId}/acoes`, rotulo: "Ações" }}>{novo ? "Nova ação" : `Editar: ${acao!.nome}`}</Titulo>
       {novo && !origemId && (
-        <TipoDeAcao empresaId={empresaId} atual="acao" podeAcao podeVencimento={pode("alertas.editar")} />
+        <TipoDeAcao empresaId={empresaId} atual="acao" podeAcao podeVencimento={pode("alertas.editar")} manutencao={manutencao} />
       )}
       {erro && <Aviso>{erro}</Aviso>}
       {origemId && (
@@ -59,7 +60,10 @@ export default async function EditarAcao({
         equipamentos={(equipamentos ?? []).filter((e) => e.ativo || e.id === acao?.equipamento_id).map(({ id, nome, ativo }) => ({ id, nome: ativo ? nome : `${nome} (baixado)` }))}
         unidades={unidades ?? []}
         setores={setores ?? []}
-        categorias={categorias ?? []}
+        categorias={(categorias ?? []).map(({ id, nome }) => ({ id, nome }))}
+        manutencao={manutencao}
+        // nova ação aberta de Manutenções já vem na primeira categoria de manutenção
+        categoriaPadrao={novo && manutencao ? (categorias ?? []).find((c) => c.manutencao)?.id : undefined}
         membros={await membrosAtribuiveis(supabase, empresaId, membros ?? [], acao?.responsaveis ?? [])}
         podeMudarPrivado={novo || !acao!.criado_por || acao!.criado_por === membro.id}
       />

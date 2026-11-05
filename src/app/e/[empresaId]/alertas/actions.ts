@@ -127,7 +127,8 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
   }
 
   revalidatePath(`/e/${empresaId}/alertas`);
-  redirect(`/e/${empresaId}/acoes?salvo=1`);
+  // aberta de Manutenções: volta para lá
+  redirect(`/e/${empresaId}/acoes?${form.get("manutencao") === "1" ? "manutencao=1&" : ""}salvo=1`);
 }
 
 export async function excluirAlerta(empresaId: string, alertaId: string) {

@@ -189,7 +189,7 @@ export default async function PaginaAcoes({
               Ver semana
             </LinkBotao>
             {podeNova && (
-              <LinkBotao href={`/e/${empresaId}/${pode("acoes.editar") ? "acoes" : "alertas"}/novo`}>Nova ação</LinkBotao>
+              <LinkBotao href={`/e/${empresaId}/${pode("acoes.editar") ? "acoes" : "alertas"}/novo${soManutencao ? "?manutencao=1" : ""}`}>Nova ação</LinkBotao>
             )}
           </>
         }
@@ -261,7 +261,7 @@ export default async function PaginaAcoes({
                 >
                   <div>
                     {pode("alertas.editar") ? (
-                      <Link href={`/e/${empresaId}/alertas/${al.id}`} className="font-medium text-blue-700">
+                      <Link href={`/e/${empresaId}/alertas/${al.id}${soManutencao ? "?manutencao=1" : ""}`} className="font-medium text-blue-700">
                         {al.nome}
                       </Link>
                     ) : (
@@ -305,7 +305,7 @@ export default async function PaginaAcoes({
                   <div>
                     {pode("acoes.editar") ? (
                       <Link
-                        href={`/e/${empresaId}/acoes/${a.id}`}
+                        href={`/e/${empresaId}/acoes/${a.id}${soManutencao ? "?manutencao=1" : ""}`}
                         className="font-medium text-blue-700"
                       >
                         {a.nome}

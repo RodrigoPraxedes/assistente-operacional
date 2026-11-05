@@ -559,7 +559,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Em Manutenções › Ações recorrentes ficam as manutenções que se repetem: troca de filtro, limpeza da caixa d'água, revisão do ar-condicionado.",
           "Entram ali as ações das categorias marcadas como De manutenção (Configurações › Geral › Categorias: toque na categoria e marque a caixa), inclusive as com vencimento (ex.: certificado de potabilidade), e as ações ligadas a um equipamento do patrimônio.",
-          "Essas ações ficam só aqui: a lista geral de Ações mostra as outras e um link com quantas estão em Manutenções. Para criar uma nova, toque em Nova ação e escolha uma categoria de manutenção ou um equipamento. A seta no alto volta para Manutenções.",
+          "Essas ações ficam só aqui: a lista geral de Ações mostra as outras e um link com quantas estão em Manutenções. Para criar uma nova, toque em Nova ação aqui mesmo: o formulário já vem com a primeira categoria de manutenção escolhida (dá para trocar ou ligar a um equipamento) e, ao salvar, você volta para Manutenções. Vale para os dois tipos, Tarefa no dia e Avisos antes do vencimento. A seta no alto volta para Manutenções.",
         ],
       },
       {

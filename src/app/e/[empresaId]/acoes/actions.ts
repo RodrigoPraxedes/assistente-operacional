@@ -86,8 +86,10 @@ export async function salvarAcao(empresaId: string, _: { erro?: string } | undef
 
   revalidatePath(`/e/${empresaId}/acoes`);
   // "Salvar e criar nova a partir desta": abre o formulário novo já preenchido
-  if (form.get("continuar")) redirect(`/e/${empresaId}/acoes/novo?copiar=${acaoId}`);
-  redirect(`/e/${empresaId}/acoes?salvo=1`);
+  // aberta de Manutenções: volta para lá
+  const m = form.get("manutencao") === "1" ? "manutencao=1&" : "";
+  if (form.get("continuar")) redirect(`/e/${empresaId}/acoes/novo?${m}copiar=${acaoId}`);
+  redirect(`/e/${empresaId}/acoes?${m}salvo=1`);
 }
 
 export async function excluirAcao(empresaId: string, acaoId: string) {

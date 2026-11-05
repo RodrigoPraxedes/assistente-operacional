@@ -8,17 +8,21 @@ export function TipoDeAcao({
   atual,
   podeAcao,
   podeVencimento,
+  manutencao = false,
 }: {
   empresaId: string;
   atual: "acao" | "vencimento";
   podeAcao: boolean;
   podeVencimento: boolean;
+  // aberto de Manutenções › Ações recorrentes: os dois formulários continuam lá
+  manutencao?: boolean;
 }) {
+  const q = manutencao ? "?manutencao=1" : "";
   const opcoes = [
     {
       chave: "acao" as const,
       pode: podeAcao,
-      href: `/e/${empresaId}/acoes/novo`,
+      href: `/e/${empresaId}/acoes/novo${q}`,
       icone: Repeat,
       titulo: "Tarefa no dia",
       texto: "Repete (todo dia, a cada 15 dias, a cada 4 meses...) e vira tarefa no dia marcado, com prazo.",
@@ -26,7 +30,7 @@ export function TipoDeAcao({
     {
       chave: "vencimento" as const,
       pode: podeVencimento,
-      href: `/e/${empresaId}/alertas/novo`,
+      href: `/e/${empresaId}/alertas/novo${q}`,
       icone: CalendarClock,
       titulo: "Avisos antes do vencimento",
       texto: "Uma data que não pode passar (licença, extintores, Dia das Mães). Cria tarefas X dias antes.",
