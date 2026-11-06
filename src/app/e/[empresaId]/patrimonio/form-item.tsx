@@ -6,6 +6,7 @@ import { trocarPorReduzidas } from "@/lib/foto";
 import { SITUACOES_PATRIMONIO, TIPOS_PATRIMONIO, type Equipamento } from "@/lib/types";
 import { Aviso, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { CampoData } from "@/components/campo-data";
 
 type Opcao = { id: string; nome: string };
 
@@ -87,7 +88,7 @@ export function FormItem({
         <h2 className="font-medium">Compra</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo rotulo="Data da compra">
-            <Input name="data_compra" type="date" defaultValue={item?.data_compra ?? ""} />
+            <CampoData name="data_compra" defaultValue={item?.data_compra ?? ""} />
           </Campo>
           <Campo rotulo="Valor (R$)">
             <Input name="valor_compra" type="number" step="0.01" min="0" defaultValue={item?.valor_compra ?? ""} />
@@ -99,7 +100,7 @@ export function FormItem({
             <Input name="nota_fiscal" defaultValue={item?.nota_fiscal ?? ""} />
           </Campo>
           <Campo rotulo="Garantia até">
-            <Input name="garantia_ate" type="date" defaultValue={item?.garantia_ate ?? ""} />
+            <CampoData name="garantia_ate" defaultValue={item?.garantia_ate ?? ""} />
           </Campo>
         </div>
         <Campo rotulo="Observações">

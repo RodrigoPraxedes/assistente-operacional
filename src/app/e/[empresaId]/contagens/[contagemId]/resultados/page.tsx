@@ -9,6 +9,7 @@ import { Aviso, Botao, Input, Select, Titulo, Vazio, estilos } from "@/component
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { excluirRegistro } from "../../actions";
 import { FluxoTurnos } from "./fluxo-turnos";
+import { CampoData } from "@/components/campo-data";
 
 const diaCurto = (data: string) => `${formatarDia(data).slice(0, 5)} ${DIAS_SEMANA[diaDaSemana(data) - 1].curto}`;
 
@@ -91,11 +92,11 @@ export default async function ResultadosContagem({
       <form method="get" className="flex flex-wrap items-end gap-2 text-sm">
         <label className="space-y-1">
           <span className="block text-xs text-slate-500">De</span>
-          <Input type="date" name="de" defaultValue={filtros.de} className="w-auto" />
+          <CampoData name="de" defaultValue={filtros.de} className="w-auto" />
         </label>
         <label className="space-y-1">
           <span className="block text-xs text-slate-500">Até</span>
-          <Input type="date" name="ate" defaultValue={filtros.ate} className="w-auto" />
+          <CampoData name="ate" defaultValue={filtros.ate} className="w-auto" />
         </label>
         {contagem.turnos.length > 0 && !fluxo && (
           <label className="space-y-1">

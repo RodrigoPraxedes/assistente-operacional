@@ -7,6 +7,7 @@ import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
+import { CampoData } from "@/components/campo-data";
 
 type Opcao = { id: string; nome: string };
 
@@ -49,7 +50,7 @@ export function FormTarefa({
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Campo rotulo="Prazo">
-          <Input type="datetime-local" name="prazo" />
+          <CampoData tipo="datetime-local" name="prazo" />
         </Campo>
         <Campo rotulo="Unidade">
           <Select name="unidade_id" defaultValue={unidades.length === 1 ? unidades[0].id : ""}>

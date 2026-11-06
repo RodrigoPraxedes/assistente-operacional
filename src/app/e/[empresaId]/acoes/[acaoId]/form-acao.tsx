@@ -10,6 +10,7 @@ import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
+import { CampoData } from "@/components/campo-data";
 
 type Opcao = { id: string; nome: string };
 
@@ -105,11 +106,11 @@ export function FormAcao({
             <Input type="time" name="horario" value={horario} onChange={(e) => setHorario(e.target.value)} required />
           </Campo>
           <Campo rotulo={regra ? "Data inicial" : "Data"}>
-            <Input type="date" name="data_inicial" defaultValue={base?.data_inicial ?? hoje} required />
+            <CampoData name="data_inicial" defaultValue={base?.data_inicial ?? hoje} required />
           </Campo>
           {regra && (
             <Campo rotulo="Data final" dica="Vazio = repete sem fim">
-              <Input type="date" name="data_final" defaultValue={base?.data_final ?? ""} />
+              <CampoData name="data_final" defaultValue={base?.data_final ?? ""} />
             </Campo>
           )}
           {regra && (

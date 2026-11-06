@@ -14,6 +14,7 @@ import { BotaoExcluir } from "./botao-excluir";
 import { MudarStatus } from "./mudar-status";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
+import { CampoData } from "@/components/campo-data";
 
 const ACOES: Record<string, string> = {
   criada: "criou a tarefa",
@@ -232,7 +233,7 @@ export default async function DetalheTarefa({
                 <Textarea name="descricao" rows={3} defaultValue={tarefa.descricao ?? ""} />
               </Campo>
               <Campo rotulo="Prazo">
-                <Input type="datetime-local" name="prazo" defaultValue={utcParaLocalInput(tarefa.prazo, empresa.fuso_horario)} />
+                <CampoData tipo="datetime-local" name="prazo" defaultValue={utcParaLocalInput(tarefa.prazo, empresa.fuso_horario)} />
               </Campo>
               {tarefa.origem === "acao" && (
                 <p className="text-xs text-slate-500">Vale só para esta tarefa; a ação recorrente não muda.</p>

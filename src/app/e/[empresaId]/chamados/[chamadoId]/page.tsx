@@ -12,6 +12,7 @@ import { SeletorPrestador } from "@/components/seletor-prestador";
 import { CampoFotos } from "./campo-fotos";
 import { MudarStatus } from "../../tarefas/[tarefaId]/mudar-status";
 import { BotaoExcluir } from "../../tarefas/[tarefaId]/botao-excluir";
+import { CampoData } from "@/components/campo-data";
 
 export default async function DetalheChamado({
   params,
@@ -270,7 +271,7 @@ export default async function DetalheChamado({
               </Select>
             </Campo>
             <Campo rotulo="Prazo">
-              <Input type="datetime-local" name="prazo" defaultValue={utcParaLocalInput(t.prazo, fuso)} />
+              <CampoData tipo="datetime-local" name="prazo" defaultValue={utcParaLocalInput(t.prazo, fuso)} />
             </Campo>
             <Campo rotulo="Prestador que atendeu">
               <SeletorPrestador

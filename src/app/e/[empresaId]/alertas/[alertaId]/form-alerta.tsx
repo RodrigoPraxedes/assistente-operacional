@@ -7,6 +7,7 @@ import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/componen
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
+import { CampoData } from "@/components/campo-data";
 
 type Opcao = { id: string; nome: string };
 type LinhaAviso = {
@@ -92,7 +93,7 @@ export function FormAlerta({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo rotulo="Data do vencimento">
-            <Input type="date" name="data_evento" defaultValue={alerta?.data_evento ?? hoje} required />
+            <CampoData name="data_evento" defaultValue={alerta?.data_evento ?? hoje} required />
           </Campo>
           <Campo rotulo="Repetir">
             <Select name="recorrencia" defaultValue={regraAtual}>
