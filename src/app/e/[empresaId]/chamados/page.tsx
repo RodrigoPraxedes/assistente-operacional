@@ -31,7 +31,28 @@ export default async function PaginaChamados({
   if (filtros.equipamento) consulta = consulta.eq("equipamento_id", filtros.equipamento);
   if (filtros.prioridade) consulta = consulta.eq("prioridade", filtros.prioridade);
 
-  const [{ data: status }, { data: chamados }, { data: membros }, { data: unidades }, { data: equipamentos }] =
+  // ações recorrentes de manutenção (categoria "De manutenção" ou ligadas a equipamento) também
+  // aparecem no quadro, como os chamados; o filtro de prioridade só vale para chamados
+  const { data: catsManutencao } = await supabase
+    .from("categorias")
+    .select("id")
+    .eq("empresa_id", empresaId)
+    .eq("manutencao", true);
+  const idsCats = (catsManutencao ?? []).map((c) => c.id);
+  let consultaAcoes = supabase
+    .from("tarefas")
+    .select("*")
+    .eq("empresa_id", empresaId)
+    .in("origem", ["acao", "alerta"])
+    .or(idsCats.length ? `equipamento_id.not.is.null,categoria_id.in.(${idsCats.join(",")})` : "equipamento_id.not.is.null")
+    .or(`concluida_em.is.null,concluida_em.gte.${seteDiasAtras}`)
+    .or(`cancelada_em.is.null,cancelada_em.gte.${doisDiasAtras}`)
+    .order("prazo", { ascending: false })
+    .limit(300);
+  if (filtros.unidade) consultaAcoes = consultaAcoes.eq("unidade_id", filtros.unidade);
+  if (filtros.equipamento) consultaAcoes = consultaAcoes.eq("equipamento_id", filtros.equipamento);
+
+  const [{ data: status }, { data: chamados }, { data: membros }, { data: unidades }, { data: equipamentos }, { data: tarefasAcoes }] =
     await Promise.all([
       supabase
         .from("status")
@@ -44,6 +65,7 @@ export default async function PaginaChamados({
       supabase.from("membros").select("id, nome").eq("empresa_id", empresaId),
       supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
       supabase.from("equipamentos").select("id, nome, ativo").eq("empresa_id", empresaId).order("nome"),
+      filtros.prioridade ? Promise.resolve({ data: [] as Tarefa[] }) : consultaAcoes.returns<Tarefa[]>(),
     ]);
 
   const lista = chamados ?? [];
@@ -122,7 +144,7 @@ export default async function PaginaChamados({
         empresaId={empresaId}
         fuso={empresa.fuso_horario}
         status={(status ?? []) as Status[]}
-        tarefas={lista.map((c) => c.tarefas)}
+        tarefas={[...lista.map((c) => c.tarefas), ...(tarefasAcoes ?? [])]}
         nomes={{
           membros: Object.fromEntries((membros ?? []).map((m) => [m.id, m.nome])),
           unidades: Object.fromEntries((unidades ?? []).map((u) => [u.id, u.nome])),
