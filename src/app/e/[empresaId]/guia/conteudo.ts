@@ -144,7 +144,7 @@ export const SECOES: SecaoGuia[] = [
           "Em Avisar também (ciente), escolha quem só precisa ficar sabendo: a pessoa recebe a tarefa no WhatsApp e enxerga o cartão, mas não é responsável, não conta nas partes e não conclui.",
           "Com 2 ou mais responsáveis, a chave Todos os responsáveis precisam concluir decide: desligada (padrão), qualquer um conclui e a tarefa fecha para todos; ligada, cada um marca a sua parte.",
           "Quem pode atribuir: o Gestor escolhe qualquer pessoa; o Líder de setor só vê colaboradores (e ele mesmo) na lista, e o mesmo vale para as ações. Colaborador não cria tarefas, mas todos abrem chamado de manutenção.",
-          "Defina o prazo, a unidade, o setor e a categoria.",
+          "Defina o prazo, a unidade, o setor e a categoria. Datas e prazos abrem um calendário em grade do mês: toque no dia e, nos campos com hora, ajuste Hora e Minutos e toque em OK. Hoje marca a data de hoje e Limpar apaga o campo.",
           "Marque Exigir foto para concluir se quiser uma prova do serviço feito.",
           "Escolha se ela é pública (toda a equipe com acesso vê) ou privada (só você e os responsáveis veem) e toque em Criar tarefa.",
         ],

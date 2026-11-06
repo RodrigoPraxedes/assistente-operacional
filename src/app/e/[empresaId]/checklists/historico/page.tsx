@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getContexto } from "@/lib/contexto";
 import { formatarDataHora, localParaUtc } from "@/lib/formato";
 import { Botao, Cartao, Etiqueta, Input, Select, Titulo, Vazio } from "@/components/ui";
+import { CampoData } from "@/components/campo-data";
 
 const POR_PAGINA = 30;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -66,11 +67,11 @@ export default async function PaginaHistoricoChecklists({
       <form className="flex flex-wrap items-end gap-2">
         <label className="flex-[1_1_9rem] text-xs text-slate-500">
           De
-          <Input type="date" name="de" defaultValue={f.de ?? ""} />
+          <CampoData name="de" defaultValue={f.de ?? ""} />
         </label>
         <label className="flex-[1_1_9rem] text-xs text-slate-500">
           Até
-          <Input type="date" name="ate" defaultValue={f.ate ?? ""} />
+          <CampoData name="ate" defaultValue={f.ate ?? ""} />
         </label>
         <label className="flex-[1_1_12rem] text-xs text-slate-500">
           Check-list

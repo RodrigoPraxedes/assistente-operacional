@@ -10,6 +10,7 @@ import { ORIGENS, type Status, type Tarefa } from "@/lib/types";
 import { Botao, Etiqueta, Input, Textarea } from "@/components/ui";
 import { adicionarFotos } from "../chamados/actions";
 import { moverTarefa, retornarTarefa } from "./actions";
+import { CampoData } from "@/components/campo-data";
 
 interface Props {
   empresaId: string;
@@ -500,7 +501,7 @@ function DialogoConcluirChamado({
         {erro && <p className="text-sm text-red-600">{erro}</p>}
         <label className="block space-y-1 text-sm">
           <span className="font-medium">Data e hora do ato</span>
-          <Input type="datetime-local" required value={quando} onChange={(e) => setQuando(e.target.value)} />
+          <CampoData tipo="datetime-local" required value={quando} onChange={setQuando} />
         </label>
         <label className="block space-y-1 text-sm">
           <span className="font-medium">Valor gasto (R$)</span>
@@ -579,7 +580,7 @@ function DialogoAdiar({
         <h2 className="font-semibold">Adiar &quot;{tarefa.titulo}&quot;</h2>
         <label className="block space-y-1 text-sm">
           <span className="font-medium">Nova data</span>
-          <Input type="datetime-local" required value={prazo} onChange={(e) => setPrazo(e.target.value)} />
+          <CampoData tipo="datetime-local" required value={prazo} onChange={setPrazo} />
         </label>
         <label className="block space-y-1 text-sm">
           <span className="font-medium">Motivo (opcional)</span>

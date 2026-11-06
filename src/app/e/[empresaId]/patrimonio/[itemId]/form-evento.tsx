@@ -5,6 +5,7 @@ import { registrarEvento } from "../actions";
 import { EVENTOS_PATRIMONIO, SITUACOES_PATRIMONIO, type TipoEventoPatrimonio } from "@/lib/types";
 import { Aviso, Campo, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { CampoData } from "@/components/campo-data";
 
 type Opcao = { id: string; nome: string };
 
@@ -45,7 +46,7 @@ export function FormEvento({
           </Select>
         </Campo>
         <Campo rotulo="Data">
-          <Input name="data" type="date" defaultValue={hoje} required />
+          <CampoData name="data" defaultValue={hoje} required />
         </Campo>
         {tipo === "transferencia" && (
           <Campo rotulo="Para a unidade">

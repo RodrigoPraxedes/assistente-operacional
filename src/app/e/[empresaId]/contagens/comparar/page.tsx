@@ -4,7 +4,8 @@ import { lerFiltros } from "@/lib/contagem-resultados";
 import { diaDaSemana, formatarQtd } from "@/lib/contagens";
 import { DIAS_SEMANA } from "@/lib/rotinas";
 import { formatarDia } from "@/lib/formato";
-import { Botao, Cartao, Input, Titulo, Vazio } from "@/components/ui";
+import { Botao, Cartao, Titulo, Vazio } from "@/components/ui";
+import { CampoData } from "@/components/campo-data";
 
 // Itens de contagens diferentes lado a lado, somados por dia.
 // Ex.: frango contado (Contagem) x frango para assar (Produção) x frango de perda (Retirada).
@@ -69,11 +70,11 @@ export default async function CompararContagens({
           <div className="flex flex-wrap items-end gap-2 text-sm">
             <label className="space-y-1">
               <span className="block text-xs text-slate-500">De</span>
-              <Input type="date" name="de" defaultValue={filtros.de} className="w-auto" />
+              <CampoData name="de" defaultValue={filtros.de} className="w-auto" />
             </label>
             <label className="space-y-1">
               <span className="block text-xs text-slate-500">Até</span>
-              <Input type="date" name="ate" defaultValue={filtros.ate} className="w-auto" />
+              <CampoData name="ate" defaultValue={filtros.ate} className="w-auto" />
             </label>
             <Botao type="submit">Comparar</Botao>
           </div>

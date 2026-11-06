@@ -7,6 +7,7 @@ import { utcParaLocalInput } from "@/lib/formato";
 import { trocarPorReduzidas } from "@/lib/foto";
 import { adicionarFotos } from "../../chamados/actions";
 import { moverTarefa, retornarTarefa } from "../actions";
+import { CampoData } from "@/components/campo-data";
 
 interface Opcao {
   id: string;
@@ -123,12 +124,12 @@ export function MudarStatus({
         )}
       </div>
       {tipo === "adiado" && (
-        <Input type="datetime-local" value={prazo} onChange={(e) => setPrazo(e.target.value)} title="Nova data" required />
+        <CampoData tipo="datetime-local" value={prazo} onChange={setPrazo} title="Nova data" required />
       )}
       {chamado && novo && (
         <label className="block text-sm text-slate-700">
           Data e hora do ato
-          <Input type="datetime-local" value={quando} onChange={(e) => setQuando(e.target.value)} required />
+          <CampoData tipo="datetime-local" value={quando} onChange={setQuando} required />
         </label>
       )}
       {concluindoChamado && (

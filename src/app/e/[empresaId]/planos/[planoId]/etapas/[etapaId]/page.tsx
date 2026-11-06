@@ -6,6 +6,7 @@ import { Aviso, Campo, Cartao, Input, Select, Textarea, Titulo, estilos } from "
 import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { excluirEtapa, salvarEtapa } from "../../../actions";
+import { CampoData } from "@/components/campo-data";
 
 export default async function FormEtapa({
   params,
@@ -79,11 +80,11 @@ export default async function FormEtapa({
               </Select>
             </Campo>
             <Campo rotulo="Início previsto">
-              <Input type="date" name="inicio_previsto" defaultValue={etapa?.inicio_previsto ?? ""} />
+              <CampoData name="inicio_previsto" defaultValue={etapa?.inicio_previsto ?? ""} />
             </Campo>
             <Campo rotulo="Prazo">
-              <Input
-                type="date"
+              <CampoData
+               
                 name="prazo"
                 defaultValue={tarefa?.prazo ? utcParaLocalInput(tarefa.prazo, empresa.fuso_horario).slice(0, 10) : ""}
               />

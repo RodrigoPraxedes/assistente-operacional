@@ -7,6 +7,7 @@ import { diaDaSemana, diaSeguinte, formatarQtd, metaDoDia, metasDoTurno, rotuloI
 import { DIAS_SEMANA } from "@/lib/rotinas";
 import { Aviso, Campo, Input, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
+import { CampoData } from "@/components/campo-data";
 
 export interface ContagemPreencher {
   id: string;
@@ -144,7 +145,7 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
           </p>
         )}
         <Campo rotulo="Data da contagem" dica={DIAS_SEMANA[dia - 1].longo}>
-          <Input type="date" name="data_ref" required value={data} max={hoje} onChange={(e) => setData(e.target.value)} />
+          <CampoData name="data_ref" required value={data} max={hoje} onChange={setData} />
         </Campo>
         {contagem.turnos.length > 0 && (
           <div className="space-y-1">

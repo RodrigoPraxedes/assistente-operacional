@@ -3,6 +3,7 @@ import { Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { salvarPlano } from "./actions";
+import { CampoData } from "@/components/campo-data";
 
 type Opcao = { id: string; nome: string };
 
@@ -64,10 +65,10 @@ export function FormPlano({
             </Select>
           </Campo>
           <Campo rotulo="Início">
-            <Input type="date" name="inicio" defaultValue={plano?.inicio ?? ""} />
+            <CampoData name="inicio" defaultValue={plano?.inicio ?? ""} />
           </Campo>
           <Campo rotulo="Término previsto">
-            <Input type="date" name="fim_previsto" defaultValue={plano?.fim_previsto ?? ""} />
+            <CampoData name="fim_previsto" defaultValue={plano?.fim_previsto ?? ""} />
           </Campo>
           <Campo rotulo="Unidade">
             <Select
