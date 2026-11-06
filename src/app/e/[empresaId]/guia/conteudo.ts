@@ -537,7 +537,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Recebedor central e delegar",
         passos: [
           "Em Configurações › Geral, o cartão Recebedor central de chamados tem uma chave. Ligada, quem abre o chamado não escolhe o responsável: o chamado cai nos recebedores que você marcou (um ou mais) e eles recebem o aviso, no app e no WhatsApp.",
-          "Dentro do chamado, o recebedor (ou quem gerencia chamados) usa o cartão Delegar este chamado: escolha quem vai acompanhar e salve. Quem entrar na lista é avisado. Mantenha o seu nome na lista para compartilhar; se não delegar, o chamado continua com você.",
+          "Dentro do chamado, o recebedor (ou quem gerencia chamados) usa o cartão Delegar este chamado: escolha quem vai acompanhar e use o botão Salvar no final da tela (ele grava a delegação e a gestão juntas). Quem entrar na lista é avisado. Mantenha o seu nome na lista para compartilhar; se não delegar, o chamado continua com você.",
           "No celular é o mesmo caminho: abra o chamado pelo aviso e role até o cartão Delegar. Com a chave desligada, tudo volta a ser como antes e quem tem permissão escolhe o responsável ao abrir.",
         ],
       },

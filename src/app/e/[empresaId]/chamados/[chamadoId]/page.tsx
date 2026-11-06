@@ -6,7 +6,7 @@ import { linkWhatsApp, urlDoSite } from "@/lib/whatsapp";
 import { PRIORIDADES, type Chamado, type Tarefa } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Etiqueta, Input, Select, Textarea, Titulo } from "@/components/ui";
 import { comentarTarefa } from "../../tarefas/actions";
-import { atualizarChamado, delegarChamado } from "../actions";
+import { salvarChamado } from "../actions";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { SeletorPrestador } from "@/components/seletor-prestador";
 import { CampoFotos } from "./campo-fotos";
@@ -223,6 +223,8 @@ export default async function DetalheChamado({
         </Cartao>
       )}
 
+      {(podeDelegar || pode("chamados.gerenciar")) && (
+        <form action={salvarChamado.bind(null, empresaId, t.id)} className="space-y-4">
       {podeDelegar && (
         <Cartao>
           <h2 className="mb-1 font-medium">{euRecebo ? "Delegar este chamado" : "Responsáveis"}</h2>
@@ -231,22 +233,23 @@ export default async function DetalheChamado({
               ? "Se não delegar, o chamado continua com você. Quem entrar na lista recebe o aviso do que fazer; mantenha seu nome para compartilhar."
               : "Quem entrar na lista recebe o aviso do chamado."}
           </p>
-          <form action={delegarChamado.bind(null, empresaId, t.id)} className="space-y-3">
+          <div className="space-y-3">
+            <input type="hidden" name="_delegar" value="1" />
             <SeletorResponsaveis
               rotulo="Quem acompanha"
               membros={(membros ?? []).filter((m) => m.ativo || (t.responsaveis ?? []).includes(m.id))}
               name="responsaveis"
               inicial={t.responsaveis ?? []}
             />
-            <Botao>Salvar</Botao>
-          </form>
+          </div>
         </Cartao>
       )}
 
       {pode("chamados.gerenciar") && (
         <Cartao>
           <h2 className="mb-2 font-medium">Gestão</h2>
-          <form action={atualizarChamado.bind(null, empresaId, t.id)} className="grid gap-3 sm:grid-cols-2">
+          <input type="hidden" name="_gestao" value="1" />
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Campo rotulo="Título">
                 <Input name="titulo" required defaultValue={t.titulo} />
@@ -295,11 +298,11 @@ export default async function DetalheChamado({
             <Campo rotulo="Custo (R$)">
               <Input name="custo" type="number" step="0.01" min="0" defaultValue={chamado.custo ?? ""} />
             </Campo>
-            <div className="flex items-end">
-              <Botao>Salvar</Botao>
-            </div>
-          </form>
+          </div>
         </Cartao>
+      )}
+          <Botao>Salvar</Botao>
+        </form>
       )}
 
       <Cartao className="space-y-3">

@@ -51,9 +51,8 @@ export async function abrirChamado(empresaId: string, _: { erro?: string } | und
 }
 
 // Dados de gestão: título, descrição, prioridade, equipamento, fornecedor e custo
-export async function atualizarChamado(empresaId: string, tarefaId: string, form: FormData) {
+async function atualizarChamado(empresaId: string, tarefaId: string, form: FormData): Promise<string | null> {
   const { supabase, empresa } = await getContexto(empresaId);
-  const caminho = `/e/${empresaId}/chamados/${tarefaId}`;
   const custo = txt(form, "custo");
 
   const { error } = await supabase
@@ -66,11 +65,11 @@ export async function atualizarChamado(empresaId: string, tarefaId: string, form
       custo: custo ? Number(custo.replace(",", ".")) : null,
     })
     .eq("tarefa_id", tarefaId);
-  if (error) redirect(`${caminho}?erro=${encodeURIComponent(error.message)}`);
+  if (error) return error.message;
 
   // título, descrição e prazo ficam na tarefa
   const titulo = txt(form, "titulo");
-  if (!titulo) redirect(`${caminho}?erro=${encodeURIComponent("Informe o título do chamado.")}`);
+  if (!titulo) return "Informe o título do chamado.";
   const prazo = txt(form, "prazo");
   const { error: e2 } = await supabase
     .from("tarefas")
@@ -80,19 +79,24 @@ export async function atualizarChamado(empresaId: string, tarefaId: string, form
       ...(prazo ? { prazo: localParaUtc(prazo, empresa.fuso_horario) } : {}),
     })
     .eq("id", tarefaId);
-  if (e2) redirect(`${caminho}?erro=${encodeURIComponent(e2.message)}`);
-
-  revalidatePath(caminho);
-  redirect(`${caminho}?salvo=1`);
+  return e2 ? e2.message : null;
 }
 
 // Recebedor central (ou gestor) passa o chamado adiante; quem entra na lista é avisado
-export async function delegarChamado(empresaId: string, tarefaId: string, form: FormData) {
+async function delegarChamado(empresaId: string, tarefaId: string, form: FormData): Promise<string | null> {
   const { supabase } = await getContexto(empresaId);
-  const caminho = `/e/${empresaId}/chamados/${tarefaId}`;
   const ids = form.getAll("responsaveis").map(String).filter(Boolean);
   const { error } = await supabase.rpc("delegar_chamado", { p_tarefa: tarefaId, p_responsaveis: ids });
-  if (error) redirect(`${caminho}?erro=${encodeURIComponent(error.message)}`);
+  return error ? error.message : null;
+}
+
+// Um único Salvar: grava a gestão e/ou a delegação, conforme os blocos presentes no formulário
+export async function salvarChamado(empresaId: string, tarefaId: string, form: FormData) {
+  const caminho = `/e/${empresaId}/chamados/${tarefaId}`;
+  let erro: string | null = null;
+  if (form.get("_gestao")) erro = await atualizarChamado(empresaId, tarefaId, form);
+  if (!erro && form.get("_delegar")) erro = await delegarChamado(empresaId, tarefaId, form);
+  if (erro) redirect(`${caminho}?erro=${encodeURIComponent(erro)}`);
   revalidatePath(caminho);
   redirect(`${caminho}?salvo=1`);
 }
