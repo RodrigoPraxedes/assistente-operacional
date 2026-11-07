@@ -1,11 +1,12 @@
 import { exigirPermissao } from "@/lib/contexto";
 import { membrosAtribuiveis } from "@/lib/atribuicao";
 import { Cartao, Titulo } from "@/components/ui";
+import { hojeNoFuso } from "@/lib/formato";
 import { FormTarefa } from "./form";
 
 export default async function NovaTarefa({ params }: { params: Promise<{ empresaId: string }> }) {
   const { empresaId } = await params;
-  const { supabase } = await exigirPermissao(empresaId, "tarefas.criar");
+  const { supabase, empresa } = await exigirPermissao(empresaId, "tarefas.criar");
   const [{ data: unidades }, { data: setores }, { data: categorias }, { data: membros }] = await Promise.all([
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
@@ -13,12 +14,16 @@ export default async function NovaTarefa({ params }: { params: Promise<{ empresa
     supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
 
+  const h = hojeNoFuso(empresa.fuso_horario);
+  const hoje = `${h.y}-${String(h.m).padStart(2, "0")}-${String(h.d).padStart(2, "0")}`;
+
   return (
     <div className="mx-auto max-w-2xl">
       <Titulo>Nova tarefa</Titulo>
       <Cartao>
         <FormTarefa
           empresaId={empresaId}
+          hoje={hoje}
           unidades={unidades ?? []}
           setores={setores ?? []}
           categorias={categorias ?? []}
