@@ -29,7 +29,7 @@ export function FormTarefa({
 }) {
   const [estado, acao] = useActionState(criarTarefa.bind(null, empresaId), undefined);
   const [inicio, setInicio] = useState(hoje);
-  const [dias, setDias] = useState("");
+  const [dias, setDias] = useState("0");
   const [horario, setHorario] = useState("18:00");
   // o servidor continua recebendo um único "prazo" (data e hora locais)
   const prazo = dias === "" || !inicio || !horario ? "" : `${somarDias(inicio, Number(dias))}T${horario}`;
