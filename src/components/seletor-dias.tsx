@@ -6,15 +6,12 @@ import { Select } from "@/components/ui";
 export function SeletorDias({
   value,
   onChange,
-  semPrazo,
 }: {
   value: string;
   onChange: (v: string) => void;
-  semPrazo?: boolean;
 }) {
   return (
     <Select value={value} onChange={(e) => onChange(e.target.value)} aria-label="Prazo em dias">
-      {semPrazo && <option value="">Sem prazo</option>}
       <option value="0">No mesmo dia</option>
       {[1, 2, 3, 4, 5, 6, 7].map((d) => (
         <option key={d} value={d}>

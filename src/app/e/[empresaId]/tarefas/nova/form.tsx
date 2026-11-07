@@ -32,7 +32,7 @@ export function FormTarefa({
   const [dias, setDias] = useState("0");
   const [horario, setHorario] = useState("18:00");
   // o servidor continua recebendo um único "prazo" (data e hora locais)
-  const prazo = dias === "" || !inicio || !horario ? "" : `${somarDias(inicio, Number(dias))}T${horario}`;
+  const prazo = !inicio || !horario ? "" : `${somarDias(inicio, Number(dias))}T${horario}`;
   return (
     <form action={acao} className="space-y-4">
       <Campo rotulo="O que precisa ser feito">
@@ -62,13 +62,11 @@ export function FormTarefa({
         </Campo>
         <Campo rotulo="Prazo" dica="Dias depois da data de início">
           <input type="hidden" name="prazo" value={prazo} />
-          <SeletorDias value={dias} onChange={setDias} semPrazo />
+          <SeletorDias value={dias} onChange={setDias} />
         </Campo>
-        {dias !== "" && (
-          <Campo rotulo="Horário" dica="Hora em que a tarefa vence">
-            <Input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} required />
-          </Campo>
-        )}
+        <Campo rotulo="Horário" dica="Hora em que a tarefa vence">
+          <Input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} required />
+        </Campo>
         <Campo rotulo="Unidade">
           <Select name="unidade_id" defaultValue={unidades.length === 1 ? unidades[0].id : ""}>
             <option value="">Empresa toda</option>
