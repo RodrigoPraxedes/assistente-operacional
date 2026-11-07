@@ -11,6 +11,7 @@ import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { CampoTodosConcluem } from "@/components/campo-todos-concluem";
 import { CampoData } from "@/components/campo-data";
+import { SeletorDias } from "@/components/seletor-dias";
 
 type Opcao = { id: string; nome: string };
 
@@ -19,34 +20,6 @@ const emMin = (hhmm: string) => {
   return (h || 0) * 60 + (m || 0);
 };
 const hhmm = (min: number) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
-
-// Prazo como hora do relógio ("vence às 18:00") + dias depois; o banco guarda os minutos depois do horário.
-function CampoPrazo({ horario, inicial }: { horario: string; inicial: number }) {
-  const base = emMin(horario);
-  const [hora, setHora] = useState(() => hhmm((base + inicial) % 1440));
-  const [dias, setDias] = useState(() => Math.floor((base + inicial) / 1440));
-  // a hora de vencimento só pode ser antes do horário se cair em outro dia
-  const total = Math.max(0, dias * 1440 + emMin(hora) - base);
-  const diasReais = Math.floor((base + total) / 1440);
-  const resumo =
-    diasReais === 0 ? "no mesmo dia" : diasReais === 1 ? "no dia seguinte" : `${diasReais} dias depois`;
-  return (
-    <Campo rotulo="Prazo" dica={`Cada ocorrência vence às ${hhmm((base + total) % 1440)} (${resumo}); depois disso aparece como atrasada`}>
-      <input type="hidden" name="prazo_minutos" value={total} />
-      <div className="flex gap-2">
-        <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required />
-        <Select value={dias} onChange={(e) => setDias(Number(e.target.value))}>
-          <option value={0}>No mesmo dia</option>
-          {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-            <option key={d} value={d}>
-              {d === 1 ? "+1 dia" : `+${d} dias`}
-            </option>
-          ))}
-        </Select>
-      </div>
-    </Campo>
-  );
-}
 
 export function FormAcao({
   empresaId,
@@ -80,7 +53,10 @@ export function FormAcao({
   const base = acao ?? modelo;
   const inicial = base?.recorrencia ?? "";
   const [regra, setRegra] = useState(inicial);
-  const [horario, setHorario] = useState(base?.horario?.slice(0, 5) ?? "09:00");
+  // Horário = hora em que vence; Prazo = dias depois da data. (Ações antigas: horário + minutos de prazo viram hora de vencimento + dias.)
+  const fim = base ? emMin(base.horario.slice(0, 5)) + base.prazo_minutos : 18 * 60;
+  const [horario, setHorario] = useState(hhmm(fim % 1440));
+  const [dias, setDias] = useState(String(Math.min(7, Math.floor(fim / 1440))));
   // o aviso de visibilidade reenvia o formulário sem o botão clicado; por isso a escolha vai num campo oculto
   const continuar = useRef<HTMLInputElement>(null);
   const marcar = (v: string) => continuar.current && (continuar.current.value = v);
@@ -102,17 +78,21 @@ export function FormAcao({
           <Campo rotulo="Repetir">
             <SeletorRecorrencia inicial={inicial} permitirNenhuma onChange={setRegra} />
           </Campo>
-          <Campo rotulo="Horário">
-            <Input type="time" name="horario" value={horario} onChange={(e) => setHorario(e.target.value)} required />
-          </Campo>
-          <Campo rotulo={regra ? "Data inicial" : "Data"}>
-            <CampoData name="data_inicial" defaultValue={base?.data_inicial ?? hoje} required />
-          </Campo>
           {regra && (
             <Campo rotulo="Data final" dica="Vazio = repete sem fim">
               <CampoData name="data_final" defaultValue={base?.data_final ?? ""} />
             </Campo>
           )}
+          <Campo rotulo="Inicia em">
+            <CampoData name="data_inicial" defaultValue={base?.data_inicial ?? hoje} required />
+          </Campo>
+          <Campo rotulo="Prazo" dica="Dias depois da data de início">
+            <input type="hidden" name="prazo_minutos" value={Number(dias) * 1440} />
+            <SeletorDias value={dias} onChange={setDias} />
+          </Campo>
+          <Campo rotulo="Horário" dica={`Vence às ${horario || "--:--"} ${dias === "0" ? "no mesmo dia" : `(+${dias} ${dias === "1" ? "dia" : "dias"})`}; depois disso aparece como atrasada`}>
+            <Input type="time" name="horario" value={horario} onChange={(e) => setHorario(e.target.value)} required />
+          </Campo>
           {regra && (
             <label className="flex items-start gap-2 text-sm sm:col-span-2">
               <input type="checkbox" name="contar_da_conclusao" defaultChecked={base?.contar_da_conclusao ?? false} className="mt-1" />
@@ -125,7 +105,6 @@ export function FormAcao({
               </span>
             </label>
           )}
-          <CampoPrazo horario={horario} inicial={base?.prazo_minutos ?? 480} />
           <div className="sm:col-span-2">
             <SeletorResponsaveis
               name="responsaveis"
