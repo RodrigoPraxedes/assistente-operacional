@@ -283,9 +283,10 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Montar uma contagem",
         passos: [
           "Toque em Nova contagem e dê um nome (ex.: Contagem da churrasqueira).",
-          "Em Instrução, diga quando contar (ex.: no início do turno). Em Turnos, escreva os turnos separados por vírgula (ex.: Dia, Noite) ou deixe vazio.",
+          "Em Instrução (a geral, que aparece no alto da tela de contagem), diga quando contar (ex.: no início do turno). Em Turnos, escreva os turnos separados por vírgula (ex.: Dia, Noite) ou deixe vazio.",
           "Escolha a unidade, o setor e se ela fica disponível no QR Code da unidade.",
           "Adicione os itens: o nome do produto e a unidade de medida (unidades, varas, pacotes, kg...). Use ↑ e ↓ para mudar a ordem.",
+          "Em cada item há também um campo de Instrução (opcional), logo abaixo do nome. O texto aparece em cinza embaixo do nome do item para quem vai contar, no app e no QR Code (ex.: Frango sujo: contar só o que ainda não foi limpo).",
           "Para usar meta, marque Usar meta por dia da semana, dê nome à coluna do que falta (Embalar, Produzir, Repor...) e preencha a meta de cada item em cada dia. Repetir Seg em todos copia a meta de segunda para a semana toda. Dia sem meta fica vazio.",
           "Com mais de um turno (ex.: Dia, Noite), cada item ganha uma linha de metas por turno: em cada dia da semana há uma caixinha para cada turno (ex.: Frango assado, Seg Dia 25 e Seg Noite 12). Quem conta vê a meta do turno escolhido e a sugestão é calculada em cima dela. As metas que já existiam aparecem em todos os turnos; é só ajustar e salvar.",
           "Para o que é preparado hoje para amanhã (ex.: embalar a farofa de domingo no sábado), marque Meta é para o dia seguinte no item. Digite a necessidade de cada dia normalmente (Dom 450, Sáb 230...) e quem conta no sábado vê a meta de domingo, com a sugestão já calculada em cima dela.",

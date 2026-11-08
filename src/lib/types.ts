@@ -554,5 +554,7 @@ export interface ContagemItem {
   metas_turnos: Record<string, (number | null)[]> | null;
   // item preparado para amanhã: a contagem de hoje usa a meta do dia seguinte
   meta_dia_seguinte: boolean;
+  // orientação de como contar o item, mostrada abaixo do nome
+  instrucao: string | null;
   ativo: boolean;
 }

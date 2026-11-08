@@ -13,6 +13,7 @@ interface ItemForm {
   metas: string[];
   metas_turnos?: Record<string, string[]>;
   meta_dia_seguinte?: boolean;
+  instrucao?: string | null;
 }
 
 const numeroOuNulo = (s: string | undefined) => {
@@ -132,6 +133,7 @@ export async function salvarContagem(empresaId: string, _: { erro?: string } | u
       metas: temMeta(metas) ? metas : null,
       metas_turnos: metasTurnos && Object.values(metasTurnos).some(temMeta) ? metasTurnos : null,
       meta_dia_seguinte: usaMeta && !!i.meta_dia_seguinte,
+      instrucao: i.instrucao?.trim().slice(0, 500) || null,
     };
     const { error } = i.id
       ? await supabase.from("contagem_itens").update(linha).eq("id", i.id)

@@ -23,6 +23,7 @@ export interface ContagemPreencher {
     metas: (number | null)[] | null;
     metas_turnos?: Record<string, (number | null)[]> | null;
     meta_dia_seguinte?: boolean;
+    instrucao?: string | null;
   }[];
 }
 
@@ -181,6 +182,7 @@ export function FormContagem({ canal, contagem, unidadeId, token, executor, hoje
             <li key={item.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-superficie p-3">
               <label htmlFor={`qtd_${item.id}`} className="min-w-0 flex-1">
                 <span className="block font-medium text-slate-900">{item.nome}</span>
+                {item.instrucao && <span className="block whitespace-pre-line text-xs text-slate-500">{item.instrucao}</span>}
                 <span className="block text-xs text-slate-500">
                   {item.unidade_medida ?? ""}
                   {meta !== null &&
