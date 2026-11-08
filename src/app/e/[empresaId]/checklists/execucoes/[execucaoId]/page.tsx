@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getContexto } from "@/lib/contexto";
+import { ehAdminMaster, getContexto } from "@/lib/contexto";
 import { formatarDataHora } from "@/lib/formato";
 import { RESPOSTAS_SIM_NAO } from "@/lib/types";
 import { Cartao, Etiqueta, Titulo } from "@/components/ui";
@@ -10,7 +10,7 @@ const COR: Record<string, string> = { sim: "#16a34a", nao: "#dc2626", em_process
 
 export default async function Execucao({ params }: { params: Promise<{ empresaId: string; execucaoId: string }> }) {
   const { empresaId, execucaoId } = await params;
-  const { supabase, empresa } = await getContexto(empresaId);
+  const [{ supabase, empresa }, admin] = await Promise.all([getContexto(empresaId), ehAdminMaster()]);
 
   const [{ data: exec }, { data: respostas }] = await Promise.all([
     supabase.from("checklist_execucoes").select("*, unidades(nome)").eq("id", execucaoId).eq("empresa_id", empresaId).maybeSingle(),
@@ -38,9 +38,11 @@ export default async function Execucao({ params }: { params: Promise<{ empresaId
         <p>
           <span className="text-slate-500">Enviado:</span> {formatarDataHora(exec.enviado_em, empresa.fuso_horario)}
         </p>
-        <p>
-          <span className="text-slate-500">Versão do modelo:</span> {exec.modelo_versao}
-        </p>
+        {admin && (
+          <p>
+            <span className="text-slate-500">Versão do modelo:</span> {exec.modelo_versao}
+          </p>
+        )}
         {exec.tarefa_id && (
           <Link href={`/e/${empresaId}/tarefas/${exec.tarefa_id}`} className="text-blue-600">
             Ver tarefa no Kanban
