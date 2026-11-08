@@ -19,12 +19,13 @@ type ItemEditavel = {
   // com mais de um turno: as metas de cada turno (o turno sem entrada parte de `metas`)
   metas_turnos: Record<string, string[]>;
   meta_dia_seguinte: boolean;
+  instrucao: string;
 };
 
 const texto = (v: number | null | undefined) => (v === null || v === undefined ? "" : String(v));
 
 let seq = 0;
-const novoItem = (): ItemEditavel => ({ chave: `novo-${++seq}`, nome: "", unidade_medida: "unidades", metas: Array(7).fill(""), metas_turnos: {}, meta_dia_seguinte: false });
+const novoItem = (): ItemEditavel => ({ chave: `novo-${++seq}`, nome: "", unidade_medida: "unidades", metas: Array(7).fill(""), metas_turnos: {}, meta_dia_seguinte: false, instrucao: "" });
 
 export function FormEditarContagem({
   empresaId,
@@ -66,6 +67,7 @@ export function FormEditarContagem({
             Object.entries(i.metas_turnos ?? {}).map(([t, ms]) => [t, Array.from({ length: 7 }, (_, d) => texto(ms?.[d]))]),
           ),
           meta_dia_seguinte: i.meta_dia_seguinte ?? false,
+          instrucao: i.instrucao ?? "",
         }))
       : [novoItem()],
   );
@@ -275,6 +277,16 @@ export function FormEditarContagem({
                     aria-label="Unidade de medida"
                   />
                 </div>
+              </div>
+              <div className="pl-5">
+                <Textarea
+                  value={item.instrucao}
+                  onChange={(e) => alterar(item.chave, { instrucao: e.target.value })}
+                  rows={2}
+                  maxLength={500}
+                  placeholder="Instrução para quem conta (opcional). Ex.: contar só o frango já limpo"
+                  aria-label="Instrução do item"
+                />
               </div>
               {usaMeta && (
                 <div className="space-y-1 overflow-x-auto pl-5">
