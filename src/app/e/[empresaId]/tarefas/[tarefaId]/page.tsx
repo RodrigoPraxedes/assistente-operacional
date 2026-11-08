@@ -93,6 +93,13 @@ export default async function DetalheTarefa({
     !execucao &&
     ["aberto", "em_andamento", "adiado"].includes(atual?.tipo ?? "") &&
     (tarefa.origem === "contagem" || pode("checklist.executar"));
+  // contagem já enviada: atalho para os resultados do dia e turno da tarefa (quem pode ver os resultados)
+  let verContagem: string | null = null;
+  if (tarefa.origem === "contagem" && tarefa.origem_id && tarefa.concluida_em && (pode("contagens.resultados") || pode("contagens.editar"))) {
+    const dia = new Intl.DateTimeFormat("en-CA", { timeZone: empresa.fuso_horario }).format(new Date(tarefa.prazo ?? tarefa.concluida_em));
+    const turno = tarefa.titulo.includes(" · ") ? tarefa.titulo.slice(tarefa.titulo.lastIndexOf(" · ") + 3) : "";
+    verContagem = `/e/${empresaId}/contagens/${tarefa.origem_id}/resultados?${new URLSearchParams({ de: dia, ate: dia, ...(turno ? { turno } : {}) })}`;
+  }
   // status que dá para escolher aqui: os do módulo da tarefa; check-list só conclui; em conjunto e com foto,
   // a conclusão vem de "marcar minha parte" / "enviar foto"
   const opcoesStatus = (status ?? []).filter(
@@ -204,6 +211,11 @@ export default async function DetalheTarefa({
           >
             {responsavel?.telefone ? `Avisar ${responsavel.nome} no WhatsApp` : "Enviar no WhatsApp"}
           </a>
+          {verContagem && (
+            <Link href={verContagem} className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm">
+              Ver contagem preenchida
+            </Link>
+          )}
           {execucao && (
             <Link
               href={`/e/${empresaId}/checklists/execucoes/${execucao.id}`}

@@ -304,6 +304,7 @@ export const SECOES: SecaoGuia[] = [
           "Em Recebe o resultado, escolha quem recebe no WhatsApp as quantidades (e o que falta para a meta) assim que a contagem é enviada.",
           "Em Grupo que recebe o resultado, escolha um grupo do WhatsApp (ex.: o grupo dos líderes) para receber o mesmo resumo assim que a contagem é enviada, inclusive as novas remessas. Pode usar junto com Recebe o resultado ou só o grupo. Aparece quando há um grupo autorizado em WhatsApp › Destinatários.",
           "A tarefa aparece em Tarefas 1 hora antes do horário, com o botão azul para abrir a contagem já no turno certo. Ao salvar a contagem, a tarefa daquele dia e turno é concluída sozinha.",
+          "Com a tarefa já concluída, o botão azul dá lugar a Ver contagem preenchida (para quem vê os resultados), que abre os resultados daquele dia e turno com as quantidades enviadas.",
           "Não contou até 30 minutos depois do prazo (horário + tolerância): a tarefa é cancelada como Não realizado no tempo.",
         ],
       },
