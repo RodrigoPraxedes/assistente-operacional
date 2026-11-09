@@ -207,8 +207,9 @@ function CampoFoto({ nome, obrigatoria }: { nome: string; obrigatoria: boolean }
       setErro("Essa foto não é de agora. Tire a foto na hora, pela câmera.");
       return;
     }
-    await trocarPorReduzidas(input);
-    setOk(true);
+    const falha = await trocarPorReduzidas(input, false);
+    if (falha) setErro(falha);
+    else setOk(true);
   }
 
   return (
