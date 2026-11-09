@@ -251,6 +251,7 @@ export const SECOES: SecaoGuia[] = [
           "Os check-lists já preenchidos hoje mostram o selo verde Feito hoje às HH:MM, no QR e também nos cartões da tela Check-lists (a tela Contagens mostra o mesmo selo). É só um aviso: dá para abrir e preencher de novo no mesmo dia.",
           "Responda os itens, tire as fotos e toque em Salvar e enviar.",
           "As fotos são tiradas na hora: o botão de foto abre a câmera e uma foto antiga (de mais de 10 minutos, da galeria) é recusada.",
+          "O celular reduz a foto antes de enviar, uma de cada vez. Se aparecer o aviso de que não deu para preparar a foto (celular sem memória livre), feche os outros aplicativos e tire a foto de novo.",
           "As fotos de check-lists, tarefas e manutenções ficam guardadas por 30 dias e depois são apagadas sozinhas, para não encher o espaço do sistema. As respostas e o histórico continuam; só a imagem some. Se precisar de uma foto por mais tempo, abra a imagem e salve no celular antes.",
           "Depois de salvo, se o WhatsApp do Atalaia já enviou o resultado (pessoas em Recebe o resultado), a tela avisa e deixa só um link discreto Enviar também pelo meu WhatsApp, como plano B. Se nenhum aviso automático saiu, aparece o botão verde Enviar resumo no WhatsApp, que abre o seu WhatsApp com o texto pronto para o grupo ou para quem você escolher. No celular o resumo manual vai com os emojis (✅ ❌ ⏳ por resposta). No computador com Windows os emojis ficam de fora do texto, porque o WhatsApp do Windows os troca por \"�\".",
         ],
