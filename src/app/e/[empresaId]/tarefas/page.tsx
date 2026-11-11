@@ -4,7 +4,7 @@ import { getContexto } from "@/lib/contexto";
 import { hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
 import { ORIGENS, type Origem, type Status, type Tarefa } from "@/lib/types";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
-import { Input, LinkBotao, Select, Titulo } from "@/components/ui";
+import { Aviso, Input, LinkBotao, Select, Titulo } from "@/components/ui";
 import { Kanban } from "./kanban";
 import { TrocarVisao, type Visao } from "./trocar-visao";
 
@@ -25,7 +25,7 @@ export default async function PaginaTarefas({
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string; q?: string }>;
+  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string; q?: string; editada?: string }>;
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
@@ -180,6 +180,7 @@ export default async function PaginaTarefas({
       >
         Tarefas
       </Titulo>
+      {filtros.editada && <Aviso tipo="sucesso">Tarefa atualizada.</Aviso>}
 
       <form className="mb-4 flex flex-wrap items-center gap-2">
         <Input
