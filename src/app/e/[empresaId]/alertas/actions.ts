@@ -128,7 +128,10 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
 
   revalidatePath(`/e/${empresaId}/alertas`);
   // aberta de Manutenções: volta para lá
-  redirect(`/e/${empresaId}/acoes?${form.get("manutencao") === "1" ? "manutencao=1&" : ""}salvo=1`);
+  const m = form.get("manutencao") === "1" ? "manutencao=1&" : "";
+  // "Salvar e copiar": abre o formulário novo já preenchido com esta ação e seus avisos
+  if (form.get("continuar")) redirect(`/e/${empresaId}/alertas/novo?${m}copiar=${alertaId}`);
+  redirect(`/e/${empresaId}/acoes?${m}salvo=1`);
 }
 
 export async function excluirAlerta(empresaId: string, alertaId: string) {

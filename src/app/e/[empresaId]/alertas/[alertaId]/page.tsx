@@ -12,13 +12,15 @@ export default async function EditarAlerta({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; alertaId: string }>;
-  searchParams: Promise<{ erro?: string; manutencao?: string }>;
+  searchParams: Promise<{ erro?: string; copiar?: string; manutencao?: string }>;
 }) {
   const { empresaId, alertaId } = await params;
-  const { erro, manutencao: m } = await searchParams;
+  const { erro, copiar, manutencao: m } = await searchParams;
   const manutencao = m === "1";
   const { supabase, empresa, membro, pode } = await exigirPermissao(empresaId, "alertas.editar");
   const novo = alertaId === "novo";
+  // modelo para "Salvar e copiar": busca o alerta de origem
+  const origemId = novo ? copiar : undefined;
 
   const [
     { data: alerta },
@@ -28,18 +30,18 @@ export default async function EditarAlerta({
     { data: categorias },
     { data: membros },
   ] = await Promise.all([
-    novo
+    novo && !origemId
       ? Promise.resolve({ data: null })
-      : supabase.from("alertas").select("*").eq("id", alertaId).eq("empresa_id", empresaId).maybeSingle(),
-    novo
+      : supabase.from("alertas").select("*").eq("id", origemId ?? alertaId).eq("empresa_id", empresaId).maybeSingle(),
+    novo && !origemId
       ? Promise.resolve({ data: [] })
-      : supabase.from("alerta_avisos").select("*").eq("alerta_id", alertaId).order("dias_antes", { ascending: false }),
+      : supabase.from("alerta_avisos").select("*").eq("alerta_id", origemId ?? alertaId).order("dias_antes", { ascending: false }),
     supabase.from("unidades").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("setores").select("id, nome").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
     supabase.from("categorias").select("id, nome, manutencao").eq("empresa_id", empresaId).order("nome"),
     supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId).eq("ativo", true).order("nome"),
   ]);
-  if (!novo && !alerta) notFound();
+  if ((!novo || origemId) && !alerta) notFound();
 
   const h = hojeNoFuso(empresa.fuso_horario);
   const hoje = `${h.y}-${String(h.m).padStart(2, "0")}-${String(h.d).padStart(2, "0")}`;
@@ -47,16 +49,21 @@ export default async function EditarAlerta({
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <Titulo voltar={manutencao ? { href: `/e/${empresaId}/acoes?manutencao=1`, rotulo: "Manutenções" } : { href: `/e/${empresaId}/acoes`, rotulo: "Ações" }}>{novo ? "Nova ação" : `Editar: ${alerta!.nome}`}</Titulo>
-      {novo && (
+      {novo && !origemId && (
         <TipoDeAcao empresaId={empresaId} atual="vencimento" podeAcao={pode("acoes.editar")} podeVencimento manutencao={manutencao} />
       )}
       {erro && <Aviso>{erro}</Aviso>}
+      {origemId && (
+        <p className="text-xs text-slate-500">Nova ação com as configurações e os avisos de “{alerta!.nome}”. Ajuste o nome e o que mudar e salve.</p>
+      )}
       {!novo && (
         <p className="text-xs text-slate-500">Mudanças valem para as próximas tarefas. Nas já criadas, só os responsáveis acompanham (enquanto estiverem abertas).</p>
       )}
       <FormAlerta
+        key={`${alertaId}-${origemId ?? ""}`}
         empresaId={empresaId}
-        alerta={alerta as Alerta | null}
+        alerta={novo ? null : (alerta as Alerta | null)}
+        modelo={origemId ? (alerta as Alerta) : null}
         avisos={(avisos ?? []) as AlertaAviso[]}
         hoje={hoje}
         unidades={unidades ?? []}

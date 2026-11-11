@@ -407,7 +407,7 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Criar várias parecidas",
         passos: [
-          "Com o formulário preenchido, toque em Salvar e criar nova a partir desta: a ação é salva e abre uma nova com a mesma repetição, horário, datas, prazo, responsáveis, unidade, setor, categoria, visibilidade e situação.",
+          "Com o formulário preenchido, toque em Salvar e copiar: a ação é salva e abre uma nova com a mesma repetição, horário, datas, prazo, responsáveis, unidade, setor, categoria, visibilidade e situação. O botão existe nos dois tipos de ação; na ação com vencimento a cópia leva também todos os avisos, com seus responsáveis e cientes (útil para vários vencimentos parecidos, como as certidões de uma mesma renovação).",
           "O nome vem como \"Cópia de ...\", já selecionado: digite o novo nome, ajuste o que mudar e salve (ou repita o botão para a próxima).",
         ],
       },

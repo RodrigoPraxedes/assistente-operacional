@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { excluirAlerta, salvarAlerta } from "../actions";
 import type { Alerta, AlertaAviso } from "@/lib/types";
 import { Aviso, Botao, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
@@ -30,6 +30,7 @@ const REPETICOES = [
 export function FormAlerta({
   empresaId,
   alerta,
+  modelo,
   avisos: iniciais,
   hoje,
   unidades,
@@ -42,6 +43,8 @@ export function FormAlerta({
 }: {
   empresaId: string;
   alerta: Alerta | null;
+  // alerta de origem de "Salvar e copiar" (formulário novo pré-preenchido)
+  modelo?: Alerta | null;
   podeMudarPrivado: boolean;
   avisos: AlertaAviso[];
   hoje: string;
@@ -53,10 +56,15 @@ export function FormAlerta({
   membros: (Opcao & { setor_id: string | null })[];
 }) {
   const [estado, acaoForm] = useActionState(salvarAlerta.bind(null, empresaId), undefined);
+  const base = alerta ?? modelo;
+  // o aviso de visibilidade reenvia o formulário sem o botão clicado; por isso a escolha vai num campo oculto
+  const continuar = useRef<HTMLInputElement>(null);
+  const marcar = (v: string) => continuar.current && (continuar.current.value = v);
   const [avisos, setAvisos] = useState<LinhaAviso[]>(
     iniciais.length
       ? iniciais.map((a) => ({
-          id: a.id,
+          // na cópia os avisos são novos (sem id), para não mexer nos da ação de origem
+          id: modelo ? undefined : a.id,
           dias_antes: a.dias_antes,
           titulo: a.titulo,
           responsaveis: a.responsaveis,
@@ -64,7 +72,7 @@ export function FormAlerta({
         }))
       : [{ dias_antes: 30, titulo: "", responsaveis: [], cientes: [] }],
   );
-  const regraAtual = alerta?.recorrencia ?? "";
+  const regraAtual = base?.recorrencia ?? "";
   const repeticoes = REPETICOES.some((r) => r.regra === regraAtual)
     ? REPETICOES
     : [...REPETICOES, { regra: regraAtual, rotulo: regraAtual }];
@@ -74,26 +82,27 @@ export function FormAlerta({
 
   return (
     <form action={acaoForm} className="space-y-4">
+      <input ref={continuar} type="hidden" name="continuar" defaultValue="" />
       {alerta && <input type="hidden" name="id" value={alerta.id} />}
       {manutencao && <input type="hidden" name="manutencao" value="1" />}
       <input type="hidden" name="avisos" value={JSON.stringify(avisos)} />
 
       <Cartao className="space-y-4">
         <Campo rotulo="O que vence ou acontece">
-          <Input name="nome" defaultValue={alerta?.nome} placeholder="Ex.: Vencimento do alvará" required />
+          <Input name="nome" defaultValue={modelo ? `Cópia de ${modelo.nome}` : base?.nome} autoFocus={!!modelo} onFocus={(e) => modelo && e.currentTarget.select()} placeholder="Ex.: Vencimento do alvará" required />
         </Campo>
         <Campo rotulo="Detalhes">
           <Textarea
             name="descricao"
             rows={2}
-            defaultValue={alerta?.descricao ?? ""}
+            defaultValue={base?.descricao ?? ""}
             placeholder="Ex.: protocolo, contato do despachante"
           />
         </Campo>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo rotulo="Data do vencimento">
-            <CampoData name="data_evento" defaultValue={alerta?.data_evento ?? hoje} required />
+            <CampoData name="data_evento" defaultValue={base?.data_evento ?? hoje} required />
           </Campo>
           <Campo rotulo="Repetir">
             <Select name="recorrencia" defaultValue={regraAtual}>
@@ -105,10 +114,10 @@ export function FormAlerta({
             </Select>
           </Campo>
           <Campo rotulo="Horário" dica="Hora em que as tarefas aparecem">
-            <Input type="time" name="horario" defaultValue={alerta?.horario?.slice(0, 5) ?? "09:00"} required />
+            <Input type="time" name="horario" defaultValue={base?.horario?.slice(0, 5) ?? "09:00"} required />
           </Campo>
           <Campo rotulo="Responsável padrão">
-            <Select name="responsavel_id" defaultValue={alerta?.responsavel_id ?? ""}>
+            <Select name="responsavel_id" defaultValue={base?.responsavel_id ?? ""}>
               <option value="">—</option>
               {membros.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -120,7 +129,7 @@ export function FormAlerta({
           <Campo rotulo="Unidade">
             <Select
               name="unidade_id"
-              defaultValue={alerta?.unidade_id ?? (unidades.length === 1 ? unidades[0].id : "")}
+              defaultValue={base?.unidade_id ?? (unidades.length === 1 ? unidades[0].id : "")}
             >
               <option value="">Empresa toda</option>
               {unidades.map((u) => (
@@ -131,7 +140,7 @@ export function FormAlerta({
             </Select>
           </Campo>
           <Campo rotulo="Setor">
-            <Select name="setor_id" defaultValue={alerta?.setor_id ?? ""}>
+            <Select name="setor_id" defaultValue={base?.setor_id ?? ""}>
               <option value="">—</option>
               {setores.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -141,7 +150,7 @@ export function FormAlerta({
             </Select>
           </Campo>
           <Campo rotulo="Categoria">
-            <Select name="categoria_id" defaultValue={alerta?.categoria_id ?? categoriaPadrao ?? ""}>
+            <Select name="categoria_id" defaultValue={base?.categoria_id ?? categoriaPadrao ?? ""}>
               <option value="">—</option>
               {categorias.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -150,7 +159,7 @@ export function FormAlerta({
               ))}
             </Select>
           </Campo>
-          <CampoVisibilidade privado={alerta?.privado} podeMudar={podeMudarPrivado} perguntar={!alerta} />
+          <CampoVisibilidade privado={base?.privado} podeMudar={podeMudarPrivado} perguntar={!base} />
           {alerta && (
             <Campo rotulo="Situação">
               <Select name="ativo" defaultValue={String(alerta.ativo)}>
@@ -229,7 +238,12 @@ export function FormAlerta({
 
       {estado?.erro && <Aviso>{estado.erro}</Aviso>}
       <div className="flex justify-between">
-        <BotaoEnviar>Salvar ação</BotaoEnviar>
+        <div className="flex flex-wrap gap-2">
+          <BotaoEnviar onClick={() => marcar("")}>Salvar ação</BotaoEnviar>
+          <BotaoEnviar variante="secundario" onClick={() => marcar("1")}>
+            Salvar e copiar
+          </BotaoEnviar>
+        </div>
         {alerta && (
           <Botao
             type="button"
