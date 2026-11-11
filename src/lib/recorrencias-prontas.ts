@@ -26,6 +26,8 @@ export const RECORRENCIAS_PRONTAS = [
   { regra: "FREQ=MONTHLY;INTERVAL=5", rotulo: "A cada 5 meses" },
   { regra: "FREQ=MONTHLY;INTERVAL=6", rotulo: "A cada 6 meses" },
   { regra: "FREQ=YEARLY", rotulo: "Todo ano" },
+  { regra: "FREQ=YEARLY;INTERVAL=2", rotulo: "A cada 2 anos" },
+  { regra: "FREQ=YEARLY;INTERVAL=3", rotulo: "A cada 3 anos" },
 ] as const;
 
 export const DIAS_SEMANA = [
