@@ -8,6 +8,7 @@ import { BotaoEnviar } from "@/components/botao-enviar";
 import { CampoVisibilidade } from "@/components/campo-visibilidade";
 import { SeletorResponsaveis } from "@/components/seletor-responsaveis";
 import { CampoData } from "@/components/campo-data";
+import { SeletorRecorrencia } from "@/components/seletor-recorrencia";
 
 type Opcao = { id: string; nome: string };
 type LinhaAviso = {
@@ -17,15 +18,6 @@ type LinhaAviso = {
   responsaveis: string[];
   cientes: string[];
 };
-
-// datas importantes costumam ser anuais ou únicas; mensal cobre contas e taxas
-const REPETICOES = [
-  { regra: "", rotulo: "Não repete (uma vez só)" },
-  { regra: "FREQ=YEARLY", rotulo: "Todo ano" },
-  { regra: "FREQ=MONTHLY;INTERVAL=6", rotulo: "A cada 6 meses" },
-  { regra: "FREQ=MONTHLY;INTERVAL=3", rotulo: "A cada 3 meses" },
-  { regra: "FREQ=MONTHLY", rotulo: "Todo mês" },
-];
 
 export function FormAlerta({
   empresaId,
@@ -73,9 +65,6 @@ export function FormAlerta({
       : [{ dias_antes: 30, titulo: "", responsaveis: [], cientes: [] }],
   );
   const regraAtual = base?.recorrencia ?? "";
-  const repeticoes = REPETICOES.some((r) => r.regra === regraAtual)
-    ? REPETICOES
-    : [...REPETICOES, { regra: regraAtual, rotulo: regraAtual }];
 
   const mudar = (i: number, campo: Partial<LinhaAviso>) =>
     setAvisos((xs) => xs.map((x, j) => (j === i ? { ...x, ...campo } : x)));
@@ -105,13 +94,7 @@ export function FormAlerta({
             <CampoData name="data_evento" defaultValue={base?.data_evento ?? hoje} required />
           </Campo>
           <Campo rotulo="Repetir">
-            <Select name="recorrencia" defaultValue={regraAtual}>
-              {repeticoes.map((r) => (
-                <option key={r.regra} value={r.regra}>
-                  {r.rotulo}
-                </option>
-              ))}
-            </Select>
+            <SeletorRecorrencia inicial={regraAtual} permitirNenhuma />
           </Campo>
           <Campo rotulo="Horário" dica="Hora em que as tarefas aparecem">
             <Input type="time" name="horario" defaultValue={base?.horario?.slice(0, 5) ?? "09:00"} required />

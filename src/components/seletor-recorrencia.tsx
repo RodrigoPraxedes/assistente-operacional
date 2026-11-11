@@ -20,7 +20,7 @@ const UNIDADES: { valor: Unidade; rotulo: string; plural: string }[] = [
   { valor: "YEARLY", rotulo: "ano", plural: "anos" },
 ];
 
-// Campo "Repetir": lista de opções prontas + "Personalizar..." (a cada N dias/semanas/meses/anos,
+// Campo "Repetir": lista de opções prontas + "Regra personalizada..." (a cada N dias/semanas/meses/anos,
 // dias da semana, ou "na 2ª terça do mês"). Envia a regra (RRULE) no campo `name`.
 export function SeletorRecorrencia({
   name = "recorrencia",
@@ -80,7 +80,7 @@ export function SeletorRecorrencia({
             {r.rotulo}
           </option>
         ))}
-        <option value="__outra">Personalizar...</option>
+        <option value="__outra">Regra personalizada...</option>
       </Select>
     );
   }

@@ -361,8 +361,8 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Toque em Nova ação. No alto, escolha o tipo: Tarefa no dia (repete e vira tarefa no dia marcado) ou Avisos antes do vencimento (veja o tópico Ação com vencimento). Os passos abaixo são do primeiro tipo.",
           "Dê um nome.",
-          "Escolha a repetição (uma vez só, todos os dias, a cada 2, 3, 4, 10 ou 15 dias, um dia fixo da semana como às segundas ou aos sábados, toda semana, todo mês, a cada 3, 4, 5 ou 6 meses, todo ano...), o horário e a data inicial. \"A cada N dias\" conta a partir da data inicial; os dias da semana valem independente dela.",
-          "Para algo fora da lista, escolha Personalizar...: informe \"a cada N dias, semanas, meses ou anos\"; na repetição semanal marque os dias da semana; na mensal escolha entre o mesmo dia do mês ou um dia da semana do mês (por exemplo, na 2ª terça-feira ou na última sexta-feira).",
+          "Escolha a repetição (uma vez só, todos os dias, a cada 2, 3, 4, 10 ou 15 dias, um dia fixo da semana como às segundas ou aos sábados, toda semana, todo mês, a cada 3, 4, 5 ou 6 meses, todo ano, a cada 2 ou 3 anos...), o horário e a data inicial. \"A cada N dias\" conta a partir da data inicial; os dias da semana valem independente dela.",
+          "Para algo fora da lista, escolha Regra personalizada...: informe \"a cada N dias, semanas, meses ou anos\"; na repetição semanal marque os dias da semana; na mensal escolha entre o mesmo dia do mês ou um dia da semana do mês (por exemplo, na 2ª terça-feira ou na última sexta-feira).",
           "Se quiser, defina uma data final. Vazio = repete sem fim.",
           "Ao salvar uma ação editada (data, dia, horário ou repetição), as tarefas futuras que ainda não começaram e não batem mais com a nova agenda são refeitas. Tarefas em andamento, adiadas ou concluídas não são mexidas.",
           "Por padrão a próxima ocorrência segue o calendário (data inicial + repetição), mesmo que você conclua antes ou depois. Se preferir, ligue Contar a próxima a partir da data da conclusão: a próxima só nasce depois que a tarefa é concluída e conta do dia da conclusão. Exemplo: ação a cada 5 meses concluída em 28/10 gera a próxima em 28/03, com o mesmo prazo de duração. Enquanto a tarefa está aberta, nenhuma outra é criada; tarefa cancelada também conta como encerrada. Na lista de Ações, essas ações mostram \"Aguardando conclusão\" enquanto a tarefa está aberta e, depois de concluída, a data calculada da próxima. A tela Ver semana segue mostrando a previsão pelo calendário.",
@@ -375,7 +375,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Ação com vencimento (avisos antes)",
         passos: [
           "Em Nova ação, escolha Avisos antes do vencimento e escreva o que vence ou acontece.",
-          "Informe a data do vencimento e se ela se repete (todo ano, a cada 6 meses...), o horário em que as tarefas aparecem e o responsável padrão.",
+          "Informe a data do vencimento e se ela se repete (todo ano, a cada 2 ou 3 anos, a cada 6 meses ou uma regra personalizada, como a cada 18 meses), o horário em que as tarefas aparecem e o responsável padrão.",
           "Em Avisos, diga quantos dias antes cada tarefa deve ser criada e o que precisa ser feito. Ex.: 30 dias antes, \"Pedir orçamento\"; 7 dias antes, \"Confirmar o serviço\". Cada aviso tem seus responsáveis e, se quiser, pessoas em Avisar também (ciente). Avisos com o mesmo texto e o mesmo prazo geram uma tarefa só.",
           "Na antecedência marcada, a tarefa aparece no quadro. O prazo dela é a própria data do vencimento.",
           "Na lista de Ações, essas ações levam a etiqueta Vencimento e mostram a data e quantos dias faltam: vermelho até 7 dias, laranja até 30. Elas ficam na categoria escolhida, junto das outras ações.",
