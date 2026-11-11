@@ -178,7 +178,7 @@ export function FormAcao({
         <div className="flex flex-wrap gap-2">
           <BotaoEnviar onClick={() => marcar("")}>Salvar ação</BotaoEnviar>
           <BotaoEnviar variante="secundario" onClick={() => marcar("1")}>
-            Salvar e criar nova a partir desta
+            Salvar e copiar
           </BotaoEnviar>
         </div>
         {acao && (
