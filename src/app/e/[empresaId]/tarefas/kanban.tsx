@@ -29,11 +29,14 @@ interface Props {
   whatsapp?: Record<string, string>;
   // quem pode preencher check-list ganha o atalho para o formulário
   podePreencher?: boolean;
+  // quadro em que o Kanban está (Tarefas ou Manutenções)
+  lista?: "tarefas" | "chamados";
 }
 
 // chamados abrem na própria página; o resto no detalhe da tarefa
-const linkDe = (empresaId: string, t: Tarefa) =>
-  t.origem === "chamado" ? `/e/${empresaId}/chamados/${t.id}` : `/e/${empresaId}/tarefas/${t.id}`;
+// "de" diz de qual quadro a pessoa veio, para o Salvar voltar para ele
+const linkDe = (empresaId: string, t: Tarefa, lista: "tarefas" | "chamados") =>
+  `/e/${empresaId}/${t.origem === "chamado" ? "chamados" : "tarefas"}/${t.id}?de=${lista}`;
 
 export function Kanban({
   empresaId,
@@ -47,6 +50,7 @@ export function Kanban({
   colunas = status,
   whatsapp,
   podePreencher = false,
+  lista = "tarefas",
 }: Props) {
   const [tarefas, setTarefas] = useState(iniciais);
   const [arrastando, setArrastando] = useState<string | null>(null);
@@ -313,7 +317,7 @@ export function Kanban({
                       aria-hidden
                     />
                     <div className="min-w-0 flex-1">
-                      <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
+                      <Link href={linkDe(empresaId, t, lista)} className="font-medium text-slate-900 hover:text-blue-700">
                         {t.titulo}
                       </Link>
                       <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>
@@ -372,7 +376,7 @@ export function Kanban({
                         onContextMenu={(e) => toque?.id === t.id && e.preventDefault()}
                         className={`select-none rounded-lg border p-3 text-sm shadow-sm [-webkit-touch-callout:none] ${atrasada(t) ? "border-2 border-l-[6px] border-red-500 bg-red-50" : "border-slate-200 bg-superficie"} ${podeMover ? "cursor-grab" : ""} ${toque?.id === t.id ? "opacity-40" : ""}`}
                       >
-                        <Link href={linkDe(empresaId, t)} className="font-medium text-slate-900 hover:text-blue-700">
+                        <Link href={linkDe(empresaId, t, lista)} className="font-medium text-slate-900 hover:text-blue-700">
                           {t.titulo}
                         </Link>
                         <div className="mt-1 flex flex-wrap gap-1">{etiquetasDe(t)}</div>

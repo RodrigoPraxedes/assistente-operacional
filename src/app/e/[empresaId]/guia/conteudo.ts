@@ -153,7 +153,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Editar uma tarefa já criada",
         passos: [
           "Abra a tarefa e toque em Editar título, descrição e prazo (aparece para quem tem a permissão Editar tarefas no perfil).",
-          "Mude o que precisar, por exemplo puxar o prazo para hoje, e toque em Salvar alterações. A mudança de prazo fica registrada no histórico, com quem mudou. Não há aviso novo no WhatsApp.",
+          "Mude o que precisar, por exemplo puxar o prazo para hoje, e toque em Salvar alterações. A tarefa fecha e você volta para o quadro de Tarefas. A mudança de prazo fica registrada no histórico, com quem mudou. Não há aviso novo no WhatsApp.",
           "Tarefa concluída não muda mais de status, e não dá para editar tarefa concluída ou cancelada. Tarefas de ação recorrente mudam só aquela ocorrência (a ação continua igual). Check-lists, manutenções e etapas de projeto são editados na tela do próprio módulo.",
         ],
       },
@@ -540,7 +540,7 @@ export const SECOES: SecaoGuia[] = [
         titulo: "Recebedor central e delegar",
         passos: [
           "Em Configurações › Geral, o cartão Recebedor central de chamados tem uma chave. Ligada, quem abre o chamado não escolhe o responsável: o chamado cai nos recebedores que você marcou (um ou mais) e eles recebem o aviso, no app e no WhatsApp.",
-          "Dentro do chamado, o recebedor (ou quem gerencia chamados) usa o cartão Delegar este chamado: escolha quem vai acompanhar e use o botão Salvar no final da tela (ele grava a delegação e a gestão juntas). Quem entrar na lista é avisado. Mantenha o seu nome na lista para compartilhar; se não delegar, o chamado continua com você.",
+          "Dentro do chamado, o recebedor (ou quem gerencia chamados) usa o cartão Delegar este chamado: escolha quem vai acompanhar e use o botão Salvar no final da tela (ele grava a delegação e a gestão juntas). Depois de salvar, o chamado fecha e você volta para o quadro de onde veio: Tarefas ou Manutenções. Quem entrar na lista é avisado. Mantenha o seu nome na lista para compartilhar; se não delegar, o chamado continua com você.",
           "No celular é o mesmo caminho: abra o chamado pelo aviso e role até o cartão Delegar. Com a chave desligada, tudo volta a ser como antes e quem tem permissão escolhe o responsável ao abrir.",
         ],
       },

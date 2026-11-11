@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getContexto } from "@/lib/contexto";
 import { PRIORIDADES, type Chamado, type Status, type Tarefa } from "@/lib/types";
-import { LinkBotao, Select, Titulo } from "@/components/ui";
+import { Aviso, LinkBotao, Select, Titulo } from "@/components/ui";
 import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { Kanban } from "../tarefas/kanban";
 
@@ -10,7 +10,7 @@ export default async function PaginaChamados({
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ unidade?: string; equipamento?: string; prioridade?: string }>;
+  searchParams: Promise<{ unidade?: string; equipamento?: string; prioridade?: string; salvo?: string }>;
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
@@ -85,6 +85,11 @@ export default async function PaginaChamados({
 
   return (
     <div>
+      {filtros.salvo && (
+        <div className="mb-4">
+          <Aviso tipo="sucesso">Chamado salvo.</Aviso>
+        </div>
+      )}
       <Titulo
         acoes={
           <>
@@ -151,6 +156,7 @@ export default async function PaginaChamados({
         }}
         podeMover={pode("tarefas.mudar_status")}
         etiquetas={etiquetas}
+        lista="chamados"
       />
     </div>
   );

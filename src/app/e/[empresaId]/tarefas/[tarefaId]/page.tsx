@@ -36,7 +36,7 @@ export default async function DetalheTarefa({
 
   const { data: tarefa } = await supabase.from("tarefas").select("*").eq("id", tarefaId).maybeSingle<Tarefa>();
   if (!tarefa) notFound();
-  if (tarefa.origem === "chamado") redirect(`/e/${empresaId}/chamados/${tarefa.id}`);
+  if (tarefa.origem === "chamado") redirect(`/e/${empresaId}/chamados/${tarefa.id}?de=tarefas`);
 
   const [
     { data: status },

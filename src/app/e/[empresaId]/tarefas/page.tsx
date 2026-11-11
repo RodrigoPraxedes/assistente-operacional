@@ -4,7 +4,7 @@ import { getContexto } from "@/lib/contexto";
 import { hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
 import { ORIGENS, type Origem, type Status, type Tarefa } from "@/lib/types";
 import { linkWhatsApp, mensagemTarefa } from "@/lib/whatsapp";
-import { Input, LinkBotao, Select, Titulo } from "@/components/ui";
+import { Aviso, Input, LinkBotao, Select, Titulo } from "@/components/ui";
 import { Kanban } from "./kanban";
 import { TrocarVisao, type Visao } from "./trocar-visao";
 
@@ -25,7 +25,7 @@ export default async function PaginaTarefas({
   searchParams,
 }: {
   params: Promise<{ empresaId: string }>;
-  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string; q?: string }>;
+  searchParams: Promise<{ origem?: string; unidade?: string; minhas?: string; status?: string; recorte?: string; q?: string; salvo?: string }>;
 }) {
   const { empresaId } = await params;
   const filtros = await searchParams;
@@ -170,6 +170,11 @@ export default async function PaginaTarefas({
 
   return (
     <div>
+      {filtros.salvo && (
+        <div className="mb-4">
+          <Aviso tipo="sucesso">{filtros.salvo === "chamado" ? "Chamado salvo." : "Tarefa salva."}</Aviso>
+        </div>
+      )}
       <Titulo
         acoes={
           <>

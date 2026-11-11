@@ -19,13 +19,15 @@ export default async function DetalheChamado({
   searchParams,
 }: {
   params: Promise<{ empresaId: string; chamadoId: string }>;
-  searchParams: Promise<{ novo?: string; salvo?: string; erro?: string }>;
+  searchParams: Promise<{ novo?: string; salvo?: string; erro?: string; de?: string }>;
 }) {
   const { empresaId, chamadoId } = await params;
   const avisos = await searchParams;
   const { supabase, empresa, membro, pode } = await getContexto(empresaId);
   const fuso = empresa.fuso_horario;
   const caminho = `/e/${empresaId}/chamados/${chamadoId}`;
+  // quadro de onde a pessoa veio (Tarefas ou Manutenções): a seta e o Salvar voltam para ele
+  const lista = avisos.de === "tarefas" ? "tarefas" : "chamados";
 
   const { data: chamado } = await supabase
     .from("chamados")
@@ -103,7 +105,7 @@ export default async function DetalheChamado({
       {avisos.salvo && <Aviso tipo="sucesso">Salvo.</Aviso>}
       {avisos.erro && <Aviso>{avisos.erro}</Aviso>}
 
-      <Titulo voltar={{ href: `/e/${empresaId}/chamados`, rotulo: "Manutenções" }}>
+      <Titulo voltar={{ href: `/e/${empresaId}/${lista}`, rotulo: lista === "tarefas" ? "Tarefas" : "Manutenções" }}>
         <span className="text-slate-400">#{chamado.numero}</span> {t.titulo}
       </Titulo>
 
@@ -226,6 +228,7 @@ export default async function DetalheChamado({
 
       {(podeDelegar || pode("chamados.gerenciar")) && (
         <form action={salvarChamado.bind(null, empresaId, t.id)} className="space-y-4">
+          <input type="hidden" name="_de" value={lista} />
       {podeDelegar && (
         <Cartao>
           <h2 className="mb-1 font-medium">{euRecebo ? "Delegar este chamado" : "Responsáveis"}</h2>

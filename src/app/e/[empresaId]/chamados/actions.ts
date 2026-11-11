@@ -96,9 +96,13 @@ export async function salvarChamado(empresaId: string, tarefaId: string, form: F
   let erro: string | null = null;
   if (form.get("_gestao")) erro = await atualizarChamado(empresaId, tarefaId, form);
   if (!erro && form.get("_delegar")) erro = await delegarChamado(empresaId, tarefaId, form);
-  if (erro) redirect(`${caminho}?erro=${encodeURIComponent(erro)}`);
+  const de = form.get("_de") === "tarefas" ? "tarefas" : "chamados";
+  if (erro) redirect(`${caminho}?de=${de}&erro=${encodeURIComponent(erro)}`);
   revalidatePath(caminho);
-  redirect(`${caminho}?salvo=1`);
+  revalidatePath(`/e/${empresaId}/chamados`);
+  revalidatePath(`/e/${empresaId}/tarefas`);
+  // salvou: fecha o chamado e volta para o quadro de onde a pessoa veio
+  redirect(`/e/${empresaId}/${de}?salvo=chamado`);
 }
 
 export async function adicionarFotos(empresaId: string, tarefaId: string, form: FormData) {

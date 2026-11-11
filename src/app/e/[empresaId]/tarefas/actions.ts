@@ -114,7 +114,8 @@ export async function editarTarefa(empresaId: string, tarefaId: string, form: Fo
   if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
   revalidatePath(voltar);
   revalidatePath(`/e/${empresaId}/tarefas`);
-  redirect(`${voltar}?editada=1`);
+  // salvou: fecha a tarefa e volta para o quadro
+  redirect(`/e/${empresaId}/tarefas?salvo=tarefa`);
 }
 
 // Privada: só quem criou e o responsável veem. Só quem criou pode trocar (o banco confere).
@@ -140,7 +141,7 @@ export async function mudarResponsaveis(empresaId: string, tarefaId: string, for
   if (!data?.length) redirect(`${voltar}?erro=${encodeURIComponent("Sem permissão para mudar esta tarefa")}`);
   revalidatePath(voltar);
   revalidatePath(`/e/${empresaId}/tarefas`);
-  redirect(`${voltar}?responsaveis=1`);
+  redirect(`/e/${empresaId}/tarefas?salvo=tarefa`);
 }
 
 // Troca quem só fica ciente e a chave "todos precisam concluir". Quem entrar como ciente recebe o aviso no WhatsApp.
@@ -156,7 +157,7 @@ export async function mudarCientes(empresaId: string, tarefaId: string, form: Fo
   if (!data?.length) redirect(`${voltar}?erro=${encodeURIComponent("Sem permissão para mudar esta tarefa")}`);
   revalidatePath(voltar);
   revalidatePath(`/e/${empresaId}/tarefas`);
-  redirect(`${voltar}?responsaveis=1`);
+  redirect(`/e/${empresaId}/tarefas?salvo=tarefa`);
 }
 
 export async function comentarTarefa(empresaId: string, tarefaId: string, voltar: string, form: FormData) {
