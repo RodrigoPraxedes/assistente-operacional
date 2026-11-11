@@ -114,7 +114,7 @@ export async function editarTarefa(empresaId: string, tarefaId: string, form: Fo
   if (error) redirect(`${voltar}?erro=${encodeURIComponent(error.message)}`);
   revalidatePath(voltar);
   revalidatePath(`/e/${empresaId}/tarefas`);
-  redirect(`${voltar}?editada=1`);
+  redirect(`/e/${empresaId}/tarefas?editada=1`);
 }
 
 // Privada: só quem criou e o responsável veem. Só quem criou pode trocar (o banco confere).
