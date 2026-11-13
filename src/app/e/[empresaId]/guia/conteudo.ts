@@ -370,6 +370,7 @@ export const SECOES: SecaoGuia[] = [
           "Inicia em é a data da (primeira) ocorrência. Em Prazo, escolha quantos dias depois ela vence (No mesmo dia, +1 dia... +7 dias) e, em Horário, a hora do vencimento. A tela mostra o resultado, por exemplo \"Vence às 18:00 no mesmo dia\". Depois desse momento a tarefa aparece como atrasada.",
           "Escolha os responsáveis, quem só fica ciente (recebe o aviso e o lembrete, sem precisar concluir), a chave Todos os responsáveis precisam concluir, a unidade, o setor, a categoria e a visibilidade. Com Todas as unidades, cada unidade recebe a sua tarefa.",
           "Toque em Salvar ação.",
+          "Histórico: ao abrir uma ação já salva, o cartão Histórico de realizações mostra as últimas 15 tarefas concluídas dela, com a data, quem concluiu, o prazo e a etiqueta No prazo ou Atrasada. A mais recente vem em destaque como Última. Toque numa data para abrir a tarefa. Tarefas privadas só aparecem para quem pode vê-las. Na lista de Ações, cada ação mostra também a Última realização (ou Ainda não realizada).",
         ],
       },
       {

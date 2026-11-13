@@ -81,6 +81,20 @@ export default async function PaginaAcoes({
       historico.set(t.origem_id, h);
     }
   }
+  // última realização de cada ação (tarefa concluída mais recente)
+  const ultimaFeita = new Map<string, string>();
+  {
+    const { data: feitas } = await supabase
+      .from("tarefas")
+      .select("origem_id, concluida_em")
+      .eq("empresa_id", empresaId)
+      .eq("origem", "acao")
+      .not("concluida_em", "is", null)
+      .order("concluida_em", { ascending: false })
+      .limit(2000)
+      .returns<{ origem_id: string; concluida_em: string }[]>();
+    for (const t of feitas ?? []) if (!ultimaFeita.has(t.origem_id)) ultimaFeita.set(t.origem_id, t.concluida_em);
+  }
   const proximaDa = (a: Acao) => {
     const regra = { regra: a.recorrencia, horario: a.horario, inicio: a.data_inicial, fim: a.data_final, fuso };
     return a.contar_da_conclusao && a.recorrencia
@@ -336,6 +350,9 @@ export default async function PaginaAcoes({
                         ` · ${a.responsaveis.map((id) => membro.get(id)).join(", ")}`}
                       {a.data_final &&
                         ` · até ${formatarData(`${a.data_final}T12:00:00Z`, fuso)}`}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {ultimaFeita.has(a.id) ? `Última realização: ${formatarDataHora(ultimaFeita.get(a.id)!, fuso)}` : "Ainda não realizada"}
                     </p>
                   </div>
                   <div className="text-right text-xs">
