@@ -498,7 +498,7 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
     const [{ data: tarefas }, { data: abertos }] = await Promise.all([
       admin
         .from("tarefas")
-        .select("id, titulo, prazo, unidade_id, responsaveis, criado_por, status_id, unidades(nome)")
+        .select("id, titulo, prazo, unidade_id, responsaveis, criado_por, status_id, origem, origem_id, unidades(nome)")
         .eq("empresa_id", c.empresa_id)
         .not("origem", "in", "(checklist,contagem)")
         .is("concluida_em", null)
@@ -514,6 +514,8 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
             responsaveis: string[];
             criado_por: string | null;
             status_id: string;
+            origem: string;
+            origem_id: string | null;
             unidades: { nome: string } | null;
           }[]
         >(),
@@ -537,7 +539,19 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
     const { data: nomes } = await admin.from("membros").select("id, nome").in("id", idsNomes);
     const nomeDe = new Map((nomes ?? []).map((m) => [m.id, m.nome.trim().split(/\s+/)[0]]));
 
+    // a que a tarefa está atrelada (etapa de projeto ou ação recorrente)
+    const idsDe = (o: string) => vencidas.filter((t) => t.origem === o && t.origem_id).map((t) => t.origem_id as string);
+    const [{ data: planos }, { data: acoes }] = await Promise.all([
+      idsDe("plano").length ? admin.from("planos").select("id, nome").in("id", idsDe("plano")) : Promise.resolve({ data: [] }),
+      idsDe("acao").length ? admin.from("acoes").select("id, nome").in("id", idsDe("acao")) : Promise.resolve({ data: [] }),
+    ]);
+    const vinculoDe = new Map<string, string>([
+      ...(planos ?? []).map((p): [string, string] => [p.id, `Projeto: ${p.nome}`]),
+      ...(acoes ?? []).map((a): [string, string] => [a.id, `Ação recorrente: ${a.nome}`]),
+    ]);
+
     for (const t of vencidas) {
+      const vinculo = t.origem_id ? vinculoDe.get(t.origem_id) : undefined;
       const base = `${t.titulo}${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`;
       const concluir = c.link_prazo ? "conclua pelo link." : "conclua no app.";
       const quemFaz = t.responsaveis.map((id) => nomeDe.get(id)).filter(Boolean).join(", ");
@@ -555,6 +569,7 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
                 "*Prazo venceu* ⌛",
                 "",
                 `*${t.titulo}*${t.unidades?.nome ? ` · ${t.unidades.nome}` : ""}`,
+                ...(vinculo ? [`*${vinculo}*`] : []),
                 `*Prazo:* ${diaMes(t.prazo, fuso)} ${hora(t.prazo, fuso)}`,
                 "",
                 `*_Se já fez, ${concluir}_*`,
