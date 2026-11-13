@@ -33,7 +33,6 @@ export async function gerarPushPrazoVencido(agora = new Date()) {
         .select("id, titulo, prazo, responsaveis, origem, status_id")
         .eq("empresa_id", e.id)
         .not("origem", "in", "(checklist,contagem)")
-        .eq("privado", false)
         .is("concluida_em", null)
         .not("prazo", "is", null)
         .lte("prazo", agora.toISOString())

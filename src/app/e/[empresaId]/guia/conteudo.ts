@@ -146,7 +146,7 @@ export const SECOES: SecaoGuia[] = [
           "Quem pode atribuir: o Gestor escolhe qualquer pessoa; o Líder de setor só vê colaboradores (e ele mesmo) na lista, e o mesmo vale para as ações. Colaborador não cria tarefas, mas todos abrem chamado de manutenção.",
           "Defina o início, o prazo, a unidade, o setor e a categoria. Inicia em é a data de partida; Prazo conta quantos dias depois vence (No mesmo dia, que já vem marcado, +1 dia... +7 dias) e Horário é a hora do vencimento. Datas abrem um calendário em grade do mês: toque no dia e, nos campos com hora, ajuste Hora e Minutos e toque em OK. Hoje marca a data de hoje e Limpar apaga o campo.",
           "Marque Exigir foto para concluir se quiser uma prova do serviço feito.",
-          "Escolha se ela é pública (toda a equipe com acesso vê) ou privada (só você e os responsáveis veem) e toque em Criar tarefa.",
+          "Escolha se ela é pública (toda a equipe com acesso vê) ou privada (só você e os responsáveis veem; os responsáveis recebem o aviso normalmente) e toque em Criar tarefa.",
         ],
       },
       {
@@ -493,7 +493,7 @@ export const SECOES: SecaoGuia[] = [
           "Projeto público: veem quem tem permissão de ver ou editar projetos (o dono, o Gestor e o Líder de setor, se tiver essa permissão), o coordenador, quem criou e quem é responsável ou está na equipe de alguma etapa.",
           "Projeto privado: só quem criou, o coordenador e quem está nas etapas veem. Nem o dono da empresa vê. As etapas também ficam privadas no quadro de Tarefas.",
           "Só quem criou troca entre público e privado (em Editar projeto) e exclui um projeto privado. O coordenador também pode editá-lo, se tiver permissão de editar projetos.",
-          "Etapas de projeto privado não geram aviso automático no WhatsApp, como as demais tarefas privadas.",
+          "Etapas de projeto privado avisam só os responsáveis da etapa (WhatsApp e notificação no celular), nunca um grupo.",
         ],
       },
       {
@@ -753,8 +753,8 @@ export const SECOES: SecaoGuia[] = [
       {
         titulo: "Automações",
         passos: [
-          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo. Cada ocorrência de uma ação recorrente também avisa os responsáveis quando é criada (com o dia e a hora em que acontece); tarefas privadas e as de check-list e contagem ficam de fora (mesmo ao trocar os responsáveis do check-list; eles têm o próprio lembrete). Os avisos têm emojis, uma linha em branco entre o título e o conteúdo e o link em linha própria. Check-list e contagem concluídos levam \"Confira aqui:\" antes do link. A mensagem termina com a frase em negrito e itálico \"Quando concluir, sinalize no app como Concluído.\" (não dá para concluir pelo WhatsApp); o aviso de prazo vencido traz a mesma ideia.",
-          "Prazo venceu e a tarefa segue aberta: passou o prazo (inclusive o novo prazo de uma tarefa adiada) sem a tarefa ser concluída ou cancelada, os responsáveis recebem um lembrete para concluir no app e quem criou também é avisado. Sai uma vez por prazo (se o prazo mudar, avisa de novo), nunca de madrugada, e não vale para check-list nem tarefa privada. Dá para desligar aqui.",
+          "Tarefa atribuída: quem recebe uma tarefa ganha uma mensagem com o prazo. Cada ocorrência de uma ação recorrente também avisa os responsáveis quando é criada (com o dia e a hora em que acontece); as de check-list e contagem ficam de fora; tarefa privada avisa só os responsáveis (mesmo ao trocar os responsáveis do check-list; eles têm o próprio lembrete). Os avisos têm emojis, uma linha em branco entre o título e o conteúdo e o link em linha própria. Check-list e contagem concluídos levam \"Confira aqui:\" antes do link. A mensagem termina com a frase em negrito e itálico \"Quando concluir, sinalize no app como Concluído.\" (não dá para concluir pelo WhatsApp); o aviso de prazo vencido traz a mesma ideia.",
+          "Prazo venceu e a tarefa segue aberta: passou o prazo (inclusive o novo prazo de uma tarefa adiada) sem a tarefa ser concluída ou cancelada, os responsáveis recebem um lembrete para concluir no app e quem criou também é avisado. Sai uma vez por prazo (se o prazo mudar, avisa de novo), nunca de madrugada, e não vale para check-list. Em tarefa privada, só os responsáveis e quem criou recebem. Dá para desligar aqui.",
           "Lembrete de ação recorrente: os responsáveis recebem outro aviso alguns minutos antes do horário da ocorrência (padrão 30; dá para mudar na própria tela).",
           "Tarefa concluída: quem criou é avisado quando ela termina (uma vez só, mesmo estando também como ciente).",
           "Check-list concluído: o resultado sai sozinho para quem foi cadastrado (desligado, vira rascunho para confirmar).",
@@ -770,7 +770,7 @@ export const SECOES: SecaoGuia[] = [
       },
     ],
     dicas: [
-      "Tarefas privadas não geram aviso automático.",
+      "Tarefas privadas avisam apenas os responsáveis (e quem criou, no prazo vencido), nunca grupos; nos resumos de pendências entram só na contagem, sem título.",
       "Comece com um único número de teste antes de autorizar a equipe toda.",
       "Link em toda mensagem aumenta o risco de o WhatsApp tratar o número como robô. Deixe o link só onde a pessoa precisa abrir o app.",
     ],

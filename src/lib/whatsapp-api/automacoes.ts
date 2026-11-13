@@ -330,6 +330,7 @@ export async function gerarLembretesChecklist(agora = new Date()) {
             responsaveis: string[];
             status_id: string;
             ocorrencia_em: string;
+            privado: boolean;
             unidades: { nome: string } | null;
           }[]
         >(),
@@ -428,10 +429,9 @@ export async function gerarLembretesAcoes(agora = new Date()) {
     const [{ data: tarefas }, { data: abertos }] = await Promise.all([
       admin
         .from("tarefas")
-        .select("id, unidade_id, responsaveis, cientes, status_id, titulo, ocorrencia_em, unidades(nome)")
+        .select("id, unidade_id, responsaveis, cientes, status_id, titulo, ocorrencia_em, privado, unidades(nome)")
         .eq("empresa_id", c.empresa_id)
         .eq("origem", "acao")
-        .eq("privado", false)
         .is("concluida_em", null)
         .gt("ocorrencia_em", agora.toISOString())
         .lte("ocorrencia_em", new Date(agora.getTime() + c.lembrete_acao_minutos * 60_000).toISOString())
@@ -444,6 +444,7 @@ export async function gerarLembretesAcoes(agora = new Date()) {
             status_id: string;
             titulo: string;
             ocorrencia_em: string;
+            privado: boolean;
             unidades: { nome: string } | null;
           }[]
         >(),
@@ -453,7 +454,8 @@ export async function gerarLembretesAcoes(agora = new Date()) {
 
     for (const t of (tarefas ?? []).filter((x) => statusAberto.has(x.status_id))) {
       // quem só está ciente recebe o mesmo lembrete, com o título trocado
-      for (const membroId of [...t.responsaveis, ...t.cientes]) {
+      // tarefa privada: só os responsáveis recebem (cientes não são avisados)
+      for (const membroId of t.privado ? t.responsaveis : [...t.responsaveis, ...t.cientes]) {
         const ciente = !t.responsaveis.includes(membroId);
         const { data: id } = await admin.rpc("whatsapp_enfileirar_automatica", {
           p_empresa: c.empresa_id,
@@ -479,7 +481,7 @@ export async function gerarLembretesAcoes(agora = new Date()) {
 // responsável (e quem criou, se for outra pessoa) é lembrado de concluir no app.
 // Só olha prazos das últimas 24 h. A chave da mensagem leva o prazo: sai uma vez por
 // prazo e pessoa (prazo editado avisa de novo). Avisos de prazo não saem de madrugada
-// (ver ORIGENS_SEM_MADRUGADA em fila.ts). Check-list tem regra própria; privada fica de fora.
+// (ver ORIGENS_SEM_MADRUGADA em fila.ts). Check-list tem regra própria. Tarefa privada também avisa (só o responsável e quem criou).
 const PRAZO_JANELA_HORAS = 24;
 
 export async function gerarAvisosPrazoVencido(agora = new Date()) {
@@ -499,7 +501,6 @@ export async function gerarAvisosPrazoVencido(agora = new Date()) {
         .select("id, titulo, prazo, unidade_id, responsaveis, criado_por, status_id, unidades(nome)")
         .eq("empresa_id", c.empresa_id)
         .not("origem", "in", "(checklist,contagem)")
-        .eq("privado", false)
         .is("concluida_em", null)
         .not("prazo", "is", null)
         .lte("prazo", agora.toISOString())
