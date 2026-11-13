@@ -72,6 +72,11 @@ export default async function DetalheTarefa({
         ])
       : [{ data: null }, { data: [] }];
 
+  const { data: acaoOrigem } =
+    tarefa.origem === "acao" && tarefa.origem_id
+      ? await supabase.from("acoes").select("id, nome").eq("id", tarefa.origem_id).maybeSingle()
+      : { data: null };
+
   const { data: equipamento } = tarefa.equipamento_id
     ? await supabase.from("equipamentos").select("id, nome").eq("id", tarefa.equipamento_id).maybeSingle()
     : { data: null };
@@ -154,6 +159,16 @@ export default async function DetalheTarefa({
               <dd>
                 <Link href={`/e/${empresaId}/planos/${plano.id}`} className="text-blue-700">
                   {plano.nome}
+                </Link>
+              </dd>
+            </>
+          )}
+          {acaoOrigem && (
+            <>
+              <dt className="text-slate-500">Ação recorrente</dt>
+              <dd>
+                <Link href={`/e/${empresaId}/acoes/${acaoOrigem.id}`} className="text-blue-700">
+                  {acaoOrigem.nome}
                 </Link>
               </dd>
             </>
