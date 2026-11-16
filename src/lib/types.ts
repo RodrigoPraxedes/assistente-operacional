@@ -264,6 +264,7 @@ export interface AlertaAviso {
   alerta_id: string;
   dias_antes: number;
   titulo: string;
+  observacao: string | null;
   responsavel_id: string | null;
   // vazio = usa o responsável padrão do alerta
   responsaveis: string[];

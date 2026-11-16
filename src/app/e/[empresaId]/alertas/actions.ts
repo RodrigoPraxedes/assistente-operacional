@@ -11,6 +11,7 @@ interface AvisoForm {
   id?: string;
   dias_antes: number;
   titulo: string;
+  observacao: string | null;
   responsaveis: string[];
   cientes: string[];
 }
@@ -32,6 +33,7 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
         id: a.id ? String(a.id) : undefined,
         dias_antes: Math.round(Number(a.dias_antes)),
         titulo: String(a.titulo ?? "").trim(),
+        observacao: String(a.observacao ?? "").trim() || null,
         responsaveis: (Array.isArray(a.responsaveis) ? a.responsaveis : []).map(String).filter(Boolean),
         cientes: (Array.isArray(a.cientes) ? a.cientes : []).map(String).filter(Boolean),
       }))
@@ -43,6 +45,7 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
       const ja = unicos.get(k);
       if (!ja) unicos.set(k, a);
       else {
+        ja.observacao = [ja.observacao, a.observacao].filter((x, i, xs) => x && xs.indexOf(x) === i).join("\n\n") || null;
         ja.responsaveis = [...new Set([...ja.responsaveis, ...a.responsaveis])];
         ja.cientes = [...new Set([...ja.cientes, ...a.cientes])];
       }
@@ -111,7 +114,7 @@ export async function salvarAlerta(empresaId: string, _: { erro?: string } | und
 
   const novos = avisos
     .filter((a) => !a.id)
-    .map((a) => ({ dias_antes: a.dias_antes, titulo: a.titulo, responsaveis: a.responsaveis, cientes: a.cientes, empresa_id: empresaId, alerta_id: alertaId }));
+    .map((a) => ({ dias_antes: a.dias_antes, titulo: a.titulo, observacao: a.observacao, responsaveis: a.responsaveis, cientes: a.cientes, empresa_id: empresaId, alerta_id: alertaId }));
   if (novos.length) {
     const { error: e } = await supabase.from("alerta_avisos").insert(novos);
     if (e) return { erro: e.message };

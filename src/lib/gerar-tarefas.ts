@@ -261,7 +261,7 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
   let q = admin
     .from("alerta_avisos")
     .select(
-      "id, dias_antes, titulo, responsaveis, cientes, todos_concluem, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, privado, criado_por, empresas(fuso_horario))",
+      "id, dias_antes, titulo, observacao, responsaveis, cientes, todos_concluem, alertas!inner(id, empresa_id, unidade_id, setor_id, categoria_id, responsavel_id, nome, descricao, data_evento, recorrencia, horario, ativo, privado, criado_por, empresas(fuso_horario))",
     )
     .eq("alertas.ativo", true);
   if (alertaId) q = q.eq("alerta_id", alertaId);
@@ -271,6 +271,7 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
       id: string;
       dias_antes: number;
       titulo: string;
+      observacao: string | null;
       responsaveis: string[];
       cientes: string[];
       todos_concluem: boolean;
@@ -318,7 +319,7 @@ async function fontesAlertas(admin: Admin, { id: alertaId, empresaId }: Filtro =
       criado_por: a.criado_por,
       titulo: v.titulo,
       descricao: (quando) =>
-        [`${a.nome}: ${formatarData(quando.prazo.toISOString(), fuso)}`, a.descricao].filter(Boolean).join("\n\n"),
+        [`${a.nome}: ${formatarData(quando.prazo.toISOString(), fuso)}`, v.observacao, a.descricao].filter(Boolean).join("\n\n"),
       momentos: (dias) =>
         avisosDeAlerta(evento, v.dias_antes, dias).map((m) => ({
           quando: m.quando,

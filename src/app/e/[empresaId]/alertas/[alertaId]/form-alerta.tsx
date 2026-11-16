@@ -15,6 +15,7 @@ type LinhaAviso = {
   id?: string;
   dias_antes: number;
   titulo: string;
+  observacao: string;
   responsaveis: string[];
   cientes: string[];
 };
@@ -59,10 +60,11 @@ export function FormAlerta({
           id: modelo ? undefined : a.id,
           dias_antes: a.dias_antes,
           titulo: a.titulo,
+          observacao: a.observacao ?? "",
           responsaveis: a.responsaveis,
           cientes: a.cientes,
         }))
-      : [{ dias_antes: 30, titulo: "", responsaveis: [], cientes: [] }],
+      : [{ dias_antes: 30, titulo: "", observacao: "", responsaveis: [], cientes: [] }],
   );
   const regraAtual = base?.recorrencia ?? "";
 
@@ -193,6 +195,14 @@ export function FormAlerta({
                 Remover
               </button>
             </div>
+            <Campo rotulo="Observação (o que fazer)">
+              <Textarea
+                rows={2}
+                value={a.observacao}
+                onChange={(e) => mudar(i, { observacao: e.target.value })}
+                placeholder="Opcional: descreva como fazer. Aparece nos detalhes da tarefa."
+              />
+            </Campo>
             <SeletorResponsaveis
               membros={membros}
               setores={setores}
@@ -213,7 +223,7 @@ export function FormAlerta({
         <Botao
           type="button"
           variante="secundario"
-          onClick={() => setAvisos((xs) => [...xs, { dias_antes: 7, titulo: "", responsaveis: [], cientes: [] }])}
+          onClick={() => setAvisos((xs) => [...xs, { dias_antes: 7, titulo: "", observacao: "", responsaveis: [], cientes: [] }])}
         >
           + Aviso
         </Botao>

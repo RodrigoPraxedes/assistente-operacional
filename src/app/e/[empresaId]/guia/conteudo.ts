@@ -378,7 +378,7 @@ export const SECOES: SecaoGuia[] = [
         passos: [
           "Em Nova ação, escolha Avisos antes do vencimento e escreva o que vence ou acontece.",
           "Informe a data do vencimento e se ela se repete (todo ano, a cada 2 ou 3 anos, a cada 6 meses ou uma regra personalizada, como a cada 18 meses), o horário em que as tarefas aparecem e o responsável padrão.",
-          "Em Avisos, diga quantos dias antes cada tarefa deve ser criada e o que precisa ser feito. Ex.: 30 dias antes, \"Pedir orçamento\"; 7 dias antes, \"Confirmar o serviço\". Cada aviso tem seus responsáveis e, se quiser, pessoas em Avisar também (ciente). Avisos com o mesmo texto e o mesmo prazo geram uma tarefa só.",
+          "Em Avisos, diga quantos dias antes cada tarefa deve ser criada e o que precisa ser feito. Ex.: 30 dias antes, \"Pedir orçamento\"; 7 dias antes, \"Confirmar o serviço\". Cada aviso tem uma Observação (opcional) para descrever o que fazer: ela aparece nos detalhes da tarefa criada (só nas tarefas criadas depois de salvar). Cada aviso tem seus responsáveis e, se quiser, pessoas em Avisar também (ciente). Avisos com o mesmo texto e o mesmo prazo geram uma tarefa só.",
           "Na antecedência marcada, a tarefa aparece no quadro. O prazo dela é a própria data do vencimento.",
           "Na lista de Ações, essas ações levam a etiqueta Vencimento e mostram a data e quantos dias faltam: vermelho até 7 dias, laranja até 30. Elas ficam na categoria escolhida, junto das outras ações.",
           "Para parar sem apagar, mude a situação para Inativo. Excluir não apaga as tarefas já criadas.",
