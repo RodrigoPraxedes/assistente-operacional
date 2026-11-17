@@ -1,15 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useCallback, useState } from "react";
 import { abrirChamado } from "../actions";
 import { trocarPorReduzidas } from "@/lib/foto";
 import { PRIORIDADES } from "@/lib/types";
 import { Aviso, Campo, Cartao, Input, Select, Textarea } from "@/components/ui";
 import { SeletorPrestador } from "@/components/seletor-prestador";
 import { SeletorComBusca } from "@/components/seletor-com-busca";
+import { LeitorCodigo } from "@/components/leitor-codigo";
 import { BotaoEnviar } from "@/components/botao-enviar";
 
 type Opcao = { id: string; nome: string };
+type OpcaoEquip = Opcao & { codigo?: string | null; unidade_id?: string | null };
+
+const normCodigo = (c: string) => c.trim().toLowerCase().replace(/^0+(?=.)/, "");
 
 export function FormChamado({
   empresaId,
@@ -31,7 +35,7 @@ export function FormChamado({
   sla: Record<string, number>;
   unidades: Opcao[];
   setores: Opcao[];
-  equipamentos: Opcao[];
+  equipamentos: OpcaoEquip[];
   membros: Opcao[];
   fornecedores: Opcao[];
   podeCadastrarPrestador: boolean;
@@ -39,6 +43,22 @@ export function FormChamado({
   unidadeInicial?: string;
 }) {
   const [estado, acao] = useActionState(abrirChamado.bind(null, empresaId), undefined);
+  const [equip, setEquip] = useState(equipamentoInicial ?? "");
+  const [unidade, setUnidade] = useState(unidadeInicial ?? (unidades.length === 1 ? unidades[0].id : ""));
+  const [leitura, setLeitura] = useState("");
+  const aoLer = useCallback(
+    (codigo: string) => {
+      const achado = equipamentos.find((e) => e.codigo && normCodigo(e.codigo) === normCodigo(codigo));
+      if (achado) {
+        setEquip(achado.id);
+        if (achado.unidade_id) setUnidade(achado.unidade_id);
+        setLeitura(`Equipamento encontrado: ${achado.nome}`);
+      } else {
+        setLeitura(`Nenhum equipamento com o código ${codigo}. Escolha na lista ou cadastre no Patrimônio.`);
+      }
+    },
+    [equipamentos],
+  );
   const opcoes = (lista: Opcao[], vazio = "—") => (
     <>
       <option value="">{vazio}</option>
@@ -70,13 +90,15 @@ export function FormChamado({
             </Select>
           </Campo>
           <Campo rotulo="Unidade">
-            <Select name="unidade_id" defaultValue={unidadeInicial ?? (unidades.length === 1 ? unidades[0].id : "")} required>
+            <Select name="unidade_id" value={unidade} onChange={(e) => setUnidade(e.target.value)} required>
               {opcoes(unidades, "Escolha...")}
             </Select>
           </Campo>
           <div className="space-y-1">
             <span className="text-sm font-medium text-slate-700">Equipamento ou móvel</span>
-            <SeletorComBusca name="equipamento_id" opcoes={equipamentos} inicial={equipamentoInicial ?? ""} />
+            <SeletorComBusca key={equip} name="equipamento_id" opcoes={equipamentos} inicial={equip} />
+            <LeitorCodigo onLido={aoLer} />
+            {leitura && <span className="block text-xs text-slate-600">{leitura}</span>}
             <span className="block text-xs text-slate-500">Do patrimônio; o chamado entra no histórico do item</span>
           </div>
           <Campo rotulo="Setor">

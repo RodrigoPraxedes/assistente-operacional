@@ -12,6 +12,7 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "@types/web-push": "^3.6.4",
+    "@zxing/library": "^0.21.3",
     "exceljs": "^4.4.0",
     "ical.js": "^2.2.1",
     "lucide-react": "^1.56.0",
