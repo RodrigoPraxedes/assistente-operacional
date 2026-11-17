@@ -66,7 +66,10 @@ export default async function PaginaPainel({
   const fimHoje = horaLocalParaUtc(h.y, h.m, h.d, 23, 59, fuso).toISOString();
   const daquiUmaHora = new Date(agora.getTime() + 3_600_000).toISOString();
   const daquiSeteDias = new Date(agora.getTime() + 7 * DIA);
-  const trintaDiasAtras = new Date(agora.getTime() - 30 * DIA).toISOString();
+  const seteDiasAtras = new Date(agora.getTime() - 7 * DIA).toISOString();
+  // tolerância de 15 min: concluir até 15 min depois do prazo ainda conta como no prazo
+  const TOLERANCIA_MS = 15 * 60 * 1000;
+  const fimDaJanela = new Date(agora.getTime() - TOLERANCIA_MS).toISOString();
   const hoje = hojeIso(fuso);
 
   const segundaSemana = segundaDaSemana(hoje);
@@ -209,14 +212,14 @@ export default async function PaginaPainel({
           turnos: Pick<Turno, "id" | "nome" | "inicio" | "fim" | "periodo" | "cor"> | null;
         }[]
       >(),
-    // 6. prazos dos últimos 30 dias
+    // 6. prazos dos últimos 7 dias (só os já vencidos além da tolerância)
     deMim(
       supabase
         .from("tarefas")
         .select(camposTarefa)
         .eq("empresa_id", empresaId)
-        .gte("prazo", trintaDiasAtras)
-        .lte("prazo", agora.toISOString())
+        .gte("prazo", seteDiasAtras)
+        .lte("prazo", fimDaJanela)
         .limit(5000),
     ).returns<TarefaPainel[]>(),
     supabase.from("membros").select("id, nome, setor_id").eq("empresa_id", empresaId),
@@ -291,10 +294,10 @@ export default async function PaginaPainel({
   const ausentes = doDia.filter((e) => e.tipo !== "turno");
   const variasUnidades = (unidades?.length ?? 0) > 1;
 
-  // 6. no prazo nos últimos 30 dias (canceladas não contam)
+  // 6. no prazo nos últimos 7 dias (tolerância de 15 min) (canceladas não contam)
   const comPrazo = (ultimos30 ?? []).filter((t) => tipoStatus.get(t.status_id) !== "cancelado");
   const noPrazo = (t: TarefaPainel) =>
-    !!t.concluida_em && !!t.prazo && new Date(t.concluida_em).getTime() <= new Date(t.prazo).getTime();
+    !!t.concluida_em && !!t.prazo && new Date(t.concluida_em).getTime() <= new Date(t.prazo).getTime() + TOLERANCIA_MS;
   const somar = (mapa: Map<string, { total: number; ok: number }>, chave: string, ok: boolean) => {
     const v = mapa.get(chave) ?? { total: 0, ok: 0 };
     v.total++;
@@ -561,10 +564,10 @@ export default async function PaginaPainel({
         )}
       </div>
 
-      {/* 6. últimos 30 dias */}
-      <Bloco titulo="Tarefas no prazo · últimos 30 dias">
+      {/* 6. últimos 7 dias */}
+      <Bloco titulo="Tarefas no prazo · últimos 7 dias">
         {comPrazo.length === 0 ? (
-          <Nada>Nenhuma tarefa com prazo nos últimos 30 dias.</Nada>
+          <Nada>Nenhuma tarefa com prazo nos últimos 7 dias.</Nada>
         ) : (
           <div className="space-y-5">
             <div>
