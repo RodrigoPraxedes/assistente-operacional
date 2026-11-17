@@ -107,7 +107,7 @@ export const SECOES: SecaoGuia[] = [
           "Manutenções em aberto: total por status e por prioridade, e as abertas há mais tempo (em vermelho a partir de 7 dias).",
           "Próximos 7 dias: ações com vencimento e etapas de projetos que vencem na semana.",
           "Escalados hoje: quem trabalha em cada turno e quem está de folga, férias ou falta.",
-          "Tarefas no prazo nos últimos 30 dias: a porcentagem concluída até o prazo, por pessoa e por setor.",
+          "Tarefas no prazo nos últimos 7 dias: a porcentagem concluída até o prazo, por pessoa e por setor. Há tolerância de 15 minutos: concluir até 15 minutos depois do prazo ainda conta como no prazo, e a tarefa só entra na conta depois de passar esses 15 minutos.",
         ],
       },
       {
