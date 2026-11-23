@@ -4,6 +4,7 @@ import { PRIORIDADES, type Chamado, type Status, type Tarefa } from "@/lib/types
 import { LinkBotao, Select, Titulo } from "@/components/ui";
 import { SeletorComBusca } from "@/components/seletor-com-busca";
 import { Kanban } from "../tarefas/kanban";
+import { hojeNoFuso, horaLocalParaUtc } from "@/lib/formato";
 
 export default async function PaginaChamados({
   params,
@@ -18,6 +19,10 @@ export default async function PaginaChamados({
   const seteDiasAtras = new Date(Date.now() - 7 * 86_400_000).toISOString();
   // canceladas somem depois de 48 h (continuam guardadas)
   const doisDiasAtras = new Date(Date.now() - 2 * 86_400_000).toISOString();
+
+  // mesma regra do quadro de Tarefas: ocorrência de amanhã em diante fica escondida até o dia dela
+  const hoje = hojeNoFuso(empresa.fuso_horario);
+  const fimDeHoje = horaLocalParaUtc(hoje.y, hoje.m, hoje.d, 23, 59, empresa.fuso_horario).toISOString();
 
   let consulta = supabase
     .from("chamados")
@@ -45,6 +50,7 @@ export default async function PaginaChamados({
     .eq("empresa_id", empresaId)
     .in("origem", ["acao", "alerta"])
     .or(idsCats.length ? `equipamento_id.not.is.null,categoria_id.in.(${idsCats.join(",")})` : "equipamento_id.not.is.null")
+    .or(`ocorrencia_em.is.null,ocorrencia_em.lte.${fimDeHoje}`)
     .or(`concluida_em.is.null,concluida_em.gte.${seteDiasAtras}`)
     .or(`cancelada_em.is.null,cancelada_em.gte.${doisDiasAtras}`)
     .order("prazo", { ascending: false })
